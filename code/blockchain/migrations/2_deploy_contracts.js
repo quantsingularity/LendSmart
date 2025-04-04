@@ -1,1 +1,8 @@
-Placeholder content for /mnt/data/Smart_Contract_Based_Micro_Lending_Platform/code/blockchain/migrations/2_deploy_contracts.js
+const LoanManager = artifacts.require("LoanManager");
+const BorrowerContract = artifacts.require("BorrowerContract");
+
+module.exports = async function(deployer) {
+  await deployer.deploy(LoanManager);
+  const loanManager = await LoanManager.deployed();
+  await deployer.deploy(BorrowerContract);
+};

@@ -1,1 +1,16 @@
-Placeholder content for /mnt/data/Smart_Contract_Based_Micro_Lending_Platform/code/frontend/src/index.js
+import React from 'react';
+import ReactDOM from 'react-dom';
+import App from './App';
+import { Web3ReactProvider } from '@web3-react/core';
+import { Web3Provider } from '@ethersproject/providers';
+
+function getLibrary(provider) {
+  return new Web3Provider(provider);
+}
+
+ReactDOM.render(
+  <Web3ReactProvider getLibrary={getLibrary}>
+    <App />
+  </Web3ReactProvider>,
+  document.getElementById('root')
+);
