@@ -1,1 +1,123 @@
-Placeholder content for /mnt/data/Smart_Contract_Based_Micro_Lending_Platform/code/frontend/src/App.js
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
+import { Web3ReactProvider } from '@web3-react/core';
+import { Web3Provider } from '@ethersproject/providers';
+
+// Pages
+import Home from './pages/Home';
+import Dashboard from './pages/Dashboard';
+import LoanApplication from './pages/LoanApplication';
+import LoanMarketplace from './pages/LoanMarketplace';
+import Profile from './pages/Profile';
+import Analytics from './pages/Analytics';
+import Notifications from './pages/Notifications';
+import MultiCurrency from './pages/MultiCurrency';
+import Reputation from './pages/Reputation';
+
+// Components
+import Layout from './components/Layout';
+import ProtectedRoute from './components/ProtectedRoute';
+
+// Context
+import { AuthProvider } from './context/AuthContext';
+
+// Get Web3 library
+function getLibrary(provider) {
+  return new Web3Provider(provider);
+}
+
+// Create theme
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: '#1976d2',
+    },
+    secondary: {
+      main: '#dc004e',
+    },
+    background: {
+      default: '#f5f5f5',
+    },
+  },
+  typography: {
+    fontFamily: [
+      'Roboto',
+      'Arial',
+      'sans-serif',
+    ].join(','),
+  },
+});
+
+function App() {
+  return (
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <Web3ReactProvider getLibrary={getLibrary}>
+        <AuthProvider>
+          <Router>
+            <Layout>
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/apply" element={<LoanApplication />} />
+                <Route path="/marketplace" element={<LoanMarketplace />} />
+                <Route 
+                  path="/dashboard" 
+                  element={
+                    <ProtectedRoute>
+                      <Dashboard />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/profile" 
+                  element={
+                    <ProtectedRoute>
+                      <Profile />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/analytics" 
+                  element={
+                    <ProtectedRoute>
+                      <Analytics />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/notifications" 
+                  element={
+                    <ProtectedRoute>
+                      <Notifications />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/multi-currency" 
+                  element={
+                    <ProtectedRoute>
+                      <MultiCurrency />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/reputation" 
+                  element={
+                    <ProtectedRoute>
+                      <Reputation />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </Layout>
+          </Router>
+        </AuthProvider>
+      </Web3ReactProvider>
+    </ThemeProvider>
+  );
+}
+
+export default App;

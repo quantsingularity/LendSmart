@@ -1,1 +1,0 @@
-Placeholder content for /mnt/data/Smart_Contract_Based_Micro_Lending_Platform/code/blockchain/tests/test_borrowercontract.js

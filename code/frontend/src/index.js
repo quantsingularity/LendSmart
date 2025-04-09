@@ -1,16 +1,11 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
+import { createRoot } from 'react-dom/client';
+import './index.css';
 import App from './App';
-import { Web3ReactProvider } from '@web3-react/core';
-import { Web3Provider } from '@ethersproject/providers';
 
-function getLibrary(provider) {
-  return new Web3Provider(provider);
-}
-
-ReactDOM.render(
-  <Web3ReactProvider getLibrary={getLibrary}>
+const root = createRoot(document.getElementById('root'));
+root.render(
+  <React.StrictMode>
     <App />
-  </Web3ReactProvider>,
-  document.getElementById('root')
+  </React.StrictMode>
 );
