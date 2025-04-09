@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { styled, alpha } from '@mui/material/styles';
 import { 
   AppBar, 
   Box, 
@@ -18,7 +19,10 @@ import {
   Avatar,
   Chip,
   Menu,
-  MenuItem
+  MenuItem,
+  Tooltip,
+  Badge,
+  ListItemButton
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import HomeIcon from '@mui/icons-material/Home';
@@ -29,14 +33,102 @@ import BarChartIcon from '@mui/icons-material/BarChart';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import CurrencyExchangeIcon from '@mui/icons-material/CurrencyExchange';
 import StarIcon from '@mui/icons-material/Star';
-import { Link as RouterLink } from 'react-router-dom';
+import LightModeIcon from '@mui/icons-material/LightMode';
+import DarkModeIcon from '@mui/icons-material/DarkMode';
+import CloseIcon from '@mui/icons-material/Close';
+import { Link as RouterLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useThemeMode } from '../theme/ThemeContext';
+
+// Styled components
+const StyledAppBar = styled(AppBar)(({ theme }) => ({
+  transition: 'all 0.3s ease',
+  boxShadow: theme.shadows[2],
+  backdropFilter: 'blur(10px)',
+  backgroundColor: theme.palette.mode === 'light' 
+    ? 'rgba(255, 255, 255, 0.8)' 
+    : 'rgba(18, 18, 18, 0.8)',
+  color: theme.palette.text.primary,
+}));
+
+const LogoText = styled(Typography)(({ theme }) => ({
+  fontFamily: 'Poppins, sans-serif',
+  fontWeight: 600,
+  fontSize: '1.5rem',
+  background: theme.palette.mode === 'light' 
+    ? 'linear-gradient(45deg, #3a86ff 0%, #00c6ff 100%)' 
+    : 'linear-gradient(45deg, #3a86ff 30%, #00c6ff 90%)',
+  WebkitBackgroundClip: 'text',
+  WebkitTextFillColor: 'transparent',
+  backgroundClip: 'text',
+  textFillColor: 'transparent',
+  display: 'flex',
+  alignItems: 'center',
+}));
+
+const NavButton = styled(Button)(({ theme, active }) => ({
+  borderRadius: theme.shape.borderRadius,
+  margin: theme.spacing(0, 1),
+  padding: theme.spacing(1, 2),
+  color: theme.palette.text.primary,
+  position: 'relative',
+  overflow: 'hidden',
+  '&:after': {
+    content: '""',
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    width: active ? '100%' : '0%',
+    height: '3px',
+    background: 'linear-gradient(45deg, #3a86ff 0%, #00c6ff 100%)',
+    transition: 'width 0.3s ease',
+  },
+  '&:hover': {
+    backgroundColor: alpha(theme.palette.primary.main, 0.08),
+    '&:after': {
+      width: '100%',
+    },
+  },
+}));
+
+const DrawerHeader = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  padding: theme.spacing(2),
+}));
+
+const StyledListItemButton = styled(ListItemButton)(({ theme, active }) => ({
+  borderRadius: theme.shape.borderRadius,
+  margin: theme.spacing(0.5, 1),
+  backgroundColor: active ? alpha(theme.palette.primary.main, 0.1) : 'transparent',
+  '&:hover': {
+    backgroundColor: alpha(theme.palette.primary.main, 0.08),
+  },
+  '& .MuiListItemIcon-root': {
+    color: active ? theme.palette.primary.main : theme.palette.text.secondary,
+  },
+  '& .MuiListItemText-primary': {
+    color: active ? theme.palette.primary.main : theme.palette.text.primary,
+    fontWeight: active ? 500 : 400,
+  },
+}));
+
+const StyledFooter = styled(Box)(({ theme }) => ({
+  padding: theme.spacing(3),
+  backgroundColor: theme.palette.mode === 'light' 
+    ? alpha(theme.palette.background.paper, 0.8)
+    : alpha(theme.palette.background.paper, 0.2),
+  backdropFilter: 'blur(10px)',
+  borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+  marginTop: 'auto',
+}));
 
 // Navigation items
 const navItems = [
-  { name: 'Home', path: '/' },
-  { name: 'Apply for Loan', path: '/apply' },
-  { name: 'Marketplace', path: '/marketplace' },
+  { name: 'Home', path: '/', icon: <HomeIcon /> },
+  { name: 'Apply for Loan', path: '/apply', icon: <AccountBalanceIcon /> },
+  { name: 'Marketplace', path: '/marketplace', icon: <CurrencyExchangeIcon /> },
 ];
 
 // Auth items
@@ -52,9 +144,11 @@ const authItems = [
 function Layout({ children }) {
   const { isAuthenticated, userProfile, connectWallet, disconnectWallet } = useAuth();
   const theme = useTheme();
+  const { mode, toggleColorMode } = useThemeMode();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
+  const location = useLocation();
 
   const handleDrawerToggle = () => {
     setDrawerOpen(!drawerOpen);
@@ -73,55 +167,92 @@ function Layout({ children }) {
     handleProfileMenuClose();
   };
 
+  const isActive = (path) => {
+    return location.pathname === path;
+  };
+
   const drawer = (
-    <Box sx={{ width: 250 }} role="presentation" onClick={handleDrawerToggle}>
-      <Box sx={{ p: 2, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <Typography variant="h6" component="div">
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      <DrawerHeader>
+        <LogoText variant="h6">
           LendSmart
-        </Typography>
-      </Box>
+        </LogoText>
+        <IconButton onClick={handleDrawerToggle} edge="end">
+          <CloseIcon />
+        </IconButton>
+      </DrawerHeader>
       <Divider />
-      <List>
+      <List sx={{ flexGrow: 1, px: 1 }}>
         {navItems.map((item) => (
-          <ListItem 
-            button 
-            key={item.name} 
-            component={RouterLink} 
-            to={item.path}
-          >
-            <ListItemIcon>
-              {item.name === 'Home' ? <HomeIcon /> : <AccountBalanceIcon />}
-            </ListItemIcon>
-            <ListItemText primary={item.name} />
+          <ListItem key={item.name} disablePadding>
+            <StyledListItemButton
+              component={RouterLink}
+              to={item.path}
+              active={isActive(item.path)}
+              onClick={handleDrawerToggle}
+            >
+              <ListItemIcon>
+                {item.icon}
+              </ListItemIcon>
+              <ListItemText primary={item.name} />
+            </StyledListItemButton>
           </ListItem>
         ))}
-      </List>
-      {isAuthenticated && (
-        <>
-          <Divider />
-          <List>
+        
+        {isAuthenticated && (
+          <>
+            <Divider sx={{ my: 2 }} />
+            <Typography variant="overline" sx={{ px: 3, color: 'text.secondary', fontWeight: 500 }}>
+              Account
+            </Typography>
             {authItems.map((item) => (
-              <ListItem 
-                button 
-                key={item.name} 
-                component={RouterLink} 
-                to={item.path}
-              >
-                <ListItemIcon>
-                  {item.icon}
-                </ListItemIcon>
-                <ListItemText primary={item.name} />
+              <ListItem key={item.name} disablePadding>
+                <StyledListItemButton
+                  component={RouterLink}
+                  to={item.path}
+                  active={isActive(item.path)}
+                  onClick={handleDrawerToggle}
+                >
+                  <ListItemIcon>
+                    {item.icon}
+                  </ListItemIcon>
+                  <ListItemText primary={item.name} />
+                  {item.name === 'Notifications' && (
+                    <Badge color="error" variant="dot" />
+                  )}
+                </StyledListItemButton>
               </ListItem>
             ))}
-          </List>
-        </>
-      )}
+          </>
+        )}
+      </List>
+      
+      <Box sx={{ p: 2 }}>
+        <Button
+          fullWidth
+          variant={isAuthenticated ? "outlined" : "contained"}
+          color="primary"
+          onClick={isAuthenticated ? handleDisconnect : connectWallet}
+          sx={{ mb: 2 }}
+        >
+          {isAuthenticated ? 'Disconnect Wallet' : 'Connect Wallet'}
+        </Button>
+        <Button
+          fullWidth
+          variant="outlined"
+          color="inherit"
+          onClick={toggleColorMode}
+          startIcon={mode === 'dark' ? <LightModeIcon /> : <DarkModeIcon />}
+        >
+          {mode === 'dark' ? 'Light Mode' : 'Dark Mode'}
+        </Button>
+      </Box>
     </Box>
   );
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-      <AppBar position="static">
+      <StyledAppBar position="sticky" elevation={0}>
         <Toolbar>
           {isMobile && (
             <IconButton
@@ -135,39 +266,52 @@ function Layout({ children }) {
             </IconButton>
           )}
           
-          <Typography
+          <LogoText
             variant="h6"
             component={RouterLink}
             to="/"
             sx={{ 
               flexGrow: 1, 
-              textDecoration: 'none', 
-              color: 'inherit',
+              textDecoration: 'none',
               display: 'flex',
               alignItems: 'center'
             }}
           >
             LendSmart
-          </Typography>
+          </LogoText>
           
           {!isMobile && (
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', mr: 2 }}>
               {navItems.map((item) => (
-                <Button 
+                <NavButton 
                   key={item.name} 
                   component={RouterLink} 
                   to={item.path} 
-                  sx={{ color: 'white', mx: 1 }}
+                  active={isActive(item.path) ? 1 : 0}
                 >
                   {item.name}
-                </Button>
+                </NavButton>
               ))}
             </Box>
           )}
           
-          <Box sx={{ ml: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <Tooltip title={mode === 'dark' ? 'Light Mode' : 'Dark Mode'}>
+              <IconButton onClick={toggleColorMode} color="inherit" sx={{ mr: 1 }}>
+                {mode === 'dark' ? <LightModeIcon /> : <DarkModeIcon />}
+              </IconButton>
+            </Tooltip>
+            
             {isAuthenticated ? (
               <>
+                <Tooltip title="Notifications">
+                  <IconButton color="inherit" component={RouterLink} to="/notifications" sx={{ mr: 1 }}>
+                    <Badge badgeContent={3} color="error">
+                      <NotificationsIcon />
+                    </Badge>
+                  </IconButton>
+                </Tooltip>
+                
                 <Chip
                   avatar={
                     <Avatar 
@@ -183,9 +327,11 @@ function Layout({ children }) {
                   label={userProfile?.shortAddress || '0x...'}
                   variant="outlined"
                   sx={{ 
-                    color: 'white', 
-                    borderColor: 'rgba(255,255,255,0.5)',
-                    cursor: 'pointer'
+                    borderColor: alpha(theme.palette.divider, 0.5),
+                    cursor: 'pointer',
+                    '&:hover': {
+                      backgroundColor: alpha(theme.palette.primary.main, 0.08),
+                    },
                   }}
                   onClick={handleProfileMenuOpen}
                 />
@@ -193,29 +339,53 @@ function Layout({ children }) {
                   anchorEl={anchorEl}
                   open={Boolean(anchorEl)}
                   onClose={handleProfileMenuClose}
+                  PaperProps={{
+                    elevation: 3,
+                    sx: {
+                      borderRadius: 2,
+                      minWidth: 180,
+                    }
+                  }}
+                  transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+                  anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
                 >
                   <MenuItem component={RouterLink} to="/profile" onClick={handleProfileMenuClose}>
+                    <ListItemIcon>
+                      <PersonIcon fontSize="small" />
+                    </ListItemIcon>
                     Profile
                   </MenuItem>
                   <MenuItem component={RouterLink} to="/dashboard" onClick={handleProfileMenuClose}>
+                    <ListItemIcon>
+                      <DashboardIcon fontSize="small" />
+                    </ListItemIcon>
                     Dashboard
                   </MenuItem>
                   <Divider />
-                  <MenuItem onClick={handleDisconnect}>Disconnect Wallet</MenuItem>
+                  <MenuItem onClick={handleDisconnect}>
+                    <ListItemIcon>
+                      <CloseIcon fontSize="small" />
+                    </ListItemIcon>
+                    Disconnect Wallet
+                  </MenuItem>
                 </Menu>
               </>
             ) : (
               <Button 
-                variant="outlined" 
-                color="inherit" 
+                variant="contained" 
+                color="primary" 
                 onClick={connectWallet}
+                sx={{ 
+                  px: 3,
+                  py: 1,
+                }}
               >
                 Connect Wallet
               </Button>
             )}
           </Box>
         </Toolbar>
-      </AppBar>
+      </StyledAppBar>
       
       <Drawer
         variant="temporary"
@@ -224,26 +394,122 @@ function Layout({ children }) {
         ModalProps={{
           keepMounted: true, // Better open performance on mobile
         }}
+        PaperProps={{
+          sx: {
+            width: 280,
+            borderRadius: 0,
+          }
+        }}
       >
         {drawer}
       </Drawer>
       
       <Box component="main" sx={{ flexGrow: 1, py: 3 }}>
-        <Container>
+        <Container maxWidth="lg">
           {children}
         </Container>
       </Box>
       
-      <Box component="footer" sx={{ py: 3, bgcolor: 'background.paper', mt: 'auto' }}>
+      <StyledFooter component="footer">
         <Container maxWidth="lg">
+          <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'center', md: 'flex-start' } }}>
+            <Box sx={{ mb: { xs: 3, md: 0 }, textAlign: { xs: 'center', md: 'left' } }}>
+              <LogoText variant="h6" sx={{ mb: 1 }}>
+                LendSmart
+              </LogoText>
+              <Typography variant="body2" color="text.secondary">
+                AI-powered P2P lending platform with blockchain integration
+              </Typography>
+            </Box>
+            
+            <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 4, textAlign: { xs: 'center', sm: 'left' } }}>
+              <Box>
+                <Typography variant="subtitle2" fontWeight={600} gutterBottom>
+                  Platform
+                </Typography>
+                <Box component="ul" sx={{ listStyle: 'none', p: 0, m: 0 }}>
+                  {navItems.map((item) => (
+                    <Box component="li" key={item.name} sx={{ mb: 1 }}>
+                      <Typography 
+                        component={RouterLink} 
+                        to={item.path}
+                        variant="body2" 
+                        color="text.secondary"
+                        sx={{ 
+                          textDecoration: 'none',
+                          '&:hover': { color: 'primary.main' },
+                          transition: 'color 0.2s',
+                        }}
+                      >
+                        {item.name}
+                      </Typography>
+                    </Box>
+                  ))}
+                </Box>
+              </Box>
+              
+              <Box>
+                <Typography variant="subtitle2" fontWeight={600} gutterBottom>
+                  Resources
+                </Typography>
+                <Box component="ul" sx={{ listStyle: 'none', p: 0, m: 0 }}>
+                  <Box component="li" sx={{ mb: 1 }}>
+                    <Typography 
+                      component="a" 
+                      href="#"
+                      variant="body2" 
+                      color="text.secondary"
+                      sx={{ 
+                        textDecoration: 'none',
+                        '&:hover': { color: 'primary.main' },
+                        transition: 'color 0.2s',
+                      }}
+                    >
+                      Documentation
+                    </Typography>
+                  </Box>
+                  <Box component="li" sx={{ mb: 1 }}>
+                    <Typography 
+                      component="a" 
+                      href="#"
+                      variant="body2" 
+                      color="text.secondary"
+                      sx={{ 
+                        textDecoration: 'none',
+                        '&:hover': { color: 'primary.main' },
+                        transition: 'color 0.2s',
+                      }}
+                    >
+                      FAQ
+                    </Typography>
+                  </Box>
+                  <Box component="li" sx={{ mb: 1 }}>
+                    <Typography 
+                      component="a" 
+                      href="#"
+                      variant="body2" 
+                      color="text.secondary"
+                      sx={{ 
+                        textDecoration: 'none',
+                        '&:hover': { color: 'primary.main' },
+                        transition: 'color 0.2s',
+                      }}
+                    >
+                      Support
+                    </Typography>
+                  </Box>
+                </Box>
+              </Box>
+            </Box>
+          </Box>
+          
+          <Divider sx={{ my: 3 }} />
+          
           <Typography variant="body2" color="text.secondary" align="center">
             © {new Date().getFullYear()} LendSmart. All rights reserved.
           </Typography>
-          <Typography variant="body2" color="text.secondary" align="center" sx={{ mt: 1 }}>
-            AI-powered P2P lending platform with blockchain integration
-          </Typography>
         </Container>
-      </Box>
+      </StyledFooter>
     </Box>
   );
 }

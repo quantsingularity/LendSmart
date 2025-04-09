@@ -1,110 +1,90 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useWeb3React } from '@web3-react/core';
-import { InjectedConnector } from '@web3-react/injected-connector';
-import { ethers } from 'ethers';
+import React, { createContext, useState, useContext, useEffect } from 'react';
 
 // Create context
-const AuthContext = createContext();
-
-// Injected connector (MetaMask)
-export const injectedConnector = new InjectedConnector({
-  supportedChainIds: [1, 3, 4, 5, 42, 80001],
+const AuthContext = createContext({
+  isAuthenticated: false,
+  userProfile: null,
+  connectWallet: () => {},
+  disconnectWallet: () => {},
 });
 
-// Provider component
+// Custom hook to use the auth context
+export const useAuth = () => useContext(AuthContext);
+
+// Auth provider component
 export const AuthProvider = ({ children }) => {
-  const { activate, deactivate, account, library, active, chainId } = useWeb3React();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userProfile, setUserProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
 
-  // Connect wallet
+  // Check if user was previously authenticated
+  useEffect(() => {
+    const storedAuth = localStorage.getItem('isAuthenticated');
+    if (storedAuth === 'true') {
+      setIsAuthenticated(true);
+      const storedProfile = localStorage.getItem('userProfile');
+      if (storedProfile) {
+        setUserProfile(JSON.parse(storedProfile));
+      } else {
+        // Create a default profile if authenticated but no profile exists
+        const defaultProfile = {
+          address: '0x71C7656EC7ab88b098defB751B7401B5f6d8976F',
+          shortAddress: '0x71C7...976F',
+          balance: '5.43 ETH',
+          reputation: 4.8,
+        };
+        setUserProfile(defaultProfile);
+        localStorage.setItem('userProfile', JSON.stringify(defaultProfile));
+      }
+    }
+  }, []);
+
+  // Connect wallet function
   const connectWallet = async () => {
     try {
-      await activate(injectedConnector);
+      // In a real app, this would connect to MetaMask or other wallet
+      // For demo purposes, we'll simulate a successful connection
+      const mockProfile = {
+        address: '0x71C7656EC7ab88b098defB751B7401B5f6d8976F',
+        shortAddress: '0x71C7...976F',
+        balance: '5.43 ETH',
+        reputation: 4.8,
+      };
+      
+      setUserProfile(mockProfile);
+      setIsAuthenticated(true);
+      
+      // Store in localStorage for persistence
+      localStorage.setItem('isAuthenticated', 'true');
+      localStorage.setItem('userProfile', JSON.stringify(mockProfile));
+      
+      return true;
     } catch (error) {
       console.error('Error connecting wallet:', error);
+      return false;
     }
   };
 
-  // Disconnect wallet
+  // Disconnect wallet function
   const disconnectWallet = () => {
-    try {
-      deactivate();
-      setIsAuthenticated(false);
-      setUserProfile(null);
-    } catch (error) {
-      console.error('Error disconnecting wallet:', error);
-    }
+    setIsAuthenticated(false);
+    setUserProfile(null);
+    localStorage.removeItem('isAuthenticated');
+    localStorage.removeItem('userProfile');
   };
-
-  // Update user profile when account changes
-  useEffect(() => {
-    const updateUserProfile = async () => {
-      if (account && library) {
-        try {
-          const balance = await library.getBalance(account);
-          const shortAddress = `${account.substring(0, 6)}...${account.substring(account.length - 4)}`;
-          
-          setUserProfile({
-            address: account,
-            shortAddress,
-            balance,
-            chainId,
-          });
-          
-          setIsAuthenticated(true);
-        } catch (error) {
-          console.error('Error fetching user profile:', error);
-        }
-      } else {
-        setUserProfile(null);
-        setIsAuthenticated(false);
-      }
-      
-      setLoading(false);
-    };
-
-    updateUserProfile();
-  }, [account, library, chainId, active]);
-
-  // Auto-connect on startup if previously connected
-  useEffect(() => {
-    const autoConnect = async () => {
-      if (window.ethereum && window.ethereum.isMetaMask) {
-        try {
-          await activate(injectedConnector);
-        } catch (error) {
-          console.error('Auto-connect error:', error);
-          setLoading(false);
-        }
-      } else {
-        setLoading(false);
-      }
-    };
-
-    autoConnect();
-  }, [activate]);
 
   // Context value
-  const value = {
+  const contextValue = {
     isAuthenticated,
     userProfile,
-    loading,
     connectWallet,
     disconnectWallet,
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-};
-
-// Custom hook to use auth context
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
+  return (
+    <AuthContext.Provider value={contextValue}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
 export default AuthContext;
