@@ -81,8 +81,8 @@ The **Smart Contract-Based Micro-Lending Platform** is a decentralized applicati
 
 ### **1. Clone Repository**
 ```bash
-git clone https://github.com/your-repo-name/Micro-Lending-Platform.git
-cd Micro-Lending-Platform
+git clone https://github.com/abrar2030/LendSmart.git
+cd LendSmart
 ```
 
 ### **2. Install Backend Dependencies**
