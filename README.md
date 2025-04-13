@@ -4,6 +4,10 @@
 ## Overview
 The **Smart Contract-Based Micro-Lending Platform** is a decentralized application (DApp) designed to revolutionize peer-to-peer lending. It uses blockchain technology for transparency, AI for borrower risk assessment, and smart contracts to automate loan agreements.
 
+<div align="center">
+  <img src="LendSmart.bmp" alt="Smart Contract-Based Micro-Lending Platform" width="100%">
+</div>
+
 > **Note**: LendSmart is currently under active development. Features and functionalities are being added and improved continuously to enhance user experience.
 
 ## Key Features
