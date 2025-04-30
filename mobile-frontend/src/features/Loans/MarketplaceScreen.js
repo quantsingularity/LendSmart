@@ -1,18 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, FlatList, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, FlatList, ActivityIndicator, RefreshControl } from 'react-native';
 import { Text, Card, Button, Searchbar, useTheme, Chip } from 'react-native-paper';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { spacing } from '../../../theme/theme';
-import apiService from '../../../services/apiService'; // Assuming API service is set up
+import PropTypes from 'prop-types';
+// Removed direct import of spacing, use theme.spacing instead
+// import apiService from '../../../services/apiService'; // For fetching real data
 
 // Placeholder data for marketplace loans
 const placeholderLoans = [
-  { id: '1', amount: 1500, interestRate: 8.5, term: 12, purpose: 'Debt Consolidation', creditScoreRange: '650-700', status: 'Available' },
-  { id: '2', amount: 500, interestRate: 12.0, term: 6, purpose: 'Small Business', creditScoreRange: '600-650', status: 'Available' },
-  { id: '3', amount: 3000, interestRate: 7.0, term: 24, purpose: 'Home Improvement', creditScoreRange: '700+', status: 'Available' },
-  { id: '4', amount: 1000, interestRate: 9.0, term: 9, purpose: 'Education', creditScoreRange: '680-720', status: 'Funded' },
+  { id: '1', amount: 1500, interestRate: 8.5, term: 12, purpose: 'Debt Consolidation', creditScoreRange: '650-700', status: 'Available', fundedAmount: 0 },
+  { id: '2', amount: 500, interestRate: 12.0, term: 6, purpose: 'Small Business', creditScoreRange: '600-650', status: 'Available', fundedAmount: 100 },
+  { id: '3', amount: 3000, interestRate: 7.0, term: 24, purpose: 'Home Improvement', creditScoreRange: '700+', status: 'Available', fundedAmount: 0 },
+  { id: '4', amount: 1000, interestRate: 9.0, term: 9, purpose: 'Education', creditScoreRange: '680-720', status: 'Funded', fundedAmount: 1000 },
 ];
 
+// Added navigation prop back
 const MarketplaceScreen = ({ navigation }) => {
   const theme = useTheme();
   const styles = createStyles(theme);
@@ -20,89 +22,126 @@ const MarketplaceScreen = ({ navigation }) => {
   const [loans, setLoans] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const fetchLoans = async (isRefreshing = false) => {
+    if (!isRefreshing) setLoading(true);
+    setError(null);
+    try {
+      // TODO: Replace with actual API call to fetch loans
+      // const response = await apiService.get('/loans/marketplace', { params: { search: searchQuery /*, filters */ } });
+      // setLoans(response.data);
+
+      // Using placeholder data for now
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
+      const filteredLoans = placeholderLoans.filter(loan =>
+        loan.purpose.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        loan.amount.toString().includes(searchQuery)
+      );
+      setLoans(filteredLoans);
+
+    } catch (err) {
+      console.error('Failed to fetch loans:', err);
+      setError('Failed to load loan marketplace. Please try again.');
+      // setLoans([]); // Clear loans on error or keep placeholders?
+    } finally {
+      if (!isRefreshing) setLoading(false);
+      setRefreshing(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchLoans = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        // TODO: Replace with actual API call to fetch loans
-        // const response = await apiService.get('/loans/marketplace', { params: { search: searchQuery /*, filters */ } });
-        // setLoans(response.data);
-        
-        // Using placeholder data for now
-        await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
-        const filteredLoans = placeholderLoans.filter(loan => 
-          loan.purpose.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          loan.amount.toString().includes(searchQuery)
-        );
-        setLoans(filteredLoans);
-
-      } catch (err) {
-        console.error('Failed to fetch loans:', err);
-        setError('Failed to load loan marketplace. Please try again.');
-        setLoans(placeholderLoans); // Show placeholder on error for demo
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchLoans();
-  }, [searchQuery]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery]); // Re-fetch when search query changes
+
+  const onRefresh = React.useCallback(() => {
+    setRefreshing(true);
+    fetchLoans(true);
+  }, []);
 
   const onChangeSearch = query => setSearchQuery(query);
 
-  const renderLoanItem = ({ item }) => (
-    <Card style={styles.loanCard}>
-      <Card.Title 
-        title={`Loan: $${item.amount}`} 
-        subtitle={`${item.interestRate}% Interest | ${item.term} Months`} 
-        titleStyle={styles.cardTitle}
-        subtitleStyle={styles.cardSubtitle}
-      />
-      <Card.Content>
-        <View style={styles.detailRow}>
-          <MaterialCommunityIcons name="briefcase-outline" size={16} color={theme.colors.textSecondary} />
-          <Text style={styles.detailText}>Purpose: {item.purpose}</Text>
-        </View>
-        <View style={styles.detailRow}>
-          <MaterialCommunityIcons name="credit-card-scan-outline" size={16} color={theme.colors.textSecondary} />
-          <Text style={styles.detailText}>Credit Score: {item.creditScoreRange}</Text>
-        </View>
-         <Chip 
-           icon={item.status === 'Available' ? "check-circle-outline" : "information-outline"}
-           style={[styles.statusChip, { backgroundColor: item.status === 'Available' ? theme.colors.success : theme.colors.disabled }]} 
-           textStyle={{ color: '#fff' }}
-         >
-           {item.status}
-         </Chip>
-      </Card.Content>
-      <Card.Actions>
-        <Button 
-          onPress={() => console.log('View details for loan:', item.id)} // TODO: Navigate to Loan Detail Screen
-        >
-          View Details
-        </Button>
-        <Button 
-          mode="contained" 
-          disabled={item.status !== 'Available'}
-          onPress={() => console.log('Fund loan:', item.id)} // TODO: Implement funding logic
-        >
-          Fund Loan
-        </Button>
-      </Card.Actions>
-    </Card>
-  );
+  const handleViewDetails = (loanId) => {
+    navigation.navigate('LoanDetails', { loanId: loanId });
+  };
+
+  const handleFundLoan = (loanId) => {
+    // Navigate to details screen where funding happens
+    navigation.navigate('LoanDetails', { loanId: loanId, focusFund: true }); 
+  };
+
+  const renderLoanItem = ({ item }) => {
+    const fundedPercent = item.amount > 0 ? ((item.fundedAmount || 0) / item.amount) * 100 : 0;
+    return (
+      <Card style={styles.loanCard} onPress={() => handleViewDetails(item.id)}>
+        <Card.Title
+          title={`$${item.amount.toLocaleString()}`}
+          subtitle={`${item.interestRate}% APR | ${item.term} Months`}
+          titleStyle={styles.cardTitle}
+          subtitleStyle={styles.cardSubtitle}
+          right={(props) => (
+            <Chip
+              {...props}
+              icon={item.status === 'Available' ? "check-circle-outline" : "information-outline"}
+              style={[styles.statusChip, { backgroundColor: item.status === 'Available' ? theme.colors.success : theme.colors.disabled }]}
+              textStyle={styles.statusChipText}
+            >
+              {item.status}
+            </Chip>
+          )}
+          rightStyle={styles.cardTitleRight}
+        />
+        <Card.Content>
+          <View style={styles.detailRow}>
+            <MaterialCommunityIcons name="briefcase-outline" size={16} color={theme.colors.textSecondary} style={styles.detailIcon} />
+            <Text style={styles.detailText}>{item.purpose}</Text>
+          </View>
+          <View style={styles.detailRow}>
+            <MaterialCommunityIcons name="credit-card-scan-outline" size={16} color={theme.colors.textSecondary} style={styles.detailIcon} />
+            <Text style={styles.detailText}>Score: {item.creditScoreRange}</Text>
+          </View>
+          {/* Funding Progress Bar */}
+          {item.status === 'Available' && item.fundedAmount > 0 && (
+            <View style={styles.progressContainer}>
+                <View style={[styles.progressBar, { width: `${fundedPercent}%`, backgroundColor: theme.colors.primary }]} />
+            </View>
+          )}
+           <Text style={styles.fundedText}>
+             {item.status === 'Funded' ? 'Fully Funded' : `$${(item.fundedAmount || 0).toLocaleString()} / $${item.amount.toLocaleString()} funded (${fundedPercent.toFixed(0)}%)`}
+           </Text>
+        </Card.Content>
+        <Card.Actions style={styles.cardActions}>
+          <Button
+            icon="information-outline"
+            onPress={() => handleViewDetails(item.id)}
+          >
+            Details
+          </Button>
+          <Button
+            mode="contained"
+            icon="cash-plus"
+            disabled={item.status !== 'Available'}
+            onPress={() => handleFundLoan(item.id)}
+            style={styles.fundButton}
+          >
+            Fund
+          </Button>
+        </Card.Actions>
+      </Card>
+    );
+  }
 
   return (
     <View style={styles.container}>
       <Searchbar
-        placeholder="Search loans by purpose or amount"
+        placeholder="Search loans..."
         onChangeText={onChangeSearch}
         value={searchQuery}
         style={styles.searchbar}
+        icon="magnify"
       />
-      {/* TODO: Add Filter Chips/Button here */} 
+      {/* TODO: Add Filter Chips/Button here */}
       {loading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={theme.colors.primary} />
@@ -110,7 +149,7 @@ const MarketplaceScreen = ({ navigation }) => {
       ) : error ? (
          <View style={styles.errorContainer}>
            <Text style={styles.errorText}>{error}</Text>
-           {/* Optionally add a retry button */}
+           <Button onPress={() => fetchLoans()}>Retry</Button>
          </View>
       ) : (
         <FlatList
@@ -118,9 +157,14 @@ const MarketplaceScreen = ({ navigation }) => {
           renderItem={renderLoanItem}
           keyExtractor={item => item.id}
           contentContainerStyle={styles.listContainer}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.colors.primary} />
+          }
           ListEmptyComponent={() => (
             <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>No loans found matching your criteria.</Text>
+              <MaterialCommunityIcons name="database-off-outline" size={48} color={theme.colors.textTertiary} />
+              <Text style={styles.emptyText}>No loans found.</Text>
+              {searchQuery ? <Text style={styles.emptySubText}>Try adjusting your search.</Text> : <Text style={styles.emptySubText}>Pull down to refresh.</Text>}
             </View>
           )}
         />
@@ -129,13 +173,23 @@ const MarketplaceScreen = ({ navigation }) => {
   );
 };
 
+// Add prop types validation
+MarketplaceScreen.propTypes = {
+  navigation: PropTypes.shape({
+    navigate: PropTypes.func.isRequired,
+  }).isRequired,
+};
+
 const createStyles = (theme) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,
   },
   searchbar: {
-    margin: spacing.md,
+    marginHorizontal: theme.spacing.lg,
+    marginTop: theme.spacing.md,
+    marginBottom: theme.spacing.sm,
+    borderRadius: theme.borderRadius.lg,
     elevation: 2,
   },
   loadingContainer: {
@@ -147,49 +201,108 @@ const createStyles = (theme) => StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: spacing.md,
+    padding: theme.spacing.lg,
   },
   errorText: {
     color: theme.colors.error,
     textAlign: 'center',
+    marginBottom: theme.spacing.md,
+    fontSize: theme.fontSizes.body1,
+    fontFamily: theme.fonts.primary,
   },
   listContainer: {
-    paddingHorizontal: spacing.md,
-    paddingBottom: spacing.md,
+    paddingHorizontal: theme.spacing.lg,
+    paddingBottom: theme.spacing.lg,
   },
   loanCard: {
-    marginBottom: spacing.md,
+    marginBottom: theme.spacing.lg,
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.borderRadius.lg,
     elevation: 3,
   },
   cardTitle: {
-    fontWeight: 'bold',
-    color: theme.colors.primary,
+    fontFamily: theme.fonts.primaryBold,
+    fontSize: theme.fontSizes.h4,
+    color: theme.colors.textPrimary,
   },
   cardSubtitle: {
+    fontFamily: theme.fonts.primary,
+    fontSize: theme.fontSizes.body2,
     color: theme.colors.textSecondary,
+  },
+  cardTitleRight: {
+    marginRight: theme.spacing.md,
+    marginTop: theme.spacing.sm, // Align chip better
+  },
+  statusChip: {
+    paddingHorizontal: theme.spacing.sm,
+    height: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  statusChipText: {
+    color: '#fff',
+    fontFamily: theme.fonts.primaryMedium,
+    fontSize: theme.fontSizes.caption,
   },
   detailRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: spacing.xs,
+    marginBottom: theme.spacing.sm,
+  },
+  detailIcon: {
+    marginRight: theme.spacing.sm,
   },
   detailText: {
-    marginLeft: spacing.sm,
+    fontFamily: theme.fonts.primary,
+    fontSize: theme.fontSizes.body2,
     color: theme.colors.textPrimary,
+    flexShrink: 1, // Allow text to wrap
   },
-  statusChip: {
-    marginTop: spacing.sm,
-    alignSelf: 'flex-start',
+  progressContainer: {
+    height: 6, 
+    backgroundColor: theme.colors.border, 
+    borderRadius: theme.borderRadius.sm,
+    marginTop: theme.spacing.sm,
+    overflow: 'hidden',
+  },
+  progressBar: {
+    height: '100%',
+  },
+  fundedText: {
+    fontFamily: theme.fonts.primary,
+    fontSize: theme.fontSizes.caption,
+    color: theme.colors.textSecondary,
+    marginTop: theme.spacing.xs,
+    textAlign: 'right',
+  },
+  cardActions: {
+    justifyContent: 'space-between',
+    paddingHorizontal: theme.spacing.sm, // Reduce padding slightly
+  },
+  fundButton: {
+    // marginLeft: theme.spacing.sm,
   },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 50, // Adjust as needed
+    marginTop: 80, // Adjust as needed
+    paddingHorizontal: theme.spacing.xl,
   },
   emptyText: {
-    fontSize: theme.fontSizes.body1,
+    fontSize: theme.fontSizes.h6,
+    fontFamily: theme.fonts.primaryMedium,
     color: theme.colors.textSecondary,
+    marginTop: theme.spacing.md,
+    textAlign: 'center',
+  },
+  emptySubText: {
+    fontSize: theme.fontSizes.body2,
+    fontFamily: theme.fonts.primary,
+    color: theme.colors.textTertiary,
+    marginTop: theme.spacing.xs,
+    textAlign: 'center',
   },
 });
 

@@ -2,35 +2,47 @@ import React from 'react';
 import { Provider as PaperProvider } from 'react-native-paper';
 import { AuthProvider } from './contexts/AuthContext';
 import { ThemeProvider, ThemeContext } from './contexts/ThemeContext';
+import { WalletProvider } from './contexts/WalletContext'; // Import WalletProvider
 import AppNavigator from './navigation/AppNavigator';
 
-// TODO: Add WalletConnectModal provider if using WalletConnect
-// import { WalletConnectModal } from "@walletconnect/modal-react-native";
+// Import necessary WalletConnect components
+import { WalletConnectModal } from "@walletconnect/modal-react-native";
+import '@walletconnect/react-native-compat'; // Polyfill for compatibility
+import "react-native-get-random-values"; // Required for crypto operations
 
-// TODO: Configure WalletConnect Project ID
-// const walletConnectProjectId = 'YOUR_PROJECT_ID';
+// --- WalletConnect Configuration ---
+// IMPORTANT: Replace with your actual Project ID from https://cloud.walletconnect.com/
+const walletConnectProjectId = 'YOUR_WALLETCONNECT_PROJECT_ID'; // <<< MUST BE REPLACED
 
-// TODO: Configure WalletConnect Provider Metadata
-// const providerMetadata = {
-//   name: 'LendSmart Mobile',
-//   description: 'LendSmart Mobile App',
-//   url: 'https://your-project-url.com/', // Replace with your project URL
-//   icons: ['https://your-project-url.com/logo.png'], // Replace with your logo URL
-//   redirect: {
-//     native: 'lendsmart://',
-//     universal: 'https://your-project-url.com'
-//   }
-// };
+// Configure Provider Metadata (Information about your DApp)
+const providerMetadata = {
+  name: 'LendSmart Mobile',
+  description: 'LendSmart Mobile - P2P Lending Platform',
+  url: 'https://lendsmart.example.com/', // Replace with your project URL
+  icons: ['https://lendsmart.example.com/logo.png'], // Replace with your logo URL
+  redirect: {
+    native: 'lendsmart://', // Your app's deep link scheme
+    universal: 'https://lendsmart.example.com' // Your app's universal link
+  }
+};
+
+// Optional: Session Parameters for WalletConnect
+// const sessionParams = { ... };
 
 const AppContent = () => {
-  // Use ThemeContext to get the actual theme object for PaperProvider
   const { theme } = React.useContext(ThemeContext);
 
   return (
     <PaperProvider theme={theme}>
       <AppNavigator />
-      {/* Render WalletConnectModal here if using WalletConnect */}
-      {/* <WalletConnectModal projectId={walletConnectProjectId} providerMetadata={providerMetadata} /> */}
+      {/* Render WalletConnectModal globally */}
+      <WalletConnectModal
+        projectId={walletConnectProjectId}
+        providerMetadata={providerMetadata}
+        // sessionParams={sessionParams} // Optional
+        // themeMode={theme.dark ? 'dark' : 'light'} // Optional: Sync with app theme
+        // accentColor={theme.colors.primary} // Optional: Sync with app theme
+      />
     </PaperProvider>
   );
 };
@@ -39,8 +51,10 @@ const App = () => {
   return (
     <AuthProvider>
       <ThemeProvider>
-        {/* Wrap AppContent to access ThemeContext within PaperProvider */}
-        <AppContent />
+        {/* Wrap AppContent with WalletProvider */}
+        <WalletProvider>
+          <AppContent />
+        </WalletProvider>
       </ThemeProvider>
     </AuthProvider>
   );

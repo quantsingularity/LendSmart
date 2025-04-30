@@ -1,8 +1,10 @@
 import React, { useState, useContext } from 'react';
 import { View, StyleSheet, ScrollView, Alert } from 'react-native';
-import { Text, TextInput, Button, useTheme, ActivityIndicator, ProgressBar, MD3Colors } from 'react-native-paper';
+// Removed unused imports: ActivityIndicator, ProgressBar, MD3Colors
+import { Text, TextInput, Button, useTheme } from 'react-native-paper';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
+import PropTypes from 'prop-types'; // Import PropTypes
 import { AuthContext } from '../../../contexts/AuthContext';
 import { spacing } from '../../../theme/theme';
 import apiService from '../../../services/apiService'; // Assuming API service is set up
@@ -33,10 +35,8 @@ const LoanApplicationScreen = ({ navigation }) => {
   const styles = createStyles(theme);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [step, setStep] = useState(1); // For multi-step form, if needed
-
-  // For this example, we'll keep it a single step form
-  const totalSteps = 1;
+  // Removed unused state: step, setStep
+  // Removed unused const: totalSteps
 
   const handleSubmitLoan = async (values, { setSubmitting, resetForm }) => {
     if (!user) {
@@ -44,7 +44,7 @@ const LoanApplicationScreen = ({ navigation }) => {
       setSubmitting(false);
       return;
     }
-    
+
     // Optional: Check wallet connection before proceeding
     // if (!blockchainService.isConnected()) {
     //   Alert.alert('Wallet Not Connected', 'Please connect your wallet before applying.');
@@ -60,7 +60,7 @@ const LoanApplicationScreen = ({ navigation }) => {
       // TODO: Replace with actual API call
       // const apiResponse = await apiService.post('/loans/apply', values);
       // console.log('API Response:', apiResponse.data);
-      
+
       // Simulate API call delay
       await new Promise(resolve => setTimeout(resolve, 1500));
       const simulatedApiResponse = { success: true, loanId: `loan_${Date.now()}` }; // Simulate success
@@ -96,7 +96,7 @@ const LoanApplicationScreen = ({ navigation }) => {
         <Text style={styles.title}>Apply for a Loan</Text>
         <Text style={styles.subtitle}>Fill in the details below to submit your loan request.</Text>
       </View>
-      
+
       {/* Progress Bar for multi-step form (kept for potential future use) */}
       {/* <ProgressBar progress={step / totalSteps} color={theme.colors.primary} style={styles.progressBar} /> */}
 
@@ -140,7 +140,7 @@ const LoanApplicationScreen = ({ navigation }) => {
               error={touched.purpose && !!errors.purpose}
             />
             {touched.purpose && errors.purpose && <Text style={styles.errorText}>{errors.purpose}</Text>}
-            
+
             {/* Add more form fields here based on requirements */}
 
             {error && <Text style={styles.serverErrorText}>{error}</Text>}
@@ -159,6 +159,13 @@ const LoanApplicationScreen = ({ navigation }) => {
       </Formik>
     </ScrollView>
   );
+};
+
+// Add prop types validation
+LoanApplicationScreen.propTypes = {
+  navigation: PropTypes.shape({
+    navigate: PropTypes.func.isRequired,
+  }).isRequired,
 };
 
 const createStyles = (theme) => StyleSheet.create({

@@ -3,16 +3,17 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useTheme } from 'react-native-paper';
 
-// Import actual screen components
+// Import screen components and navigators
 import DashboardScreen from '../features/Dashboard/DashboardScreen';
-import MarketplaceScreen from '../features/Loans/MarketplaceScreen';
+// Import the new MarketplaceNavigator
+import MarketplaceNavigator from './MarketplaceNavigator'; 
 import LoanApplicationScreen from '../features/Loans/LoanApplicationScreen';
 import ProfileScreen from '../features/Profile/ProfileScreen';
 
 const Tab = createBottomTabNavigator();
 
 const MainTabNavigator = () => {
-  const theme = useTheme(); // Use theme from react-native-paper
+  const theme = useTheme();
 
   return (
     <Tab.Navigator
@@ -22,7 +23,7 @@ const MainTabNavigator = () => {
 
           if (route.name === 'Dashboard') {
             iconName = focused ? 'view-dashboard' : 'view-dashboard-outline';
-          } else if (route.name === 'Marketplace') {
+          } else if (route.name === 'MarketplaceNav') { // Updated name
             iconName = focused ? 'storefront' : 'storefront-outline';
           } else if (route.name === 'Apply') {
             iconName = focused ? 'file-document-edit' : 'file-document-edit-outline';
@@ -30,30 +31,27 @@ const MainTabNavigator = () => {
             iconName = focused ? 'account-circle' : 'account-circle-outline';
           }
 
-          // You can return any component that you like here!
           return <MaterialCommunityIcons name={iconName} size={size} color={color} />;
         },
         tabBarActiveTintColor: theme.colors.primary,
         tabBarInactiveTintColor: theme.colors.textSecondary,
         tabBarStyle: {
-          backgroundColor: theme.colors.surface, // Use theme surface color for tab bar background
-          borderTopColor: theme.colors.border, // Use theme border color
-        },
-        headerStyle: {
           backgroundColor: theme.colors.surface,
+          borderTopColor: theme.colors.border,
         },
-        headerTintColor: theme.colors.textPrimary,
-        headerTitleStyle: {
-          fontWeight: 'bold',
-        },
+        // Hide the header for the tab navigator itself, as nested navigators will have their own
+        headerShown: false, 
       })}
     >
-      {/* Use actual screen components */}
       <Tab.Screen name="Dashboard" component={DashboardScreen} />
-      <Tab.Screen name="Marketplace" component={MarketplaceScreen} />
-      <Tab.Screen name="Apply" component={LoanApplicationScreen} options={{ title: 'Apply for Loan' }} />
-      <Tab.Screen name="Profile" component={ProfileScreen} />
-      {/* Add other main screens like Notifications, Analytics if needed */}
+      {/* Use MarketplaceNavigator instead of MarketplaceScreen directly */}
+      <Tab.Screen 
+        name="MarketplaceNav" 
+        component={MarketplaceNavigator} 
+        options={{ title: 'Marketplace' }} // Set the tab label
+      />
+      <Tab.Screen name="Apply" component={LoanApplicationScreen} options={{ title: 'Apply for Loan', headerShown: true }} />
+      <Tab.Screen name="Profile" component={ProfileScreen} options={{ headerShown: true }} />
     </Tab.Navigator>
   );
 };

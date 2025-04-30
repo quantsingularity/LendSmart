@@ -1,17 +1,21 @@
 import React, { useContext, useState } from 'react';
 import { View, StyleSheet, ScrollView, Alert } from 'react-native';
-import { Avatar, Text, Button, List, Divider, useTheme, TextInput, Switch } from 'react-native-paper';
+// Removed unused useTheme import from react-native-paper, as theme comes from ThemeContext
+import { Avatar, Text, Button, List, Divider, TextInput, Switch } from 'react-native-paper';
+import PropTypes from 'prop-types'; // Import PropTypes
 import { AuthContext } from '../../../contexts/AuthContext';
 import { ThemeContext } from '../../../contexts/ThemeContext';
 import { spacing } from '../../../theme/theme';
-import * as Keychain from 'react-native-keychain'; // For logout
+// Removed unused Keychain import
 
-const ProfileScreen = ({ navigation }) => {
+// Removed unused navigation prop
+const ProfileScreen = () => {
   const { user, logout } = useContext(AuthContext);
+  // theme is correctly obtained from ThemeContext
   const { isDark, toggleTheme, theme } = useContext(ThemeContext);
   const styles = createStyles(theme);
 
-  // Example state for editable fields (if needed)
+  // Example state for editable fields
   const [name, setName] = useState(user?.name || '');
   const [email, setEmail] = useState(user?.email || '');
   const [isEditing, setIsEditing] = useState(false);
@@ -20,7 +24,8 @@ const ProfileScreen = ({ navigation }) => {
     try {
       await logout();
       // Navigation to Auth screens happens automatically in AppNavigator
-    } catch (error) {
+    } catch (err) { // Changed variable name from error to err
+      console.error('Logout failed:', err); // Log the error
       Alert.alert('Logout Failed', 'An error occurred during logout.');
     }
   };
@@ -29,11 +34,15 @@ const ProfileScreen = ({ navigation }) => {
     // TODO: Implement API call to update user profile
     console.log('Saving changes:', { name, email });
     try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
       // await apiService.put('/user/profile', { name, email });
       Alert.alert('Success', 'Profile updated successfully.');
       setIsEditing(false);
       // Optionally update user context if API returns updated user data
-    } catch (error) {
+      // Example: updateUser({ ...user, name, email }); // Assuming an updateUser function exists in AuthContext
+    } catch (err) { // Changed variable name from error to err
+      console.error('Profile update failed:', err); // Log the error
       Alert.alert('Update Failed', 'Could not update profile.');
     }
   };
@@ -62,6 +71,7 @@ const ProfileScreen = ({ navigation }) => {
               keyboardType="email-address"
               autoCapitalize="none"
               style={styles.input}
+              // Consider adding validation or disabling email editing
             />
             <View style={styles.buttonRow}>
               <Button onPress={() => setIsEditing(false)} style={styles.editButton}>Cancel</Button>
@@ -110,6 +120,9 @@ const ProfileScreen = ({ navigation }) => {
     </ScrollView>
   );
 };
+
+// Add prop types validation (currently no props)
+ProfileScreen.propTypes = {};
 
 const createStyles = (theme) => StyleSheet.create({
   container: {

@@ -1,4 +1,5 @@
 import React, { createContext, useState, useEffect, useMemo, useCallback } from 'react';
+import PropTypes from 'prop-types'; // Import PropTypes
 import * as Keychain from 'react-native-keychain';
 import apiService from '../services/apiService'; // Assuming apiService is set up
 
@@ -154,5 +155,10 @@ export const AuthProvider = ({ children }) => {
       {children}
     </AuthContext.Provider>
   );
+};
+
+// Add prop types validation
+AuthProvider.propTypes = {
+  children: PropTypes.node.isRequired,
 };
 
