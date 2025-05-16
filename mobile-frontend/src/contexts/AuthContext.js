@@ -1,92 +1,274 @@
 import React, { createContext, useState, useEffect, useMemo, useCallback } from 'react';
-import PropTypes from 'prop-types'; // Import PropTypes
+import PropTypes from 'prop-types';
 import * as Keychain from 'react-native-keychain';
-import apiService from '../services/apiService'; // Assuming apiService is set up
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import apiService from '../services/apiService';
+import { Alert } from 'react-native';
+import NetInfo from '@react-native-community/netinfo';
 
 export const AuthContext = createContext({
   user: null,
   token: null,
-  loading: true,
+  isAuthenticated: false,
+  isLoading: true,
   error: null,
   login: async (credentials) => {},
   logout: async () => {},
   register: async (userData) => {},
+  updateProfile: async (userData) => {},
+  resetPassword: async (email) => {},
+  verifyEmail: async (code) => {},
+  refreshToken: async () => {},
+  clearError: () => {},
+  checkAuthStatus: async () => {},
 });
 
-const AUTH_KEY = 'userAuthData'; // Key for Keychain storage
+const AUTH_KEY = 'userAuthData';
+const TOKEN_EXPIRY_KEY = 'tokenExpiry';
+const REFRESH_TOKEN_KEY = 'refreshToken';
+const BIOMETRIC_ENABLED_KEY = 'biometricEnabled';
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [refreshToken, setRefreshToken] = useState(null);
+  const [tokenExpiry, setTokenExpiry] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [biometricEnabled, setBiometricEnabled] = useState(false);
+  const [isConnected, setIsConnected] = useState(true);
 
-  // Load token from storage on initial app load
+  // Monitor network connectivity
+  useEffect(() => {
+    const unsubscribe = NetInfo.addEventListener(state => {
+      setIsConnected(state.isConnected);
+      if (!state.isConnected) {
+        console.log('Network connection lost');
+      } else if (state.isConnected && !isConnected) {
+        console.log('Network connection restored');
+        checkAuthStatus(); // Verify token when connection is restored
+      }
+    });
+
+    return () => unsubscribe();
+  }, [isConnected]);
+
+  // Load auth data on initial app load
   useEffect(() => {
     const loadAuthData = async () => {
       try {
-        setLoading(true);
+        setIsLoading(true);
+        
+        // Check if biometric auth is enabled
+        const biometricEnabledStr = await AsyncStorage.getItem(BIOMETRIC_ENABLED_KEY);
+        const isBiometricEnabled = biometricEnabledStr === 'true';
+        setBiometricEnabled(isBiometricEnabled);
+        
+        // Get credentials from secure storage
         const credentials = await Keychain.getGenericPassword({ service: AUTH_KEY });
+        
         if (credentials) {
           const storedData = JSON.parse(credentials.password);
-          if (storedData.token && storedData.user) {
-            // TODO: Optionally verify token validity with backend here
+          
+          // Get token expiry and refresh token
+          const expiryTimestamp = await AsyncStorage.getItem(TOKEN_EXPIRY_KEY);
+          const storedRefreshToken = await AsyncStorage.getItem(REFRESH_TOKEN_KEY);
+          
+          setRefreshToken(storedRefreshToken);
+          
+          if (expiryTimestamp) {
+            const expiry = parseInt(expiryTimestamp, 10);
+            setTokenExpiry(expiry);
+            
+            // Check if token is expired
+            const now = Date.now();
+            if (now >= expiry) {
+              // Token expired, try to refresh
+              if (storedRefreshToken) {
+                try {
+                  await refreshTokenHandler(storedRefreshToken);
+                } catch (refreshError) {
+                  console.error('Failed to refresh token:', refreshError);
+                  await clearAuthData();
+                  setUser(null);
+                  setToken(null);
+                }
+              } else {
+                // No refresh token, clear auth data
+                await clearAuthData();
+                setUser(null);
+                setToken(null);
+              }
+            } else {
+              // Token still valid
+              setToken(storedData.token);
+              setUser(storedData.user);
+              apiService.setAuthToken(storedData.token);
+              
+              // Schedule token refresh before expiry
+              const timeToRefresh = expiry - now - 60000; // Refresh 1 minute before expiry
+              if (timeToRefresh > 0) {
+                setTimeout(() => {
+                  refreshTokenHandler(storedRefreshToken);
+                }, timeToRefresh);
+              }
+            }
+          } else {
+            // No expiry found, set token anyway but it might be invalid
             setToken(storedData.token);
             setUser(storedData.user);
-            // Set token for apiService
-            apiService.defaults.headers.common['Authorization'] = `Bearer ${storedData.token}`;
-          } else {
-            await Keychain.resetGenericPassword({ service: AUTH_KEY }); // Clear invalid data
+            apiService.setAuthToken(storedData.token);
+            
+            // Verify token with backend
+            verifyToken(storedData.token);
           }
         }
       } catch (err) {
         console.error('Failed to load auth data:', err);
-        setError('Failed to load session.');
-        await Keychain.resetGenericPassword({ service: AUTH_KEY }); // Clear on error
+        await clearAuthData();
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
     };
 
     loadAuthData();
   }, []);
 
-  const storeAuthData = async (newToken, userData) => {
+  // Verify token with backend
+  const verifyToken = async (authToken) => {
+    if (!authToken || !isConnected) return false;
+    
+    try {
+      const response = await apiService.get('/auth/verify');
+      return true;
+    } catch (err) {
+      console.error('Token verification failed:', err);
+      
+      // If token is invalid, try to refresh
+      if (refreshToken) {
+        try {
+          await refreshTokenHandler(refreshToken);
+          return true;
+        } catch (refreshError) {
+          console.error('Failed to refresh token during verification:', refreshError);
+          await clearAuthData();
+          setUser(null);
+          setToken(null);
+          return false;
+        }
+      } else {
+        await clearAuthData();
+        setUser(null);
+        setToken(null);
+        return false;
+      }
+    }
+  };
+
+  // Store auth data securely
+  const storeAuthData = async (newToken, userData, newRefreshToken, expiresIn) => {
     try {
       const dataToStore = JSON.stringify({ token: newToken, user: userData });
       await Keychain.setGenericPassword('user', dataToStore, { service: AUTH_KEY });
-      // Set token for future apiService requests
-      apiService.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
+      
+      // Calculate and store token expiry
+      const expiryTime = Date.now() + (expiresIn * 1000);
+      await AsyncStorage.setItem(TOKEN_EXPIRY_KEY, expiryTime.toString());
+      setTokenExpiry(expiryTime);
+      
+      // Store refresh token
+      if (newRefreshToken) {
+        await AsyncStorage.setItem(REFRESH_TOKEN_KEY, newRefreshToken);
+        setRefreshToken(newRefreshToken);
+      }
+      
+      // Set token for API service
+      apiService.setAuthToken(newToken);
+      
+      // Schedule token refresh before expiry
+      if (expiresIn) {
+        const timeToRefresh = (expiresIn * 1000) - 60000; // Refresh 1 minute before expiry
+        if (timeToRefresh > 0) {
+          setTimeout(() => {
+            refreshTokenHandler(newRefreshToken);
+          }, timeToRefresh);
+        }
+      }
     } catch (err) {
       console.error('Failed to store auth data:', err);
-      setError('Failed to save session.');
-      // Decide if we should logout user here
+      setError('Failed to save session data.');
     }
   };
 
+  // Clear all auth data
   const clearAuthData = async () => {
     try {
       await Keychain.resetGenericPassword({ service: AUTH_KEY });
-      // Clear token from apiService
-      delete apiService.defaults.headers.common['Authorization'];
+      await AsyncStorage.removeItem(TOKEN_EXPIRY_KEY);
+      await AsyncStorage.removeItem(REFRESH_TOKEN_KEY);
+      apiService.clearAuthToken();
     } catch (err) {
       console.error('Failed to clear auth data:', err);
-      setError('Failed to clear session.');
     }
   };
 
-  const login = useCallback(async (credentials) => {
-    setLoading(true);
-    setError(null);
+  // Refresh token handler
+  const refreshTokenHandler = async (currentRefreshToken) => {
+    if (!currentRefreshToken || !isConnected) {
+      throw new Error('No refresh token available or no network connection');
+    }
+    
     try {
-      // Replace with actual API call
-      const response = await apiService.post('/auth/login', credentials);
-      const { token: newToken, user: userData } = response.data; // Adjust based on actual API response
+      const response = await apiService.post('/auth/refresh', { refreshToken: currentRefreshToken });
+      const { token: newToken, refreshToken: newRefreshToken, expiresIn, user: userData } = response.data;
+      
+      if (newToken) {
+        setToken(newToken);
+        
+        if (userData) {
+          setUser(userData);
+        }
+        
+        await storeAuthData(newToken, userData || user, newRefreshToken, expiresIn);
+        return newToken;
+      } else {
+        throw new Error('Invalid refresh response');
+      }
+    } catch (err) {
+      console.error('Token refresh failed:', err);
+      await clearAuthData();
+      setUser(null);
+      setToken(null);
+      setRefreshToken(null);
+      throw err;
+    }
+  };
 
+  // Login handler
+  const login = useCallback(async (credentials, useBiometric = false) => {
+    if (!isConnected) {
+      setError('No internet connection. Please check your network and try again.');
+      throw new Error('No internet connection');
+    }
+    
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const response = await apiService.post('/auth/login', credentials);
+      const { token: newToken, refreshToken: newRefreshToken, expiresIn, user: userData } = response.data;
+      
       if (newToken && userData) {
         setToken(newToken);
         setUser(userData);
-        await storeAuthData(newToken, userData);
+        
+        // Store biometric preference if provided
+        if (useBiometric !== undefined) {
+          await AsyncStorage.setItem(BIOMETRIC_ENABLED_KEY, useBiometric.toString());
+          setBiometricEnabled(useBiometric);
+        }
+        
+        await storeAuthData(newToken, userData, newRefreshToken, expiresIn);
         return userData;
       } else {
         throw new Error('Invalid login response from server');
@@ -95,60 +277,233 @@ export const AuthProvider = ({ children }) => {
       console.error('Login failed:', err);
       const message = err.response?.data?.message || err.message || 'Login failed. Please check your credentials.';
       setError(message);
-      await clearAuthData(); // Clear any potentially stale data
-      setUser(null);
-      setToken(null);
-      throw new Error(message); // Re-throw for the UI to handle
+      await clearAuthData();
+      throw new Error(message);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
-  }, []);
+  }, [isConnected]);
 
+  // Logout handler
   const logout = useCallback(async () => {
-    setLoading(true);
+    setIsLoading(true);
     setError(null);
+    
     try {
-      // Optional: Call backend logout endpoint
-      // await apiService.post('/auth/logout');
+      if (isConnected && token) {
+        // Attempt to notify backend about logout
+        await apiService.post('/auth/logout');
+      }
     } catch (err) {
       console.warn('Backend logout failed (continuing local logout):', err);
-      // Don't block logout if backend call fails
     } finally {
       setUser(null);
       setToken(null);
+      setRefreshToken(null);
       await clearAuthData();
-      setLoading(false);
+      setIsLoading(false);
     }
-  }, []);
+  }, [token, isConnected]);
 
+  // Register handler
   const register = useCallback(async (userData) => {
-    setLoading(true);
+    if (!isConnected) {
+      setError('No internet connection. Please check your network and try again.');
+      throw new Error('No internet connection');
+    }
+    
+    setIsLoading(true);
     setError(null);
+    
     try {
-      // Replace with actual API call
       const response = await apiService.post('/auth/register', userData);
-      // Assuming registration doesn't auto-login, or handle if it does
-      // Maybe return success message or handle verification step
-      return response.data; // Adjust based on actual API response
+      return response.data;
     } catch (err) {
       console.error('Registration failed:', err);
       const message = err.response?.data?.message || err.message || 'Registration failed. Please try again.';
       setError(message);
-      throw new Error(message); // Re-throw for the UI to handle
+      throw new Error(message);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
+    }
+  }, [isConnected]);
+
+  // Update profile handler
+  const updateProfile = useCallback(async (userData) => {
+    if (!isConnected) {
+      setError('No internet connection. Please check your network and try again.');
+      throw new Error('No internet connection');
+    }
+    
+    if (!token) {
+      setError('You must be logged in to update your profile.');
+      throw new Error('Authentication required');
+    }
+    
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const response = await apiService.put('/users/profile', userData);
+      const updatedUser = response.data;
+      
+      // Update local user data
+      setUser(prevUser => ({ ...prevUser, ...updatedUser }));
+      
+      // Update stored user data
+      if (user && token) {
+        await storeAuthData(token, { ...user, ...updatedUser }, refreshToken, 
+          tokenExpiry ? Math.floor((tokenExpiry - Date.now()) / 1000) : undefined);
+      }
+      
+      return updatedUser;
+    } catch (err) {
+      console.error('Profile update failed:', err);
+      const message = err.response?.data?.message || err.message || 'Failed to update profile. Please try again.';
+      setError(message);
+      throw new Error(message);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [token, user, refreshToken, tokenExpiry, isConnected]);
+
+  // Reset password handler
+  const resetPassword = useCallback(async (email) => {
+    if (!isConnected) {
+      setError('No internet connection. Please check your network and try again.');
+      throw new Error('No internet connection');
+    }
+    
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const response = await apiService.post('/auth/reset-password', { email });
+      return response.data;
+    } catch (err) {
+      console.error('Password reset request failed:', err);
+      const message = err.response?.data?.message || err.message || 'Failed to request password reset. Please try again.';
+      setError(message);
+      throw new Error(message);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [isConnected]);
+
+  // Verify email handler
+  const verifyEmail = useCallback(async (code) => {
+    if (!isConnected) {
+      setError('No internet connection. Please check your network and try again.');
+      throw new Error('No internet connection');
+    }
+    
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const response = await apiService.post('/auth/verify-email', { code });
+      
+      // If verification updates user data, update local state
+      if (response.data.user) {
+        setUser(prevUser => ({ ...prevUser, ...response.data.user }));
+        
+        // Update stored user data
+        if (user && token) {
+          await storeAuthData(token, { ...user, ...response.data.user }, refreshToken,
+            tokenExpiry ? Math.floor((tokenExpiry - Date.now()) / 1000) : undefined);
+        }
+      }
+      
+      return response.data;
+    } catch (err) {
+      console.error('Email verification failed:', err);
+      const message = err.response?.data?.message || err.message || 'Failed to verify email. Please try again.';
+      setError(message);
+      throw new Error(message);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [token, user, refreshToken, tokenExpiry, isConnected]);
+
+  // Refresh token (exposed for manual refresh)
+  const refreshTokenManual = useCallback(async () => {
+    if (!refreshToken) {
+      setError('No refresh token available.');
+      throw new Error('No refresh token available');
+    }
+    
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const newToken = await refreshTokenHandler(refreshToken);
+      return newToken;
+    } catch (err) {
+      const message = 'Failed to refresh authentication. Please log in again.';
+      setError(message);
+      throw new Error(message);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [refreshToken]);
+
+  // Clear error state
+  const clearError = useCallback(() => {
+    setError(null);
+  }, []);
+
+  // Check authentication status
+  const checkAuthStatus = useCallback(async () => {
+    if (!token || !isConnected) return false;
+    
+    setIsLoading(true);
+    try {
+      const isValid = await verifyToken(token);
+      return isValid;
+    } catch (err) {
+      console.error('Auth status check failed:', err);
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [token, isConnected]);
+
+  // Toggle biometric authentication
+  const toggleBiometric = useCallback(async (enabled) => {
+    try {
+      await AsyncStorage.setItem(BIOMETRIC_ENABLED_KEY, enabled.toString());
+      setBiometricEnabled(enabled);
+      return true;
+    } catch (err) {
+      console.error('Failed to toggle biometric authentication:', err);
+      return false;
     }
   }, []);
 
+  // Context value with memoization for performance
   const authContextValue = useMemo(() => ({
     user,
     token,
-    loading,
+    isAuthenticated: !!token && !!user,
+    isLoading,
     error,
+    biometricEnabled,
+    isConnected,
     login,
     logout,
     register,
-  }), [user, token, loading, error, login, logout, register]);
+    updateProfile,
+    resetPassword,
+    verifyEmail,
+    refreshToken: refreshTokenManual,
+    clearError,
+    checkAuthStatus,
+    toggleBiometric,
+  }), [
+    user, token, isLoading, error, biometricEnabled, isConnected,
+    login, logout, register, updateProfile, resetPassword, verifyEmail,
+    refreshTokenManual, clearError, checkAuthStatus, toggleBiometric
+  ]);
 
   return (
     <AuthContext.Provider value={authContextValue}>
@@ -157,8 +512,9 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-// Add prop types validation
+// PropTypes validation
 AuthProvider.propTypes = {
   children: PropTypes.node.isRequired,
 };
 
+export default AuthProvider;

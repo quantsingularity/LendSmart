@@ -1,5 +1,6 @@
 const authService = require("../services/authService");
-const asyncHandler = require("../middlewares/asyncHandler"); // Assuming you have an asyncHandler middleware
+const asyncHandler = require("../middlewares/asyncHandler");
+const jwt = require("jsonwebtoken");
 
 /**
  * @desc    Register a new user
@@ -116,11 +117,121 @@ const updateProfile = asyncHandler(async (req, res, next) => {
     }
 });
 
-// Placeholder for logout if using server-side session invalidation or blocklisting tokens
+/**
+ * @desc    Logout user and invalidate token
+ * @route   POST /api/auth/logout
+ * @access  Private (requires token)
+ */
 const logout = asyncHandler(async (req, res, next) => {
-    // For JWT, logout is typically handled client-side by deleting the token.
-    // If using a token blocklist, implement that logic here.
-    res.status(200).json({ success: true, message: "Logout successful (client-side action required)" });
+    try {
+        // Get token from authorization header
+        const token = req.headers.authorization?.split(' ')[1];
+        
+        if (!token) {
+            return res.status(200).json({ 
+                success: true, 
+                message: "No token provided, logout successful" 
+            });
+        }
+        
+        // Add token to blocklist in Redis or database
+        await authService.invalidateToken(token);
+        
+        // Clear HTTP-only cookie if using cookies
+        if (req.cookies && req.cookies.token) {
+            res.clearCookie('token');
+        }
+        
+        res.status(200).json({ 
+            success: true, 
+            message: "Logout successful, token invalidated" 
+        });
+    } catch (error) {
+        res.status(500);
+        throw new Error(error.message || "Logout failed");
+    }
+});
+
+/**
+ * @desc    Refresh access token using refresh token
+ * @route   POST /api/auth/refresh-token
+ * @access  Public (with refresh token)
+ */
+const refreshToken = asyncHandler(async (req, res, next) => {
+    const { refreshToken } = req.body;
+    
+    if (!refreshToken) {
+        res.status(400);
+        throw new Error("Refresh token is required");
+    }
+    
+    try {
+        const { newAccessToken, newRefreshToken, user } = await authService.refreshUserToken(refreshToken);
+        
+        res.status(200).json({
+            success: true,
+            message: "Token refreshed successfully",
+            accessToken: newAccessToken,
+            refreshToken: newRefreshToken,
+            data: user
+        });
+    } catch (error) {
+        res.status(401);
+        throw new Error(error.message || "Invalid or expired refresh token");
+    }
+});
+
+/**
+ * @desc    Reset password request (sends email)
+ * @route   POST /api/auth/forgot-password
+ * @access  Public
+ */
+const forgotPassword = asyncHandler(async (req, res, next) => {
+    const { email } = req.body;
+    
+    if (!email) {
+        res.status(400);
+        throw new Error("Email is required");
+    }
+    
+    try {
+        await authService.sendPasswordResetEmail(email);
+        
+        res.status(200).json({
+            success: true,
+            message: "Password reset email sent successfully"
+        });
+    } catch (error) {
+        res.status(400);
+        throw new Error(error.message || "Failed to send password reset email");
+    }
+});
+
+/**
+ * @desc    Reset password with token
+ * @route   POST /api/auth/reset-password/:resetToken
+ * @access  Public (with reset token)
+ */
+const resetPassword = asyncHandler(async (req, res, next) => {
+    const { resetToken } = req.params;
+    const { password } = req.body;
+    
+    if (!resetToken || !password) {
+        res.status(400);
+        throw new Error("Reset token and new password are required");
+    }
+    
+    try {
+        await authService.resetUserPassword(resetToken, password);
+        
+        res.status(200).json({
+            success: true,
+            message: "Password reset successful"
+        });
+    } catch (error) {
+        res.status(400);
+        throw new Error(error.message || "Password reset failed");
+    }
 });
 
 module.exports = {
@@ -129,4 +240,7 @@ module.exports = {
     getMe,
     updateProfile,
     logout,
+    refreshToken,
+    forgotPassword,
+    resetPassword
 };
