@@ -98,3 +98,5 @@ LendSmart/web-frontend/coverage/
 # Zip files (unless specifically intended for version control)
 *.zip
 
+# Specific Files
+git-auto-commit.sh
