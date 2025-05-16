@@ -1,97 +1,191 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# LendSmart Mobile Frontend
 
-# Getting Started
+This directory contains the source code for the LendSmart mobile application, built with React Native.
 
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
+## Overview
 
-## Step 1: Start Metro
+The mobile app provides users (borrowers and lenders) with a native experience to interact with the LendSmart platform. Key features include:
+- User registration and login.
+- Browsing available loans in the marketplace.
+- Applying for new loans (for borrowers).
+- Funding loans (for lenders).
+- Managing user profiles and loan portfolios.
+- Viewing transaction history.
+- Wallet integration for interacting with smart contracts (e.g., for loan disbursement and repayments).
 
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
+## Project Structure
 
-To start the Metro dev server, run the following command from the root of your React Native project:
-
-```sh
-# Using npm
-npm start
-
-# OR using Yarn
-yarn start
+```
+mobile-frontend/
+├── android/            # Android specific project files
+├── ios/                # iOS specific project files
+├── src/
+│   ├── App.js          # Main application component
+│   ├── assets/         # Images, fonts, and other static assets
+│   ├── components/     # Reusable UI components (e.g., Button, Card, InputField)
+│   ├── config/         # Application configuration (e.g., API endpoints, keys)
+│   │   └── index.js
+│   ├── constants/      # Global constants (e.g., colors, dimensions, action types)
+│   │   ├── colors.js
+│   │   └── dimensions.js
+│   ├── contexts/       # React Context API for global state management
+│   │   ├── AuthContext.js
+│   │   ├── LoanContext.js
+│   │   ├── ThemeContext.js
+│   │   └── WalletContext.js
+│   ├── features/       # Feature-specific modules (screens, components, services)
+│   │   ├── Auth/
+│   │   │   ├── components/
+│   │   │   ├── screens/
+│   │   │   │   ├── LoginScreen.js
+│   │   │   │   └── RegisterScreen.js
+│   │   │   └── services/ (authService.js - API calls for auth)
+│   │   ├── Dashboard/
+│   │   │   └── DashboardScreen.js
+│   │   ├── Loans/
+│   │   │   ├── LoanApplicationScreen.js
+│   │   │   ├── MarketplaceScreen.js
+│   │   │   └── screens/
+│   │   │       └── LoanDetailsScreen.js
+│   │   └── Profile/
+│   │       └── ProfileScreen.js
+│   ├── hooks/          # Custom React hooks (e.g., useAuth, useForm)
+│   ├── navigation/     # Navigation setup (React Navigation)
+│   │   ├── AppNavigator.js
+│   │   ├── AuthNavigator.js
+│   │   ├── MainTabNavigator.js
+│   │   └── MarketplaceNavigator.js
+│   ├── services/       # Global services (e.g., API client, blockchain interaction)
+│   │   ├── apiService.js
+│   │   └── blockchainService.js
+│   ├── theme/          # Theming configuration (e.g., light/dark mode styles)
+│   │   └── theme.js
+│   ├── types/          # TypeScript type definitions (if using TypeScript)
+│   └── utils/          # Utility functions (e.g., helpers, validators)
+│       └── helpers.js
+├── tests/              # Unit and integration tests (e.g., using Jest and React Native Testing Library)
+│   └── __tests__/
+├── .env.example        # Example environment variables
+├── .eslintrc.js        # ESLint configuration
+├── .gitignore          # Git ignore file
+├── babel.config.js     # Babel configuration
+├── index.js            # Entry point for the React Native application
+├── metro.config.js     # Metro bundler configuration
+├── package.json        # Project dependencies and scripts
+└── README.md           # This file
 ```
 
-## Step 2: Build and run your app
+## Prerequisites
 
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
+-   Node.js (LTS version recommended)
+-   npm or Yarn
+-   React Native CLI (or Expo CLI if using Expo)
+-   Android Studio (for Android development) with JDK and Android SDK
+-   Xcode (for iOS development, macOS only)
+-   CocoaPods (for iOS dependency management)
 
-### Android
+Refer to the [React Native Environment Setup Guide](https://reactnative.dev/docs/environment-setup) for detailed instructions.
 
-```sh
-# Using npm
-npm run android
+## Setup and Installation
 
-# OR using Yarn
-yarn android
+1.  **Navigate to the `mobile-frontend` directory:**
+    ```bash
+    cd LendSmart/mobile-frontend
+    ```
+
+2.  **Install dependencies:**
+    ```bash
+    npm install
+    # or
+    # yarn install
+    ```
+
+3.  **Install iOS dependencies (if on macOS):**
+    ```bash
+    cd ios
+    pod install
+    cd ..
+    ```
+
+4.  **Set up environment variables:**
+    Create a `.env` file in the `mobile-frontend` directory by copying `.env.example`:
+    ```bash
+    cp .env.example .env
+    ```
+    Update the `.env` file with your backend API URL and other necessary configurations:
+    ```
+    API_BASE_URL=http://localhost:5000/api # Or your deployed backend URL
+    # Add other environment variables as needed (e.g., blockchain network RPC, contract addresses)
+    ```
+    Ensure these variables are correctly accessed in your `src/config/index.js` or similar.
+
+## Running the Application
+
+1.  **Start the Metro Bundler:**
+    Open a terminal in the `mobile-frontend` directory and run:
+    ```bash
+    npm start
+    # or
+    # yarn start
+    ```
+
+2.  **Run on Android:**
+    -   Ensure an Android emulator is running or a physical device is connected and configured for debugging.
+    -   In a new terminal window (in the `mobile-frontend` directory), run:
+        ```bash
+        npm run android
+        # or
+        # yarn android
+        ```
+
+3.  **Run on iOS (macOS only):**
+    -   Ensure an iOS simulator is running or a physical device is connected.
+    -   In a new terminal window (in the `mobile-frontend` directory), run:
+        ```bash
+        npm run ios
+        # or
+        # yarn ios
+        ```
+
+## Key Libraries Used
+
+-   **React Native:** Core framework.
+-   **React Navigation:** For routing and navigation.
+-   **Axios (or Fetch API):** For making HTTP requests to the backend API.
+-   **Ethers.js / Web3.js:** For interacting with Ethereum smart contracts (via `blockchainService.js`).
+-   **React Context API / Redux / Zustand:** For state management.
+-   **Styled Components / React Native StyleSheet:** For styling.
+-   **Jest / React Native Testing Library:** For testing.
+
+## Development Notes
+
+-   **API Integration:** All backend API calls are managed through `src/services/apiService.js`. Ensure the `API_BASE_URL` is correctly configured.
+-   **Blockchain Integration:** Interactions with smart contracts are handled by `src/services/blockchainService.js`. This service will require configuration for the network, contract addresses, and ABIs.
+-   **State Management:** Global state (e.g., authentication status, user profile, theme) is managed using React Context API in `src/contexts/`. Consider more robust solutions like Redux or Zustand for larger applications.
+-   **Styling:** Consistent styling is maintained using a combination of `StyleSheet` and potentially a theming solution in `src/theme/`.
+-   **Error Handling:** Implement comprehensive error handling for API calls, blockchain interactions, and user inputs.
+
+## Testing
+
+Run tests using:
+```bash
+npm test
+# or
+# yarn test
 ```
+Test files are located in the `tests/__tests__/` directory.
 
-### iOS
+## Linting
 
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
-
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
-
-```sh
-bundle install
+Run the linter using:
+```bash
+npm run lint
+# or
+# yarn lint
 ```
+(Ensure ESLint is configured in `.eslintrc.js`)
 
-Then, and every time you update your native dependencies, run:
+## License
 
-```sh
-bundle exec pod install
-```
+This project is licensed under the [Specify License, e.g., MIT License] - see the `LICENSE` file in the root project directory for details.
 
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
-
-```sh
-# Using npm
-npm run ios
-
-# OR using Yarn
-yarn ios
-```
-
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
-
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
-
-## Step 3: Modify your app
-
-Now that you have successfully run the app, let's make changes!
-
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
-
-When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
-
-- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
-- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
-
-## Congratulations! :tada:
-
-You've successfully run and modified your React Native App. :partying_face:
-
-### Now what?
-
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
-
-# Troubleshooting
-
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
-
-# Learn More
-
-To learn more about React Native, take a look at the following resources:
-
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.

@@ -1,86 +1,87 @@
-import axios from 'axios';
-import * as Keychain from 'react-native-keychain';
+import axios from "axios";
+import { Platform } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage"; // For storing auth token
 
-// TODO: Replace with actual API base URL from config or environment variables
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000/api'; // Example URL
+// Determine base URL based on platform for development
+// For Android emulator, localhost is 10.0.2.2
+// For iOS simulator, localhost is localhost
+// For production, use your actual deployed backend URL
+const API_BASE_URL_IOS = process.env.MOBILE_API_BASE_URL_IOS || "http://localhost:5000/api";
+const API_BASE_URL_ANDROID = process.env.MOBILE_API_BASE_URL_ANDROID || "http://10.0.2.2:5000/api";
 
-const apiService = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  timeout: 10000, // 10 second timeout
+const API_BASE_URL = Platform.OS === "ios" ? API_BASE_URL_IOS : API_BASE_URL_ANDROID;
+
+// Create an Axios instance
+const mobileApiService = axios.create({
+    baseURL: API_BASE_URL,
+    headers: {
+        "Content-Type": "application/json",
+    },
+    timeout: 10000, // 10 seconds timeout
 });
 
-// Request interceptor to add the auth token
-apiService.interceptors.request.use(
-  async (config) => {
-    // No need to read from Keychain here, AuthContext sets the header on login/load
-    // If the header is already set, use it. Otherwise, it's an unauthenticated request.
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
-
-// Response interceptor for handling errors (e.g., token refresh, global error handling)
-apiService.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
-    
-    // Example: Handle token expiry and refresh (requires refresh token logic)
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-      console.log('Attempting token refresh...');
-      try {
-        // Assuming you store refreshToken securely (e.g., in Keychain alongside token)
-        const credentials = await Keychain.getGenericPassword({ service: 'userAuthData' });
-        if (credentials) {
-          const storedData = JSON.parse(credentials.password);
-          const refreshToken = storedData.refreshToken; // You need to store refreshToken
-          
-          if (refreshToken) {
-            // Replace with your actual refresh token endpoint
-            const { data } = await axios.post(`${API_BASE_URL}/auth/refresh`, { refreshToken });
-            const { token: newToken, user: newUser, refreshToken: newRefreshToken } = data;
-            
-            // Update stored credentials
-            const newDataToStore = JSON.stringify({ token: newToken, user: newUser, refreshToken: newRefreshToken });
-            await Keychain.setGenericPassword('user', newDataToStore, { service: 'userAuthData' });
-            
-            // Update Authorization header for the original request and future requests
-            apiService.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
-            originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
-            
-            console.log('Token refreshed successfully.');
-            // TODO: Update user state in AuthContext if necessary
-            
-            return apiService(originalRequest); // Retry the original request
-          } else {
-             console.error('No refresh token found.');
-             // Trigger logout or redirect to login
-             // Example: authContext.logout(); // Need access to context or event emitter
-          }
-        } else {
-           console.error('No credentials found for refresh.');
-           // Trigger logout
+// Interceptor to add JWT token to requests if available
+mobileApiService.interceptors.request.use(
+    async (config) => {
+        try {
+            const token = await AsyncStorage.getItem("authToken");
+            if (token) {
+                config.headers["Authorization"] = `Bearer ${token}`;
+            }
+        } catch (e) {
+            console.error("Error reading authToken from AsyncStorage:", e);
         }
-      } catch (refreshError) {
-        console.error('Token refresh failed:', refreshError);
-        // Trigger logout
-        // Example: authContext.logout();
-        return Promise.reject(refreshError);
-      }
+        return config;
+    },
+    (error) => {
+        return Promise.reject(error);
     }
-    
-    // Handle other errors (e.g., network errors, server errors)
-    console.error('API Error:', error.response?.data || error.message);
-    
-    return Promise.reject(error);
-  }
 );
 
-export default apiService;
+// Interceptor to handle responses (e.g., for global error handling or token refresh)
+mobileApiService.interceptors.response.use(
+    (response) => {
+        return response;
+    },
+    async (error) => {
+        if (error.response) {
+            console.error("Mobile API Error Response:", error.response.data);
+            console.error("Status:", error.response.status);
+
+            if (error.response.status === 401) {
+                console.warn("Unauthorized access - 401. Clearing token and navigating to login.");
+                try {
+                    await AsyncStorage.removeItem("authToken");
+                    // Navigation to login screen should be handled by the app_s navigation logic,
+                    // possibly by listening to an event or checking auth state in a global context.
+                    // Example: RootNavigation.navigate("LoginScreen"); (if you have such a helper)
+                } catch (e) {
+                    console.error("Error removing authToken from AsyncStorage:", e);
+                }
+            }
+        } else if (error.request) {
+            console.error("Mobile API No Response:", error.request);
+            // alert("Network error: Could not connect to the server. Please check your internet connection.");
+        } else {
+            console.error("Mobile API Request Setup Error:", error.message);
+        }
+        return Promise.reject(error.response ? error.response.data : error);
+    }
+);
+
+// --- Auth Service Calls ---
+export const registerUser = (userData) => mobileApiService.post("/auth/register", userData);
+export const loginUser = (credentials) => mobileApiService.post("/auth/login", credentials);
+export const getUserProfile = () => mobileApiService.get("/auth/me");
+export const updateUserProfile = (profileData) => mobileApiService.put("/auth/profile", profileData);
+
+// --- Loan Service Calls ---
+export const applyLoan = (loanData) => mobileApiService.post("/loans/apply", loanData);
+export const getMarketplaceLoans = (params) => mobileApiService.get("/loans", { params });
+export const getMyLoans = (params) => mobileApiService.get("/loans/my-loans", { params });
+export const getLoanDetails = (loanId) => mobileApiService.get(`/loans/${loanId}`);
+export const fundLoan = (loanId, fundingData) => mobileApiService.post(`/loans/${loanId}/fund`, fundingData);
+export const recordRepayment = (loanId, repaymentData) => mobileApiService.post(`/loans/${loanId}/repay`, repaymentData);
+
+export default mobileApiService;
 
