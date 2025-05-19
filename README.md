@@ -10,7 +10,7 @@
 LendSmart is an innovative decentralized lending platform that combines blockchain technology with artificial intelligence to create a more accessible, efficient, and secure lending ecosystem for borrowers and lenders worldwide.
 
 <div align="center">
-  <img src="resources/lendsmart_dashboard.png" alt="LendSmart Dashboard" width="80%">
+  <img src="docs/images/LendSmart_dashboard.bmp" alt="LendSmart Dashboard" width="80%">
 </div>
 
 > **Note**: This project is under active development. Features and functionalities are continuously being enhanced to improve lending capabilities and user experience.
