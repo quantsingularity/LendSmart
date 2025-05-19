@@ -1,32 +1,30 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
-
+const { protect, authorize } = require('../middleware/auth');
 const {
   getUsers,
-  getUserById,
+  getUser,
+  createUser,
   updateUser,
   deleteUser,
-} = require("../controllers/userController");
+  getUsersByRole,
+  getUserByWalletAddress
+} = require('../controllers/userController');
 
-const { protect, authorize } = require("../middleware/authMiddleware");
-
-// Import loan routes to nest them under users if needed (e.g., /api/users/:userId/loans)
-const loanRoutes = require("./loanRoutes");
-
-// Re-route into other resource routers
-// Get loans for a specific user
-router.use("/:userId/loans", loanRoutes);
-
-// All routes below are protected and most are admin-only
+// Admin only routes
 router.use(protect);
+router.use(authorize('admin'));
 
-router.route("/").get(authorize("admin"), getUsers);
+router.route('/')
+  .get(getUsers)
+  .post(createUser);
 
-router
-  .route("/:id")
-  .get(authorize("admin", "borrower", "lender"), getUserById) // User can get their own profile
-  .put(authorize("admin", "borrower", "lender"), updateUser)   // User can update their own profile
-  .delete(authorize("admin"), deleteUser);
+router.route('/:id')
+  .get(getUser)
+  .put(updateUser)
+  .delete(deleteUser);
+
+router.get('/role/:role', getUsersByRole);
+router.get('/wallet/:address', getUserByWalletAddress);
 
 module.exports = router;
-

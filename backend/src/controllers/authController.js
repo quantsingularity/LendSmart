@@ -1,147 +1,239 @@
-const User = require("../models/UserModel");
-const jwt = require("jsonwebtoken");
-// const ErrorResponse = require("../utils/errorResponse"); // Example for custom error handling
+const User = require('../models/User');
+const jwt = require('jsonwebtoken');
 
-// Generate JWT
-const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: "30d", // Token expiration (e.g., 30 days)
-  });
-};
-
-// @desc    Register a new user
-// @route   POST /api/auth/register
-// @access  Public
+/**
+ * @desc    Register user
+ * @route   POST /api/auth/register
+ * @access  Public
+ */
 exports.register = async (req, res, next) => {
-  const { username, email, password, role, firstName, lastName, walletAddress } = req.body;
-
   try {
-    // Check if user already exists
-    let user = await User.findOne({ email });
-    if (user) {
-      // return next(new ErrorResponse("User already exists", 400));
-      return res.status(400).json({ success: false, message: "User already exists with this email" });
+    const { name, email, password, walletAddress, role } = req.body;
+
+    // Validate required fields
+    if (!name || !email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide name, email, and password'
+      });
     }
-    user = await User.findOne({ username });
-    if (user) {
-      return res.status(400).json({ success: false, message: "User already exists with this username" });
+
+    // Check if user already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email already in use'
+      });
+    }
+
+    // Check if wallet address is already in use
+    if (walletAddress) {
+      const walletUser = await User.findOne({ walletAddress });
+      if (walletUser) {
+        return res.status(400).json({
+          success: false,
+          message: 'Wallet address already in use'
+        });
+      }
     }
 
     // Create user
-    user = await User.create({
-      username,
+    const user = await User.create({
+      name,
       email,
-      password, // Password will be hashed by pre-save hook in UserModel
-      role,
-      firstName,
-      lastName,
-      walletAddress
+      password,
+      walletAddress,
+      role: role && ['admin', 'risk-assessor'].includes(role) ? 'user' : role // Prevent self-assignment of privileged roles
     });
 
-    const token = generateToken(user._id);
-
-    // Send back user info and token (excluding password)
-    // To exclude password even if not selected:false in model, re-fetch or manually build response object
-    const userResponse = {
-        _id: user._id,
-        username: user.username,
-        email: user.email,
-        role: user.role,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        walletAddress: user.walletAddress,
-        createdAt: user.createdAt
-    };
-
-    res.status(201).json({
-      success: true,
-      message: "User registered successfully",
-      token,
-      user: userResponse,
-    });
+    // Create token
+    sendTokenResponse(user, 201, res);
   } catch (error) {
-    console.error("Registration Error:", error);
-    // next(error); // Pass to error handling middleware
-    res.status(500).json({ success: false, message: "Server error during registration", error: error.message });
+    next(error);
   }
 };
 
-// @desc    Authenticate user & get token (Login)
-// @route   POST /api/auth/login
-// @access  Public
+/**
+ * @desc    Login user
+ * @route   POST /api/auth/login
+ * @access  Public
+ */
 exports.login = async (req, res, next) => {
-  const { email, password } = req.body;
-
-  // Validate email & password
-  if (!email || !password) {
-    // return next(new ErrorResponse("Please provide an email and password", 400));
-    return res.status(400).json({ success: false, message: "Please provide an email and password" });
-  }
-
   try {
-    // Check for user
-    const user = await User.findOne({ email }).select("+password"); // Explicitly select password
+    const { email, password } = req.body;
 
+    // Validate email & password
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide email and password'
+      });
+    }
+
+    // Check for user
+    const user = await User.findOne({ email }).select('+password');
     if (!user) {
-      // return next(new ErrorResponse("Invalid credentials", 401));
-      return res.status(401).json({ success: false, message: "Invalid credentials" });
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid credentials'
+      });
     }
 
     // Check if password matches
     const isMatch = await user.matchPassword(password);
-
     if (!isMatch) {
-      // return next(new ErrorResponse("Invalid credentials", 401));
-      return res.status(401).json({ success: false, message: "Invalid credentials" });
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid credentials'
+      });
     }
 
-    const token = generateToken(user._id);
-    
-    const userResponse = {
-        _id: user._id,
-        username: user.username,
-        email: user.email,
-        role: user.role,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        walletAddress: user.walletAddress,
-        createdAt: user.createdAt
-    };
+    // Create token
+    sendTokenResponse(user, 200, res);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @desc    Get current logged in user
+ * @route   GET /api/auth/me
+ * @access  Private
+ */
+exports.getMe = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user.id);
 
     res.status(200).json({
       success: true,
-      message: "Login successful",
-      token,
-      user: userResponse,
+      data: user
     });
   } catch (error) {
-    console.error("Login Error:", error);
-    // next(error);
-    res.status(500).json({ success: false, message: "Server error during login", error: error.message });
+    next(error);
   }
 };
 
-// @desc    Get current logged in user (example protected route)
-// @route   GET /api/auth/me
-// @access  Private
-exports.getMe = async (req, res, next) => {
-  // This route would require authentication middleware to populate req.user
-  // For now, assuming req.user is populated by a middleware like: 
-  // const decoded = jwt.verify(token, process.env.JWT_SECRET);
-  // req.user = await User.findById(decoded.id).select("-password");
+/**
+ * @desc    Update user details
+ * @route   PUT /api/auth/updatedetails
+ * @access  Private
+ */
+exports.updateDetails = async (req, res, next) => {
   try {
-    // req.user will be set by the auth middleware
-    if (!req.user) {
-        return res.status(401).json({ success: false, message: "Not authorized, user not found" });
+    const fieldsToUpdate = {
+      name: req.body.name,
+      email: req.body.email
+    };
+
+    // Only update wallet address if provided
+    if (req.body.walletAddress) {
+      // Check if wallet address is already in use by another user
+      const walletUser = await User.findOne({ 
+        walletAddress: req.body.walletAddress,
+        _id: { $ne: req.user.id }
+      });
+      
+      if (walletUser) {
+        return res.status(400).json({
+          success: false,
+          message: 'Wallet address already in use'
+        });
+      }
+      
+      fieldsToUpdate.walletAddress = req.body.walletAddress;
     }
-    const user = await User.findById(req.user.id).select("-password");
-    if (!user) {
-        return res.status(404).json({ success: false, message: "User not found" });
-    }
-    res.status(200).json({ success: true, user });
+
+    const user = await User.findByIdAndUpdate(req.user.id, fieldsToUpdate, {
+      new: true,
+      runValidators: true
+    });
+
+    res.status(200).json({
+      success: true,
+      data: user
+    });
   } catch (error) {
-    console.error("GetMe Error:", error);
-    res.status(500).json({ success: false, message: "Server error" });
+    next(error);
   }
 };
 
+/**
+ * @desc    Update password
+ * @route   PUT /api/auth/updatepassword
+ * @access  Private
+ */
+exports.updatePassword = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user.id).select('+password');
+
+    // Check current password
+    if (!(await user.matchPassword(req.body.currentPassword))) {
+      return res.status(401).json({
+        success: false,
+        message: 'Current password is incorrect'
+      });
+    }
+
+    user.password = req.body.newPassword;
+    await user.save();
+
+    sendTokenResponse(user, 200, res);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @desc    Log user out / clear cookie
+ * @route   GET /api/auth/logout
+ * @access  Private
+ */
+exports.logout = async (req, res, next) => {
+  try {
+    res.cookie('token', 'none', {
+      expires: new Date(Date.now() + 10 * 1000),
+      httpOnly: true
+    });
+
+    res.status(200).json({
+      success: true,
+      data: {}
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Helper function to get token from model, create cookie and send response
+const sendTokenResponse = (user, statusCode, res) => {
+  // Create token
+  const token = user.getSignedJwtToken();
+
+  const options = {
+    expires: new Date(
+      Date.now() + process.env.JWT_COOKIE_EXPIRE * 24 * 60 * 60 * 1000
+    ),
+    httpOnly: true
+  };
+
+  // Use secure cookies in production
+  if (process.env.NODE_ENV === 'production') {
+    options.secure = true;
+  }
+
+  res
+    .status(statusCode)
+    .cookie('token', token, options)
+    .json({
+      success: true,
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        walletAddress: user.walletAddress,
+        role: user.role
+      }
+    });
+};

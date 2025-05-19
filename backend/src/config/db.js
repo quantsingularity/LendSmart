@@ -1,20 +1,21 @@
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
+const dotenv = require('dotenv');
+
+// Load env vars
+dotenv.config();
 
 const connectDB = async () => {
   try {
-    await mongoose.connect(process.env.MONGODB_URI, {
+    const conn = await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/lendsmart', {
       useNewUrlParser: true,
-      useUnifiedTopology: true,
-      // useCreateIndex: true, // Not supported in Mongoose 6+
-      // useFindAndModify: false, // Not supported in Mongoose 6+
+      useUnifiedTopology: true
     });
-    console.log("MongoDB Connected...");
-  } catch (err) {
-    console.error("MongoDB Connection Error:", err.message);
-    // Exit process with failure
+
+    console.log(`MongoDB Connected: ${conn.connection.host}`);
+  } catch (error) {
+    console.error(`Error connecting to MongoDB: ${error.message}`);
     process.exit(1);
   }
 };
 
 module.exports = connectDB;
-

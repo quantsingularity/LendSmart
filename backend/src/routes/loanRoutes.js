@@ -1,28 +1,41 @@
-const express = require("express");
-const router = express.Router({ mergeParams: true }); // mergeParams allows us to access params from parent routers (e.g., /api/users/:userId/loans)
-
+const express = require('express');
+const router = express.Router();
+const { protect, authorize } = require('../middleware/auth');
 const {
   getLoans,
-  getLoanById,
-  createLoan,
-  updateLoan,
-  deleteLoan,
-} = require("../controllers/loanController");
+  getMyLoans,
+  getLoan,
+  applyForLoan,
+  fundLoan,
+  disburseLoan,
+  repayLoan,
+  cancelLoan,
+  createRepaymentSchedule,
+  depositCollateral,
+  setRiskScore,
+  markAsDefaulted,
+  getReputationScore
+} = require('../controllers/loanController');
 
-const { protect, authorize } = require("../middleware/authMiddleware");
+// Public routes
+router.get('/', getLoans);
+router.get('/:id', getLoan);
+router.get('/reputation/:address', getReputationScore);
 
-// Route to get all loans or create a new loan
-router
-  .route("/")
-  .get(protect, getLoans) // Protect general access, specific filtering/authorization in controller
-  .post(protect, createLoan); // User must be logged in to create a loan
+// Protected routes (require authentication)
+router.get('/user/my-loans', protect, getMyLoans);
+router.post('/apply', protect, applyForLoan);
+router.post('/:id/fund', protect, fundLoan);
+router.post('/:id/disburse', protect, disburseLoan);
+router.post('/:id/repay', protect, repayLoan);
+router.post('/:id/cancel', protect, cancelLoan);
+router.post('/:id/schedule', protect, createRepaymentSchedule);
+router.post('/:id/collateral', protect, depositCollateral);
 
-// Route for specific loan by ID
-router
-  .route("/:id")
-  .get(protect, getLoanById) // Protect general access, specific auth in controller
-  .put(protect, updateLoan)   // Protect, specific auth (admin, borrower, lender) in controller
-  .delete(protect, deleteLoan); // Protect, specific auth (admin, borrower) in controller
+// Risk assessor only routes
+router.post('/:id/risk', protect, authorize('risk-assessor', 'admin'), setRiskScore);
+
+// Lender or admin only routes
+router.post('/:id/default', protect, authorize('lender', 'admin'), markAsDefaulted);
 
 module.exports = router;
-

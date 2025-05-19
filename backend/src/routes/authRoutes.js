@@ -1,22 +1,23 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
-const { register, login, getMe } = require("../controllers/authController");
-const { protect } = require("../middleware/authMiddleware"); // Assuming authMiddleware will be created
+const { protect } = require('../middleware/auth');
+const {
+  register,
+  login,
+  getMe,
+  updateDetails,
+  updatePassword,
+  logout
+} = require('../controllers/authController');
 
-// @route   POST /api/auth/register
-// @desc    Register user
-// @access  Public
-router.post("/register", register);
+// Public routes
+router.post('/register', register);
+router.post('/login', login);
+router.get('/logout', logout);
 
-// @route   POST /api/auth/login
-// @desc    Authenticate user & get token
-// @access  Public
-router.post("/login", login);
-
-// @route   GET /api/auth/me
-// @desc    Get current user
-// @access  Private
-router.get("/me", protect, getMe); // protect middleware will verify token
+// Protected routes
+router.get('/me', protect, getMe);
+router.put('/updatedetails', protect, updateDetails);
+router.put('/updatepassword', protect, updatePassword);
 
 module.exports = router;
-
