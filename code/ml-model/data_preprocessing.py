@@ -51,8 +51,8 @@ def feature_engineering(borrowers_df, transactions_df):
     # Ensure correct data types for merging if IDs are numeric
     if "borrower_id" in transactions_df.columns and "id" in borrowers_df.columns:
         try:
-            transactions_df["borrower_id"] = pd.to_numeric(transactions_df["borrower_id"], errors=\"coerce\")
-            borrowers_df["id"] = pd.to_numeric(borrowers_df["id"], errors=\"coerce\")
+            transactions_df["borrower_id"] = pd.to_numeric(transactions_df["borrower_id"], errors="coerce")
+            borrowers_df["id"] = pd.to_numeric(borrowers_df["id"], errors="coerce")
         except Exception as e:
             print(f"Error converting IDs to numeric: {e}")
             # Fallback or error handling
