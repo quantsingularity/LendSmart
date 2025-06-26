@@ -129,3 +129,42 @@ variable "db_multi_az" {
 }
 
 
+
+
+variable "db_performance_insights_enabled" {
+  description = "Specifies whether Performance Insights is enabled for the DB instance."
+  type        = bool
+  default     = false
+}
+
+variable "db_performance_insights_retention_period" {
+  description = "The amount of time in days to retain Performance Insights data."
+  type        = number
+  default     = 7
+}
+
+variable "db_performance_insights_kms_key_id" {
+  description = "The AWS KMS key identifier for encryption of Performance Insights data."
+  type        = string
+  default     = null
+}
+
+variable "aurora_availability_zones" {
+  description = "A list of EC2 Availability Zones that instances in the DB cluster can be created in."
+  type        = list(string)
+  default     = []
+}
+
+variable "aurora_instance_count" {
+  description = "The number of Aurora instances to create."
+  type        = number
+  default     = 1
+}
+
+variable "aurora_instance_class" {
+  description = "The instance class of the Aurora instances."
+  type        = string
+  default     = "db.t3.medium"
+}
+
+

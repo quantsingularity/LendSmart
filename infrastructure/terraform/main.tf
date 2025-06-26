@@ -67,3 +67,15 @@ module "security" {
   vpc_id      = module.network.vpc_id
   app_name    = var.app_name
 }
+
+
+module "cost_optimization" {
+  source = "./modules/cost_optimization"
+
+  launch_configuration_name = module.compute.launch_configuration_name
+  subnet_ids                = module.network.private_subnet_ids
+  project_name              = var.project_name
+  s3_bucket_id              = module.storage.app_data_bucket_id
+}
+
+

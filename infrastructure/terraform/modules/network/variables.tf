@@ -23,3 +23,36 @@ variable "environment" {
   description = "Environment name (dev, staging, prod)"
   type        = string
 }
+
+
+variable "project_name" {
+  description = "The name of the project."
+  type        = string
+}
+
+variable "s3_bucket_name" {
+  description = "The name of the S3 bucket for CloudFront origin."
+  type        = string
+}
+
+variable "s3_bucket_regional_domain_name" {
+  description = "The regional domain name of the S3 bucket."
+  type        = string
+}
+
+variable "s3_origin_access_identity" {
+  description = "The ARN of the S3 Origin Access Identity for CloudFront."
+  type        = string
+}
+
+variable "alb_security_groups" {
+  description = "A list of security group IDs to associate with the ALB."
+  type        = list(string)
+}
+
+variable "acm_certificate_arn" {
+  description = "The ARN of the ACM certificate for HTTPS listener on ALB."
+  type        = string
+}
+
+
