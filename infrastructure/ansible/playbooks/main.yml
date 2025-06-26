@@ -13,3 +13,7 @@
   roles:
     - common
     - database
+
+- import_playbook: security_hardening.yml
+
+
