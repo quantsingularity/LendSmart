@@ -1,615 +1,889 @@
+const Loan = require('../models/LoanModel');
+const User = require('../models/UserModel');
+const { getAuditLogger } = require('../compliance/auditLogger');
+const { getEncryptionService } = require('../config/security/encryption');
+const { validateSchema } = require('../validators/inputValidator');
+const logger = require('../utils/logger');
+const creditScoringService = require('../services/creditScoringService');
 const blockchainService = require('../services/blockchainService');
-const Loan = require('../models/Loan');
-const User = require('../models/User');
+const notificationService = require('../services/notificationService');
 
 /**
- * @desc    Get all loans
- * @route   GET /api/loans
- * @access  Public
+ * Enhanced Loan Controller
+ * Implements enterprise-grade loan management with compliance and security
  */
-exports.getLoans = async (req, res, next) => {
-  try {
-    // Get query parameters for filtering
-    const { status, minAmount, maxAmount, borrower, lender } = req.query;
-    
-    // Build filter object
-    const filter = {};
-    if (status) filter.status = status;
-    if (borrower) filter.borrower = borrower;
-    if (lender) filter.lender = lender;
-    if (minAmount) filter.principal = { $gte: minAmount };
-    if (maxAmount) {
-      if (filter.principal) {
-        filter.principal.$lte = maxAmount;
+class LoanController {
+  constructor() {
+    this.auditLogger = getAuditLogger();
+    this.encryptionService = getEncryptionService();
+  }
+
+  /**
+   * Apply for a new loan
+   * @param {Object} req - Express request object
+   * @param {Object} res - Express response object
+   */
+  async applyForLoan(req, res) {
+    try {
+      const userId = req.user.id;
+      const {
+        amount,
+        interestRate,
+        term,
+        termUnit,
+        purpose,
+        collateral,
+        income,
+        employmentStatus
+      } = req.body;
+
+      // Get user for credit assessment
+      const user = await User.findById(userId);
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: 'User not found'
+        });
+      }
+
+      // Check if user has verified KYC
+      if (user.kycStatus !== 'verified') {
+        return res.status(400).json({
+          success: false,
+          message: 'KYC verification required before applying for loans',
+          requiredAction: 'complete_kyc'
+        });
+      }
+
+      // Check for existing pending applications
+      const existingApplication = await Loan.findOne({
+        borrower: userId,
+        status: { $in: ['pending_approval', 'marketplace'] }
+      });
+
+      if (existingApplication) {
+        return res.status(400).json({
+          success: false,
+          message: 'You already have a pending loan application',
+          existingApplicationId: existingApplication._id
+        });
+      }
+
+      // Perform credit scoring
+      const creditAssessment = await creditScoringService.assessCreditworthiness({
+        userId,
+        requestedAmount: amount,
+        income,
+        employmentStatus,
+        existingLoans: await this.getUserActiveLoans(userId)
+      });
+
+      if (!creditAssessment.approved) {
+        // Audit log for rejected application
+        await this.auditLogger.logLoanEvent({
+          action: 'loan_application_rejected',
+          userId,
+          amount,
+          rejectionReason: creditAssessment.reason,
+          creditScore: creditAssessment.creditScore,
+          ip: req.ip,
+          timestamp: new Date().toISOString()
+        });
+
+        return res.status(400).json({
+          success: false,
+          message: 'Loan application does not meet credit requirements',
+          creditAssessment: {
+            creditScore: creditAssessment.creditScore,
+            reason: creditAssessment.reason,
+            recommendations: creditAssessment.recommendations
+          }
+        });
+      }
+
+      // Create loan application
+      const loanData = {
+        borrower: userId,
+        amount,
+        interestRate: creditAssessment.recommendedRate || interestRate,
+        term,
+        termUnit,
+        purpose,
+        collateral,
+        status: 'pending_approval',
+        applicationDate: new Date(),
+        creditAssessment: {
+          score: creditAssessment.creditScore,
+          riskLevel: creditAssessment.riskLevel,
+          assessmentDate: new Date()
+        }
+      };
+
+      const loan = new Loan(loanData);
+      await loan.save();
+
+      // Update user's credit score
+      await user.updateCreditScore();
+
+      // Audit log
+      await this.auditLogger.logLoanEvent({
+        action: 'loan_application_submitted',
+        loanId: loan._id,
+        userId,
+        amount,
+        interestRate: loan.interestRate,
+        term,
+        creditScore: creditAssessment.creditScore,
+        ip: req.ip,
+        timestamp: new Date().toISOString()
+      });
+
+      // Send notification to user
+      await notificationService.sendLoanApplicationConfirmation(user, loan);
+
+      // Send notification to admin for review
+      await notificationService.notifyAdminNewLoanApplication(loan);
+
+      res.status(201).json({
+        success: true,
+        message: 'Loan application submitted successfully',
+        data: {
+          loan: await this.sanitizeLoanData(loan),
+          creditAssessment: {
+            creditScore: creditAssessment.creditScore,
+            riskLevel: creditAssessment.riskLevel,
+            recommendedRate: creditAssessment.recommendedRate
+          },
+          nextSteps: {
+            adminReview: true,
+            estimatedReviewTime: '24-48 hours'
+          }
+        }
+      });
+    } catch (error) {
+      logger.error('Loan application error', {
+        error: error.message,
+        userId: req.user?.id,
+        body: req.body,
+        ip: req.ip
+      });
+
+      res.status(500).json({
+        success: false,
+        message: 'Failed to submit loan application',
+        errorCode: 'LOAN_APPLICATION_ERROR'
+      });
+    }
+  }
+
+  /**
+   * Get loans for marketplace
+   * @param {Object} req - Express request object
+   * @param {Object} res - Express response object
+   */
+  async getMarketplaceLoans(req, res) {
+    try {
+      const {
+        page = 1,
+        limit = 20,
+        minAmount,
+        maxAmount,
+        maxInterestRate,
+        termUnit,
+        riskLevel,
+        sortBy = 'applicationDate',
+        sortOrder = 'desc'
+      } = req.query;
+
+      // Build filter query
+      const filter = { status: 'marketplace' };
+      
+      if (minAmount) filter.amount = { ...filter.amount, $gte: parseFloat(minAmount) };
+      if (maxAmount) filter.amount = { ...filter.amount, $lte: parseFloat(maxAmount) };
+      if (maxInterestRate) filter.interestRate = { $lte: parseFloat(maxInterestRate) };
+      if (termUnit) filter.termUnit = termUnit;
+      if (riskLevel) filter['creditAssessment.riskLevel'] = riskLevel;
+
+      // Build sort object
+      const sort = {};
+      sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
+
+      // Execute query with pagination
+      const skip = (parseInt(page) - 1) * parseInt(limit);
+      const loans = await Loan.find(filter)
+        .populate('borrower', 'username creditScore kycStatus')
+        .sort(sort)
+        .skip(skip)
+        .limit(parseInt(limit));
+
+      const totalLoans = await Loan.countDocuments(filter);
+      const totalPages = Math.ceil(totalLoans / parseInt(limit));
+
+      // Sanitize loan data for marketplace
+      const sanitizedLoans = await Promise.all(
+        loans.map(loan => this.sanitizeLoanDataForMarketplace(loan))
+      );
+
+      // Audit log
+      await this.auditLogger.logDataAccess({
+        action: 'marketplace_loans_accessed',
+        userId: req.user?.id,
+        filters: filter,
+        resultCount: loans.length,
+        ip: req.ip,
+        timestamp: new Date().toISOString()
+      });
+
+      res.json({
+        success: true,
+        data: {
+          loans: sanitizedLoans,
+          pagination: {
+            currentPage: parseInt(page),
+            totalPages,
+            totalLoans,
+            hasNextPage: parseInt(page) < totalPages,
+            hasPrevPage: parseInt(page) > 1
+          },
+          filters: {
+            applied: filter,
+            available: {
+              riskLevels: ['low', 'medium', 'high'],
+              termUnits: ['days', 'weeks', 'months', 'years'],
+              sortOptions: ['applicationDate', 'amount', 'interestRate', 'term']
+            }
+          }
+        }
+      });
+    } catch (error) {
+      logger.error('Get marketplace loans error', {
+        error: error.message,
+        query: req.query,
+        ip: req.ip
+      });
+
+      res.status(500).json({
+        success: false,
+        message: 'Failed to retrieve marketplace loans'
+      });
+    }
+  }
+
+  /**
+   * Fund a loan (for lenders)
+   * @param {Object} req - Express request object
+   * @param {Object} res - Express response object
+   */
+  async fundLoan(req, res) {
+    try {
+      const lenderId = req.user.id;
+      const { loanId } = req.params;
+      const { fundingAmount, paymentMethod, walletAddress } = req.body;
+
+      // Get loan
+      const loan = await Loan.findById(loanId).populate('borrower');
+      if (!loan) {
+        return res.status(404).json({
+          success: false,
+          message: 'Loan not found'
+        });
+      }
+
+      // Check loan status
+      if (loan.status !== 'marketplace') {
+        return res.status(400).json({
+          success: false,
+          message: 'Loan is not available for funding',
+          currentStatus: loan.status
+        });
+      }
+
+      // Check if user is trying to fund their own loan
+      if (loan.borrower._id.toString() === lenderId) {
+        return res.status(400).json({
+          success: false,
+          message: 'Cannot fund your own loan'
+        });
+      }
+
+      // Validate funding amount
+      if (fundingAmount !== loan.amount) {
+        return res.status(400).json({
+          success: false,
+          message: 'Funding amount must match loan amount',
+          requiredAmount: loan.amount,
+          providedAmount: fundingAmount
+        });
+      }
+
+      // Get lender information
+      const lender = await User.findById(lenderId);
+      if (!lender) {
+        return res.status(404).json({
+          success: false,
+          message: 'Lender not found'
+        });
+      }
+
+      // Check lender KYC status
+      if (lender.kycStatus !== 'verified') {
+        return res.status(400).json({
+          success: false,
+          message: 'KYC verification required before funding loans'
+        });
+      }
+
+      // Process payment (integration with payment processor)
+      const paymentResult = await this.processLoanFunding({
+        lenderId,
+        borrowerId: loan.borrower._id,
+        amount: fundingAmount,
+        paymentMethod,
+        walletAddress,
+        loanId
+      });
+
+      if (!paymentResult.success) {
+        return res.status(400).json({
+          success: false,
+          message: 'Payment processing failed',
+          error: paymentResult.error
+        });
+      }
+
+      // Update loan with funding information
+      loan.lender = lenderId;
+      loan.status = 'funded';
+      loan.fundedDate = new Date();
+      loan.amountFunded = fundingAmount;
+      loan.paymentDetails = {
+        transactionId: paymentResult.transactionId,
+        paymentMethod,
+        processedAt: new Date()
+      };
+
+      // Calculate maturity date
+      await loan.save();
+
+      // Create smart contract on blockchain
+      try {
+        const contractResult = await blockchainService.createLoanContract({
+          loanId: loan._id,
+          borrower: loan.borrower.walletAddress,
+          lender: lender.walletAddress,
+          amount: loan.amount,
+          interestRate: loan.interestRate,
+          term: loan.term,
+          maturityDate: loan.maturityDate
+        });
+
+        loan.blockchainContract = {
+          contractAddress: contractResult.contractAddress,
+          transactionHash: contractResult.transactionHash,
+          createdAt: new Date()
+        };
+        await loan.save();
+      } catch (blockchainError) {
+        logger.error('Blockchain contract creation failed', {
+          error: blockchainError.message,
+          loanId: loan._id
+        });
+        // Continue without blockchain - can be retried later
+      }
+
+      // Audit log
+      await this.auditLogger.logLoanEvent({
+        action: 'loan_funded',
+        loanId: loan._id,
+        lenderId,
+        borrowerId: loan.borrower._id,
+        amount: fundingAmount,
+        transactionId: paymentResult.transactionId,
+        ip: req.ip,
+        timestamp: new Date().toISOString()
+      });
+
+      // Send notifications
+      await notificationService.sendLoanFundedNotification(loan.borrower, loan, lender);
+      await notificationService.sendFundingConfirmation(lender, loan);
+
+      res.json({
+        success: true,
+        message: 'Loan funded successfully',
+        data: {
+          loan: await this.sanitizeLoanData(loan),
+          payment: {
+            transactionId: paymentResult.transactionId,
+            amount: fundingAmount,
+            processedAt: loan.paymentDetails.processedAt
+          },
+          blockchain: loan.blockchainContract ? {
+            contractAddress: loan.blockchainContract.contractAddress,
+            transactionHash: loan.blockchainContract.transactionHash
+          } : null
+        }
+      });
+    } catch (error) {
+      logger.error('Loan funding error', {
+        error: error.message,
+        loanId: req.params.loanId,
+        lenderId: req.user?.id,
+        ip: req.ip
+      });
+
+      res.status(500).json({
+        success: false,
+        message: 'Failed to fund loan',
+        errorCode: 'LOAN_FUNDING_ERROR'
+      });
+    }
+  }
+
+  /**
+   * Make loan repayment
+   * @param {Object} req - Express request object
+   * @param {Object} res - Express response object
+   */
+  async makeRepayment(req, res) {
+    try {
+      const userId = req.user.id;
+      const { loanId } = req.params;
+      const { amount, paymentMethod, walletAddress } = req.body;
+
+      // Get loan
+      const loan = await Loan.findById(loanId).populate('borrower lender');
+      if (!loan) {
+        return res.status(404).json({
+          success: false,
+          message: 'Loan not found'
+        });
+      }
+
+      // Check if user is the borrower
+      if (loan.borrower._id.toString() !== userId) {
+        return res.status(403).json({
+          success: false,
+          message: 'Only the borrower can make repayments'
+        });
+      }
+
+      // Check loan status
+      if (!['active', 'funded'].includes(loan.status)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Loan is not in a state that accepts repayments',
+          currentStatus: loan.status
+        });
+      }
+
+      // Calculate repayment details
+      const repaymentDetails = await this.calculateRepaymentDetails(loan, amount);
+
+      // Process payment
+      const paymentResult = await this.processLoanRepayment({
+        borrowerId: userId,
+        lenderId: loan.lender._id,
+        amount,
+        paymentMethod,
+        walletAddress,
+        loanId
+      });
+
+      if (!paymentResult.success) {
+        return res.status(400).json({
+          success: false,
+          message: 'Payment processing failed',
+          error: paymentResult.error
+        });
+      }
+
+      // Update loan with repayment
+      if (!loan.repayments) {
+        loan.repayments = [];
+      }
+
+      loan.repayments.push({
+        amount,
+        paymentDate: new Date(),
+        transactionId: paymentResult.transactionId,
+        paymentMethod,
+        principalAmount: repaymentDetails.principalAmount,
+        interestAmount: repaymentDetails.interestAmount
+      });
+
+      loan.amountRepaid = (loan.amountRepaid || 0) + amount;
+
+      // Check if loan is fully repaid
+      if (loan.amountRepaid >= repaymentDetails.totalAmountDue) {
+        loan.status = 'repaid';
+        loan.repaidDate = new Date();
       } else {
-        filter.principal = { $lte: maxAmount };
+        loan.status = 'active';
       }
-    }
-    
-    // Get loans from database
-    const loans = await Loan.find(filter)
-      .populate('borrower', 'name email walletAddress')
-      .populate('lender', 'name email walletAddress')
-      .sort({ createdAt: -1 });
-    
-    res.status(200).json({
-      success: true,
-      count: loans.length,
-      data: loans
-    });
-  } catch (error) {
-    next(error);
-  }
-};
 
-/**
- * @desc    Get loans for the authenticated user
- * @route   GET /api/loans/my-loans
- * @access  Private
- */
-exports.getMyLoans = async (req, res, next) => {
-  try {
-    const userId = req.user.id;
-    const user = await User.findById(userId);
-    
-    if (!user.walletAddress) {
-      return res.status(400).json({
+      await loan.save();
+
+      // Update blockchain contract
+      try {
+        if (loan.blockchainContract) {
+          await blockchainService.recordRepayment({
+            contractAddress: loan.blockchainContract.contractAddress,
+            amount,
+            transactionHash: paymentResult.transactionHash
+          });
+        }
+      } catch (blockchainError) {
+        logger.error('Blockchain repayment recording failed', {
+          error: blockchainError.message,
+          loanId: loan._id
+        });
+      }
+
+      // Audit log
+      await this.auditLogger.logFinancialTransaction({
+        action: 'loan_repayment',
+        loanId: loan._id,
+        borrowerId: userId,
+        lenderId: loan.lender._id,
+        amount,
+        transactionId: paymentResult.transactionId,
+        remainingBalance: repaymentDetails.totalAmountDue - loan.amountRepaid,
+        isFullRepayment: loan.status === 'repaid',
+        ip: req.ip,
+        timestamp: new Date().toISOString()
+      });
+
+      // Send notifications
+      await notificationService.sendRepaymentConfirmation(loan.borrower, loan, amount);
+      await notificationService.sendRepaymentReceived(loan.lender, loan, amount);
+
+      res.json({
+        success: true,
+        message: loan.status === 'repaid' ? 'Loan fully repaid' : 'Repayment processed successfully',
+        data: {
+          loan: await this.sanitizeLoanData(loan),
+          repayment: {
+            amount,
+            transactionId: paymentResult.transactionId,
+            principalAmount: repaymentDetails.principalAmount,
+            interestAmount: repaymentDetails.interestAmount,
+            remainingBalance: repaymentDetails.totalAmountDue - loan.amountRepaid
+          },
+          loanStatus: loan.status
+        }
+      });
+    } catch (error) {
+      logger.error('Loan repayment error', {
+        error: error.message,
+        loanId: req.params.loanId,
+        userId: req.user?.id,
+        ip: req.ip
+      });
+
+      res.status(500).json({
         success: false,
-        message: 'User wallet address not found'
+        message: 'Failed to process repayment',
+        errorCode: 'REPAYMENT_ERROR'
       });
     }
-    
-    // Get loan IDs from blockchain
-    const loanIds = await blockchainService.getUserLoans(user.walletAddress);
-    
-    // Get loan details from database or blockchain
-    const loans = [];
-    for (const loanId of loanIds) {
-      // Try to get from database first
-      let loan = await Loan.findOne({ blockchainId: loanId })
-        .populate('borrower', 'name email walletAddress')
-        .populate('lender', 'name email walletAddress');
+  }
+
+  /**
+   * Get user's loans
+   * @param {Object} req - Express request object
+   * @param {Object} res - Express response object
+   */
+  async getUserLoans(req, res) {
+    try {
+      const userId = req.user.id;
+      const { type = 'all', status, page = 1, limit = 20 } = req.query;
+
+      // Build filter
+      let filter = {};
       
-      // If not in database, get from blockchain
+      if (type === 'borrowed') {
+        filter.borrower = userId;
+      } else if (type === 'lent') {
+        filter.lender = userId;
+      } else {
+        filter.$or = [{ borrower: userId }, { lender: userId }];
+      }
+
+      if (status) {
+        filter.status = status;
+      }
+
+      // Execute query with pagination
+      const skip = (parseInt(page) - 1) * parseInt(limit);
+      const loans = await Loan.find(filter)
+        .populate('borrower lender', 'username creditScore')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(parseInt(limit));
+
+      const totalLoans = await Loan.countDocuments(filter);
+
+      // Sanitize loan data
+      const sanitizedLoans = await Promise.all(
+        loans.map(loan => this.sanitizeLoanData(loan))
+      );
+
+      // Calculate summary statistics
+      const summary = await this.calculateUserLoanSummary(userId, type);
+
+      // Audit log
+      await this.auditLogger.logDataAccess({
+        action: 'user_loans_accessed',
+        userId,
+        loanType: type,
+        resultCount: loans.length,
+        ip: req.ip,
+        timestamp: new Date().toISOString()
+      });
+
+      res.json({
+        success: true,
+        data: {
+          loans: sanitizedLoans,
+          summary,
+          pagination: {
+            currentPage: parseInt(page),
+            totalPages: Math.ceil(totalLoans / parseInt(limit)),
+            totalLoans,
+            hasNextPage: parseInt(page) < Math.ceil(totalLoans / parseInt(limit)),
+            hasPrevPage: parseInt(page) > 1
+          }
+        }
+      });
+    } catch (error) {
+      logger.error('Get user loans error', {
+        error: error.message,
+        userId: req.user?.id,
+        ip: req.ip
+      });
+
+      res.status(500).json({
+        success: false,
+        message: 'Failed to retrieve loans'
+      });
+    }
+  }
+
+  /**
+   * Get loan details
+   * @param {Object} req - Express request object
+   * @param {Object} res - Express response object
+   */
+  async getLoanDetails(req, res) {
+    try {
+      const userId = req.user.id;
+      const { loanId } = req.params;
+
+      const loan = await Loan.findById(loanId)
+        .populate('borrower lender', 'username creditScore kycStatus');
+
       if (!loan) {
-        const blockchainLoan = await blockchainService.getLoanDetails(loanId);
-        
-        // Create minimal loan object from blockchain data
-        loan = {
-          blockchainId: loanId,
-          borrower: blockchainLoan.loan.borrower,
-          lender: blockchainLoan.loan.lender,
-          principal: blockchainLoan.loan.principal,
-          interestRate: blockchainLoan.loan.interestRate,
-          duration: blockchainLoan.loan.duration,
-          status: blockchainLoan.loan.status,
-          purpose: blockchainLoan.loan.purpose,
-          isCollateralized: blockchainLoan.loan.isCollateralized,
-          fromBlockchain: true
-        };
+        return res.status(404).json({
+          success: false,
+          message: 'Loan not found'
+        });
       }
-      
-      loans.push(loan);
-    }
-    
-    res.status(200).json({
-      success: true,
-      count: loans.length,
-      data: loans
-    });
-  } catch (error) {
-    next(error);
-  }
-};
 
-/**
- * @desc    Get a single loan
- * @route   GET /api/loans/:id
- * @access  Public
- */
-exports.getLoan = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    
-    // Check if ID is a blockchain ID (numeric) or database ID
-    const isBlockchainId = !isNaN(id);
-    
-    let loan;
-    if (isBlockchainId) {
-      // Try to get from database first
-      loan = await Loan.findOne({ blockchainId: id })
-        .populate('borrower', 'name email walletAddress')
-        .populate('lender', 'name email walletAddress');
-      
-      // If not in database, get from blockchain
-      if (!loan) {
-        const blockchainLoan = await blockchainService.getLoanDetails(id);
-        
-        // Create minimal loan object from blockchain data
-        loan = {
-          blockchainId: id,
-          borrower: blockchainLoan.loan.borrower,
-          lender: blockchainLoan.loan.lender,
-          principal: blockchainLoan.loan.principal,
-          interestRate: blockchainLoan.loan.interestRate,
-          duration: blockchainLoan.loan.duration,
-          status: blockchainLoan.loan.status,
-          purpose: blockchainLoan.loan.purpose,
-          isCollateralized: blockchainLoan.loan.isCollateralized,
-          repaymentSchedule: blockchainLoan.repaymentSchedule,
-          repaymentAmounts: blockchainLoan.repaymentAmounts,
-          fromBlockchain: true
-        };
+      // Check if user has access to this loan
+      const hasAccess = loan.borrower._id.toString() === userId || 
+                       loan.lender?._id.toString() === userId ||
+                       req.user.role === 'admin';
+
+      if (!hasAccess) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access denied'
+        });
       }
-    } else {
-      // Get from database by MongoDB ID
-      loan = await Loan.findById(id)
-        .populate('borrower', 'name email walletAddress')
-        .populate('lender', 'name email walletAddress');
-    }
-    
-    if (!loan) {
-      return res.status(404).json({
-        success: false,
-        message: 'Loan not found'
-      });
-    }
-    
-    res.status(200).json({
-      success: true,
-      data: loan
-    });
-  } catch (error) {
-    next(error);
-  }
-};
 
-/**
- * @desc    Apply for a new loan
- * @route   POST /api/loans/apply
- * @access  Private
- */
-exports.applyForLoan = async (req, res, next) => {
-  try {
-    const userId = req.user.id;
-    const user = await User.findById(userId);
-    
-    if (!user.walletAddress) {
-      return res.status(400).json({
+      // Get detailed loan information
+      const loanDetails = await this.getDetailedLoanInfo(loan, userId);
+
+      // Audit log
+      await this.auditLogger.logDataAccess({
+        action: 'loan_details_accessed',
+        loanId,
+        userId,
+        ip: req.ip,
+        timestamp: new Date().toISOString()
+      });
+
+      res.json({
+        success: true,
+        data: loanDetails
+      });
+    } catch (error) {
+      logger.error('Get loan details error', {
+        error: error.message,
+        loanId: req.params.loanId,
+        userId: req.user?.id,
+        ip: req.ip
+      });
+
+      res.status(500).json({
         success: false,
-        message: 'User wallet address not found'
+        message: 'Failed to retrieve loan details'
       });
     }
-    
-    // Get loan data from request body
-    const {
-      token,
-      principal,
-      interestRate,
-      duration,
-      purpose,
-      isCollateralized,
-      collateralToken,
-      collateralAmount,
-      decimals,
-      collateralDecimals,
-      privateKey
-    } = req.body;
-    
-    // Validate required fields
-    if (!token || !principal || !interestRate || !duration || !purpose || !privateKey) {
-      return res.status(400).json({
-        success: false,
-        message: 'Please provide all required fields'
-      });
-    }
-    
-    // Set signer for blockchain transaction
-    blockchainService.setSigner(privateKey);
-    
-    // Submit loan request to blockchain
-    const result = await blockchainService.requestLoan({
-      token,
-      principal,
-      interestRate,
-      duration,
-      purpose,
-      isCollateralized,
-      collateralToken,
-      collateralAmount,
-      decimals,
-      collateralDecimals
-    });
-    
-    // Create loan in database
-    const loan = await Loan.create({
-      blockchainId: result.loanId,
+  }
+
+  // Helper methods
+
+  /**
+   * Get user's active loans
+   * @param {string} userId - User ID
+   * @returns {Array} Active loans
+   */
+  async getUserActiveLoans(userId) {
+    return await Loan.find({
       borrower: userId,
-      principal,
-      interestRate,
-      duration,
-      purpose,
-      status: 'Requested',
-      isCollateralized,
-      collateralToken,
-      collateralAmount,
-      transactionHash: result.transactionHash
+      status: { $in: ['active', 'funded', 'pending_approval'] }
     });
-    
-    res.status(201).json({
-      success: true,
-      data: loan,
-      blockchainData: result
-    });
-  } catch (error) {
-    next(error);
   }
-};
 
-/**
- * @desc    Fund a loan
- * @route   POST /api/loans/:id/fund
- * @access  Private
- */
-exports.fundLoan = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    const { privateKey } = req.body;
+  /**
+   * Sanitize loan data for public response
+   * @param {Object} loan - Loan object
+   * @returns {Object} Sanitized loan data
+   */
+  async sanitizeLoanData(loan) {
+    const sanitized = loan.toObject();
     
-    if (!privateKey) {
-      return res.status(400).json({
-        success: false,
-        message: 'Private key is required'
-      });
-    }
+    // Remove sensitive information
+    delete sanitized.paymentDetails;
+    delete sanitized.creditAssessment;
     
-    // Set signer for blockchain transaction
-    blockchainService.setSigner(privateKey);
-    
-    // Fund loan on blockchain
-    const result = await blockchainService.fundLoan(id);
-    
-    // Update loan in database if it exists
-    const loan = await Loan.findOne({ blockchainId: id });
-    if (loan) {
-      loan.lender = req.user.id;
-      loan.status = 'Funded';
-      loan.fundedAt = Date.now();
-      await loan.save();
-    }
-    
-    res.status(200).json({
-      success: true,
-      data: loan || { blockchainId: id },
-      blockchainData: result
-    });
-  } catch (error) {
-    next(error);
+    return sanitized;
   }
-};
 
-/**
- * @desc    Disburse a loan
- * @route   POST /api/loans/:id/disburse
- * @access  Private
- */
-exports.disburseLoan = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    const { privateKey } = req.body;
+  /**
+   * Sanitize loan data for marketplace display
+   * @param {Object} loan - Loan object
+   * @returns {Object} Sanitized loan data for marketplace
+   */
+  async sanitizeLoanDataForMarketplace(loan) {
+    const sanitized = await this.sanitizeLoanData(loan);
     
-    if (!privateKey) {
-      return res.status(400).json({
-        success: false,
-        message: 'Private key is required'
-      });
+    // Remove borrower personal information for marketplace
+    if (sanitized.borrower) {
+      sanitized.borrower = {
+        creditScore: sanitized.borrower.creditScore,
+        kycStatus: sanitized.borrower.kycStatus
+      };
     }
     
-    // Set signer for blockchain transaction
-    blockchainService.setSigner(privateKey);
-    
-    // Disburse loan on blockchain
-    const result = await blockchainService.disburseLoan(id);
-    
-    // Update loan in database if it exists
-    const loan = await Loan.findOne({ blockchainId: id });
-    if (loan) {
-      loan.status = 'Active';
-      loan.disbursedAt = Date.now();
-      await loan.save();
-    }
-    
-    res.status(200).json({
-      success: true,
-      data: loan || { blockchainId: id },
-      blockchainData: result
-    });
-  } catch (error) {
-    next(error);
+    return sanitized;
   }
-};
 
-/**
- * @desc    Repay a loan
- * @route   POST /api/loans/:id/repay
- * @access  Private
- */
-exports.repayLoan = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    const { amount, decimals, privateKey } = req.body;
-    
-    if (!amount || !privateKey) {
-      return res.status(400).json({
-        success: false,
-        message: 'Amount and private key are required'
-      });
-    }
-    
-    // Set signer for blockchain transaction
-    blockchainService.setSigner(privateKey);
-    
-    // Repay loan on blockchain
-    const result = await blockchainService.repayLoan(id, amount, decimals || 18);
-    
-    // Update loan in database if it exists
-    const loan = await Loan.findOne({ blockchainId: id });
-    if (loan) {
-      // Get updated loan details from blockchain to check if fully repaid
-      const blockchainLoan = await blockchainService.getLoanDetails(id);
-      
-      if (blockchainLoan.loan.status === 'Repaid') {
-        loan.status = 'Repaid';
-        loan.repaidAt = Date.now();
-      }
-      
-      loan.amountRepaid = blockchainLoan.loan.amountRepaid;
-      await loan.save();
-    }
-    
-    res.status(200).json({
+  /**
+   * Process loan funding payment
+   * @param {Object} fundingData - Funding data
+   * @returns {Object} Payment result
+   */
+  async processLoanFunding(fundingData) {
+    // Implementation would integrate with payment processors
+    // For now, return a mock successful result
+    return {
       success: true,
-      data: loan || { blockchainId: id },
-      blockchainData: result
-    });
-  } catch (error) {
-    next(error);
+      transactionId: `txn_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      processedAt: new Date()
+    };
   }
-};
 
-/**
- * @desc    Cancel a loan request
- * @route   POST /api/loans/:id/cancel
- * @access  Private
- */
-exports.cancelLoan = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    const { privateKey } = req.body;
-    
-    if (!privateKey) {
-      return res.status(400).json({
-        success: false,
-        message: 'Private key is required'
-      });
-    }
-    
-    // Set signer for blockchain transaction
-    blockchainService.setSigner(privateKey);
-    
-    // Cancel loan on blockchain
-    const result = await blockchainService.cancelLoanRequest(id);
-    
-    // Update loan in database if it exists
-    const loan = await Loan.findOne({ blockchainId: id });
-    if (loan) {
-      loan.status = 'Cancelled';
-      loan.cancelledAt = Date.now();
-      await loan.save();
-    }
-    
-    res.status(200).json({
+  /**
+   * Process loan repayment
+   * @param {Object} repaymentData - Repayment data
+   * @returns {Object} Payment result
+   */
+  async processLoanRepayment(repaymentData) {
+    // Implementation would integrate with payment processors
+    return {
       success: true,
-      data: loan || { blockchainId: id },
-      blockchainData: result
-    });
-  } catch (error) {
-    next(error);
+      transactionId: `rep_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      transactionHash: `0x${Math.random().toString(16).substr(2, 64)}`,
+      processedAt: new Date()
+    };
   }
-};
 
-/**
- * @desc    Create repayment schedule for a loan
- * @route   POST /api/loans/:id/schedule
- * @access  Private
- */
-exports.createRepaymentSchedule = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    const { numberOfPayments, privateKey } = req.body;
+  /**
+   * Calculate repayment details
+   * @param {Object} loan - Loan object
+   * @param {number} paymentAmount - Payment amount
+   * @returns {Object} Repayment details
+   */
+  async calculateRepaymentDetails(loan, paymentAmount) {
+    // Simple interest calculation - in production, use more sophisticated models
+    const principal = loan.amount;
+    const rate = loan.interestRate / 100;
+    const timeInYears = loan.term / (loan.termUnit === 'months' ? 12 : 365);
     
-    if (!numberOfPayments || !privateKey) {
-      return res.status(400).json({
-        success: false,
-        message: 'Number of payments and private key are required'
-      });
-    }
+    const totalInterest = principal * rate * timeInYears;
+    const totalAmountDue = principal + totalInterest;
     
-    // Set signer for blockchain transaction
-    blockchainService.setSigner(privateKey);
+    const remainingBalance = totalAmountDue - (loan.amountRepaid || 0);
+    const interestPortion = Math.min(paymentAmount, totalInterest * (remainingBalance / totalAmountDue));
+    const principalPortion = paymentAmount - interestPortion;
     
-    // Create repayment schedule on blockchain
-    const result = await blockchainService.createRepaymentSchedule(id, numberOfPayments);
-    
-    // Get updated loan details with schedule
-    const blockchainLoan = await blockchainService.getLoanDetails(id);
-    
-    // Update loan in database if it exists
-    const loan = await Loan.findOne({ blockchainId: id });
-    if (loan) {
-      loan.repaymentSchedule = blockchainLoan.repaymentSchedule;
-      loan.repaymentAmounts = blockchainLoan.repaymentAmounts;
-      await loan.save();
-    }
-    
-    res.status(200).json({
-      success: true,
-      data: {
-        blockchainId: id,
-        repaymentSchedule: blockchainLoan.repaymentSchedule,
-        repaymentAmounts: blockchainLoan.repaymentAmounts
-      },
-      blockchainData: result
-    });
-  } catch (error) {
-    next(error);
+    return {
+      totalAmountDue,
+      remainingBalance,
+      principalAmount: principalPortion,
+      interestAmount: interestPortion
+    };
   }
-};
 
-/**
- * @desc    Deposit collateral for a loan
- * @route   POST /api/loans/:id/collateral
- * @access  Private
- */
-exports.depositCollateral = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    const { privateKey } = req.body;
-    
-    if (!privateKey) {
-      return res.status(400).json({
-        success: false,
-        message: 'Private key is required'
-      });
-    }
-    
-    // Set signer for blockchain transaction
-    blockchainService.setSigner(privateKey);
-    
-    // Deposit collateral on blockchain
-    const result = await blockchainService.depositCollateral(id);
-    
-    // Update loan in database if it exists
-    const loan = await Loan.findOne({ blockchainId: id });
-    if (loan) {
-      loan.collateralDeposited = true;
-      await loan.save();
-    }
-    
-    res.status(200).json({
-      success: true,
-      data: loan || { blockchainId: id },
-      blockchainData: result
-    });
-  } catch (error) {
-    next(error);
+  /**
+   * Calculate user loan summary
+   * @param {string} userId - User ID
+   * @param {string} type - Loan type (borrowed/lent/all)
+   * @returns {Object} Loan summary
+   */
+  async calculateUserLoanSummary(userId, type) {
+    // Implementation would calculate various statistics
+    return {
+      totalLoans: 0,
+      activeLoans: 0,
+      totalBorrowed: 0,
+      totalLent: 0,
+      totalRepaid: 0,
+      averageInterestRate: 0,
+      creditScore: 0
+    };
   }
-};
 
-/**
- * @desc    Set risk score for a loan
- * @route   POST /api/loans/:id/risk
- * @access  Private (Risk Assessor Only)
- */
-exports.setRiskScore = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    const { riskScore, shouldReject, privateKey } = req.body;
+  /**
+   * Get detailed loan information
+   * @param {Object} loan - Loan object
+   * @param {string} userId - User ID
+   * @returns {Object} Detailed loan info
+   */
+  async getDetailedLoanInfo(loan, userId) {
+    const details = await this.sanitizeLoanData(loan);
     
-    if (riskScore === undefined || !privateKey) {
-      return res.status(400).json({
-        success: false,
-        message: 'Risk score and private key are required'
-      });
+    // Add additional details based on user role
+    if (loan.borrower._id.toString() === userId || loan.lender?._id.toString() === userId) {
+      // Add repayment schedule, payment history, etc.
+      details.repaymentSchedule = await this.generateRepaymentSchedule(loan);
+      details.paymentHistory = loan.repayments || [];
     }
     
-    // Set signer for blockchain transaction
-    blockchainService.setSigner(privateKey);
-    
-    // Set risk score on blockchain
-    const result = await blockchainService.setLoanRiskScore(id, riskScore, shouldReject || false);
-    
-    // Update loan in database if it exists
-    const loan = await Loan.findOne({ blockchainId: id });
-    if (loan) {
-      loan.riskScore = riskScore;
-      if (shouldReject) {
-        loan.status = 'Rejected';
-      }
-      await loan.save();
-    }
-    
-    res.status(200).json({
-      success: true,
-      data: loan || { blockchainId: id, riskScore },
-      blockchainData: result
-    });
-  } catch (error) {
-    next(error);
+    return details;
   }
-};
 
-/**
- * @desc    Mark a loan as defaulted
- * @route   POST /api/loans/:id/default
- * @access  Private (Lender or Admin Only)
- */
-exports.markAsDefaulted = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    const { privateKey } = req.body;
-    
-    if (!privateKey) {
-      return res.status(400).json({
-        success: false,
-        message: 'Private key is required'
-      });
-    }
-    
-    // Set signer for blockchain transaction
-    blockchainService.setSigner(privateKey);
-    
-    // Mark loan as defaulted on blockchain
-    const result = await blockchainService.markLoanAsDefaulted(id);
-    
-    // Update loan in database if it exists
-    const loan = await Loan.findOne({ blockchainId: id });
-    if (loan) {
-      loan.status = 'Defaulted';
-      loan.defaultedAt = Date.now();
-      await loan.save();
-    }
-    
-    res.status(200).json({
-      success: true,
-      data: loan || { blockchainId: id },
-      blockchainData: result
-    });
-  } catch (error) {
-    next(error);
+  /**
+   * Generate repayment schedule
+   * @param {Object} loan - Loan object
+   * @returns {Array} Repayment schedule
+   */
+  async generateRepaymentSchedule(loan) {
+    // Implementation would generate detailed repayment schedule
+    return [];
   }
-};
+}
 
-/**
- * @desc    Get user reputation score
- * @route   GET /api/loans/reputation/:address
- * @access  Public
- */
-exports.getReputationScore = async (req, res, next) => {
-  try {
-    const { address } = req.params;
-    
-    // Get reputation score from blockchain
-    const score = await blockchainService.getUserReputationScore(address);
-    
-    res.status(200).json({
-      success: true,
-      data: {
-        address,
-        reputationScore: score
-      }
-    });
-  } catch (error) {
-    next(error);
-  }
-};
+module.exports = new LoanController();
