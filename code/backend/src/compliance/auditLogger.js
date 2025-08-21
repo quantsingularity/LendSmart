@@ -1,8 +1,127 @@
 const winston = require('winston');
 const DailyRotateFile = require('winston-daily-rotate-file');
+const mongoose = require('mongoose');
 const crypto = require('crypto');
 const { getEncryptionService } = require('../config/security/encryption');
-const redisClient = require('../config/redis');
+
+// Redis client with fallback for development
+let redisClient;
+try {
+  redisClient = require('../config/redis');
+} catch (error) {
+  console.warn('Redis client not available, using in-memory fallback for development');
+  // In-memory fallback for development
+  const memoryStore = new Map();
+  redisClient = {
+    get: async (key) => memoryStore.get(key) || null,
+    setex: async (key, ttl, value) => {
+      memoryStore.set(key, value);
+      setTimeout(() => memoryStore.delete(key), ttl * 1000);
+    },
+    del: async (key) => memoryStore.delete(key)
+  };
+}
+
+/**
+ * Audit Log Schema for database storage
+ */
+const auditLogSchema = new mongoose.Schema({
+  eventId: {
+    type: String,
+    required: true,
+    unique: true,
+    default: () => `audit_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+  },
+  
+  category: {
+    type: String,
+    required: true,
+    enum: ['authentication', 'authorization', 'data_access', 'data_modification', 'security', 'compliance', 'system', 'business', 'financial', 'loan_management', 'api_access'],
+    index: true
+  },
+  
+  action: {
+    type: String,
+    required: true,
+    index: true
+  },
+  
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    index: true
+  },
+  
+  username: String,
+  
+  ip: {
+    type: String,
+    required: true,
+    index: true
+  },
+  
+  userAgent: String,
+  method: String,
+  url: String,
+  
+  resource: String,
+  resourceId: String,
+  
+  oldValues: mongoose.Schema.Types.Mixed,
+  newValues: mongoose.Schema.Types.Mixed,
+  
+  success: {
+    type: Boolean,
+    required: true,
+    index: true
+  },
+  
+  reason: String,
+  
+  riskLevel: {
+    type: String,
+    enum: ['low', 'medium', 'high', 'critical'],
+    default: 'low',
+    index: true
+  },
+  
+  complianceFlags: [{
+    type: String,
+    enum: ['pci_dss', 'gdpr', 'ccpa', 'sox', 'kyc_aml', 'data_retention']
+  }],
+  
+  metadata: mongoose.Schema.Types.Mixed,
+  
+  timestamp: {
+    type: Date,
+    required: true,
+    default: Date.now,
+    index: true
+  },
+  
+  retentionDate: {
+    type: Date,
+    index: true
+  },
+  
+  integrityHash: String,
+  chainCounter: Number,
+  previousHash: String
+}, {
+  timestamps: true,
+  collection: 'audit_logs'
+});
+
+// Indexes for performance
+auditLogSchema.index({ timestamp: -1, category: 1 });
+auditLogSchema.index({ userId: 1, timestamp: -1 });
+auditLogSchema.index({ ip: 1, timestamp: -1 });
+auditLogSchema.index({ action: 1, success: 1, timestamp: -1 });
+
+// TTL index for automatic cleanup
+auditLogSchema.index({ retentionDate: 1 }, { expireAfterSeconds: 0 });
+
+const AuditLog = mongoose.model('AuditLog', auditLogSchema);
 
 /**
  * Enterprise-grade audit logging system for financial compliance
@@ -99,10 +218,81 @@ class AuditLogger {
   }
 
   /**
-   * Log user authentication events
+   * Create audit log entry in database
+   * @param {Object} auditData - Audit data
+   * @returns {Object} Created audit log
+   */
+  async createDatabaseAuditLog(auditData) {
+    try {
+      // Determine risk level and retention
+      auditData.riskLevel = this.getRiskLevel(auditData.action);
+      auditData.retentionDate = this.getRetentionDate(auditData.riskLevel);
+      
+      // Create audit log in database
+      const auditLog = new AuditLog(auditData);
+      await auditLog.save();
+      
+      return auditLog;
+    } catch (error) {
+      console.error('Failed to create database audit log:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Get risk level for action
+   * @param {string} action - Action name
+   * @returns {string} Risk level
+   */
+  getRiskLevel(action) {
+    const riskLevels = {
+      'user_login': 'low',
+      'user_logout': 'low',
+      'profile_view': 'low',
+      'profile_update': 'medium',
+      'password_change': 'medium',
+      'mfa_setup': 'medium',
+      'loan_application': 'medium',
+      'payment_initiated': 'medium',
+      'admin_action': 'high',
+      'user_suspension': 'high',
+      'loan_approval': 'high',
+      'large_payment': 'high',
+      'kyc_status_change': 'high',
+      'data_export': 'high',
+      'security_violation': 'critical',
+      'data_breach': 'critical',
+      'unauthorized_access': 'critical',
+      'system_compromise': 'critical',
+      'compliance_violation': 'critical'
+    };
+    
+    return riskLevels[action] || 'low';
+  }
+
+  /**
+   * Get retention date based on risk level
+   * @param {string} riskLevel - Risk level
+   * @returns {Date} Retention date
+   */
+  getRetentionDate(riskLevel) {
+    const retentionPeriods = {
+      'low': 1 * 365 * 24 * 60 * 60 * 1000, // 1 year
+      'medium': 3 * 365 * 24 * 60 * 60 * 1000, // 3 years
+      'high': 7 * 365 * 24 * 60 * 60 * 1000, // 7 years
+      'critical': 10 * 365 * 24 * 60 * 60 * 1000 // 10 years
+    };
+    
+    const period = retentionPeriods[riskLevel] || retentionPeriods['low'];
+    return new Date(Date.now() + period);
+  }
+
+  /**
+   * Enhanced log authentication events with database storage
    * @param {Object} event - Authentication event data
    */
   async logAuthEvent(event) {
+    // Create file-based audit entry (existing functionality)
     const auditEntry = await this.createAuditEntry('AUTH', event, {
       category: 'authentication',
       severity: event.success ? 'info' : 'warn',
@@ -111,6 +301,123 @@ class AuditLogger {
 
     this.auditLogger.info('Authentication Event', auditEntry);
     await this.storeAuditHash(auditEntry);
+
+    // Also store in database
+    const dbAuditData = {
+      category: 'authentication',
+      action: event.action || 'user_login',
+      userId: event.userId,
+      username: event.username,
+      ip: event.ip,
+      userAgent: event.userAgent,
+      success: event.success,
+      reason: event.reason,
+      metadata: {
+        mfaUsed: event.mfaUsed,
+        loginAttempts: event.loginAttempts,
+        sessionDuration: event.sessionDuration
+      },
+      timestamp: new Date(event.timestamp)
+    };
+
+    await this.createDatabaseAuditLog(dbAuditData);
+  }
+
+  /**
+   * Enhanced log data access events
+   * @param {Object} event - Data access event
+   */
+  async logDataEvent(event) {
+    // File-based logging
+    const auditEntry = await this.createAuditEntry('DATA_ACCESS', event, {
+      category: 'data_access',
+      severity: 'info',
+      retention: '7_years'
+    });
+
+    this.auditLogger.info('Data Access Event', auditEntry);
+    await this.storeAuditHash(auditEntry);
+
+    // Database logging
+    const dbAuditData = {
+      category: 'data_access',
+      action: event.action || 'data_access',
+      userId: event.userId,
+      ip: event.ip,
+      userAgent: event.userAgent,
+      resource: event.resource,
+      resourceId: event.resourceId,
+      success: event.success || true,
+      metadata: {
+        dataType: event.dataType,
+        recordCount: event.recordCount,
+        queryParameters: event.queryParameters,
+        fileId: event.fileId,
+        fileType: event.fileType,
+        fileSize: event.fileSize
+      },
+      complianceFlags: this.getComplianceFlags(event.dataType),
+      timestamp: new Date(event.timestamp)
+    };
+
+    await this.createDatabaseAuditLog(dbAuditData);
+  }
+
+  /**
+   * Enhanced log security events
+   * @param {Object} event - Security event
+   */
+  async logSecurityEvent(event) {
+    // File-based logging
+    const auditEntry = await this.createAuditEntry('SECURITY', event, {
+      category: 'security',
+      severity: 'error',
+      retention: '7_years',
+      encrypted: true
+    });
+
+    this.auditLogger.error('Security Event', auditEntry);
+    await this.storeAuditHash(auditEntry);
+    await this.alertSecurityTeam(auditEntry);
+
+    // Database logging
+    const dbAuditData = {
+      category: 'security',
+      action: event.action || 'security_incident',
+      userId: event.userId,
+      ip: event.ip,
+      userAgent: event.userAgent,
+      success: event.success || false,
+      reason: event.reason,
+      metadata: {
+        threatType: event.threatType,
+        severity: event.severity,
+        blocked: event.blocked,
+        violations: event.violations,
+        errorCode: event.errorCode,
+        statusCode: event.statusCode
+      },
+      timestamp: new Date(event.timestamp)
+    };
+
+    await this.createDatabaseAuditLog(dbAuditData);
+  }
+
+  /**
+   * Get compliance flags for data type
+   * @param {string} dataType - Type of data
+   * @returns {Array} Compliance flags
+   */
+  getComplianceFlags(dataType) {
+    const complianceMapping = {
+      'payment': ['pci_dss'],
+      'personal_data': ['gdpr', 'ccpa'],
+      'financial_data': ['sox', 'pci_dss'],
+      'kyc': ['kyc_aml'],
+      'user_data': ['gdpr', 'ccpa', 'data_retention']
+    };
+    
+    return complianceMapping[dataType] || [];
   }
 
   /**
