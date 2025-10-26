@@ -1,8 +1,7 @@
 # LendSmart
 
-[![CI/CD Status](https://img.shields.io/github/actions/workflow/status/abrar2030/LendSmart/ci-cd.yml?branch=main&label=CI/CD&logo=github)](https://github.com/abrar2030/LendSmart/actions)
+![CI/CD Status](https://img.shields.io/github/actions/workflow/status/abrar2030/LendSmart/cicd.yml?branch=main&label=CI/CD&logo=github)
 [![Test Coverage](https://img.shields.io/badge/coverage-83%25-brightgreen)](https://github.com/abrar2030/LendSmart/actions)
-[![Smart Contract Audit](https://img.shields.io/badge/smart%20contracts-audited-brightgreen)](https://github.com/abrar2030/LendSmart/tree/main/smart-contracts)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 ## 💰 AI-Powered Decentralized Lending Platform
