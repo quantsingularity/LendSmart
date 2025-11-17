@@ -5,36 +5,39 @@ This report summarizes the validation results for the enhanced credit scoring sy
 including alternative data integration, machine learning models, and compliance framework.
 """
 
-import os
 import json
+import os
 from datetime import datetime
 
 # Define paths
-VALIDATION_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'validation_results')
-REPORT_PATH = os.path.join(VALIDATION_DIR, 'validation_summary.md')
+VALIDATION_DIR = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "validation_results"
+)
+REPORT_PATH = os.path.join(VALIDATION_DIR, "validation_summary.md")
+
 
 def generate_validation_summary():
     """Generate a markdown summary of validation results"""
-    
+
     # Check if validation report exists
-    json_report_path = os.path.join(VALIDATION_DIR, 'validation_report.json')
+    json_report_path = os.path.join(VALIDATION_DIR, "validation_report.json")
     if os.path.exists(json_report_path):
-        with open(json_report_path, 'r') as f:
+        with open(json_report_path, "r") as f:
             report_data = json.load(f)
     else:
         report_data = {
-            'timestamp': datetime.now().isoformat(),
-            'validation_results': {
-                'alternative_data_sources': True,
-                'alternative_data_scoring': True,
-                'enhanced_ml_models': True,
-                'compliance_framework': True,
-                'integration': True
+            "timestamp": datetime.now().isoformat(),
+            "validation_results": {
+                "alternative_data_sources": True,
+                "alternative_data_scoring": True,
+                "enhanced_ml_models": True,
+                "compliance_framework": True,
+                "integration": True,
             },
-            'all_passed': True,
-            'summary': "Validation PASSED: All components validated successfully"
+            "all_passed": True,
+            "summary": "Validation PASSED: All components validated successfully",
         }
-    
+
     # Generate markdown report
     markdown = f"""# LendSmart Enhanced Credit Scoring System - Validation Report
 
@@ -51,12 +54,12 @@ def generate_validation_summary():
 | Component | Status |
 |-----------|--------|
 """
-    
+
     # Add component results
-    for component, result in report_data.get('validation_results', {}).items():
+    for component, result in report_data.get("validation_results", {}).items():
         status = "✅ PASSED" if result else "❌ FAILED"
         markdown += f"| {component.replace('_', ' ').title()} | {status} |\n"
-    
+
     # Add enhancement details
     markdown += """
 ## Enhancement Details
@@ -96,12 +99,13 @@ def generate_validation_summary():
 ## Conclusion
 The enhanced credit scoring system successfully integrates alternative data sources and advanced machine learning models while maintaining regulatory compliance. The system provides more accurate risk assessment and expands credit access to underserved populations.
 """
-    
+
     # Write report to file
-    with open(REPORT_PATH, 'w') as f:
+    with open(REPORT_PATH, "w") as f:
         f.write(markdown)
-    
+
     return REPORT_PATH
+
 
 if __name__ == "__main__":
     report_path = generate_validation_summary()

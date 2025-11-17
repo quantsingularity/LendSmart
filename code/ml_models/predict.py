@@ -1,9 +1,10 @@
-import pandas as pd
-import numpy as np
-import joblib
-import os
-import json
 import argparse
+import json
+import os
+
+import joblib
+import numpy as np
+import pandas as pd
 
 # Define paths
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -14,6 +15,7 @@ MODEL_PATH = os.path.join(SAVED_MODELS_DIR, "credit_scoring_model.joblib")
 # Global cache for model and preprocessor to avoid reloading on every call in a server context
 _model = None
 _preprocessor = None
+
 
 def load_model_and_preprocessor():
     """Loads the trained model and preprocessor from disk."""
@@ -32,7 +34,7 @@ def load_model_and_preprocessor():
             except Exception as e:
                 print(f"Error loading model: {e}")
     else:
-        model_loaded = True # Already in cache
+        model_loaded = True  # Already in cache
 
     if _preprocessor is None:
         if not os.path.exists(PREPROCESSOR_PATH):
@@ -45,9 +47,10 @@ def load_model_and_preprocessor():
             except Exception as e:
                 print(f"Error loading preprocessor: {e}")
     else:
-        preprocessor_loaded = True # Already in cache
-        
+        preprocessor_loaded = True  # Already in cache
+
     return model_loaded and preprocessor_loaded
+
 
 def predict_credit_score(applicant_data):
     """
@@ -58,7 +61,9 @@ def predict_credit_score(applicant_data):
     """
     if _model is None or _preprocessor is None:
         if not load_model_and_preprocessor():
-            return {"error": "Model or preprocessor not loaded. Cannot make predictions."}
+            return {
+                "error": "Model or preprocessor not loaded. Cannot make predictions."
+            }
 
     try:
         # Convert input data to DataFrame
@@ -69,7 +74,9 @@ def predict_credit_score(applicant_data):
         elif isinstance(applicant_data, pd.DataFrame):
             applicant_df = applicant_data
         else:
-            return {"error": "Invalid input data format. Expected dict, pd.Series, or pd.DataFrame."}
+            return {
+                "error": "Invalid input data format. Expected dict, pd.Series, or pd.DataFrame."
+            }
 
         print(f"Original applicant data:\n{applicant_df}")
 
@@ -78,11 +85,11 @@ def predict_credit_score(applicant_data):
         # The preprocessor expects specific column names for numerical and categorical features.
         # If applicant_df is missing columns the preprocessor expects, it will fail.
         # If it has extra columns, they might be dropped or passed through depending on `remainder` setting.
-        
+
         # It_s crucial that the `applicant_df` has the same columns (and order, ideally, though
         # ColumnTransformer handles order if names are consistent) as the X_features DataFrame
         # used to fit the preprocessor in `data_preprocessing.py`.
-        
+
         # Example: Extracting feature names from preprocessor if possible
         # This is complex because the preprocessor might have been fitted on a DataFrame
         # with many columns. The input `applicant_data` must provide all of them.
@@ -99,29 +106,37 @@ def predict_credit_score(applicant_data):
         # The interpretation of 0 and 1 depends on how the target was encoded.
         # Let_s assume 1 means higher risk / default.
         predicted_class = int(prediction[0])
-        probability_default = float(probability[0][1]) # Probability of class 1
-        probability_non_default = float(probability[0][0]) # Probability of class 0
+        probability_default = float(probability[0][1])  # Probability of class 1
+        probability_non_default = float(probability[0][0])  # Probability of class 0
 
         return {
             "prediction_label": "High Risk" if predicted_class == 1 else "Low Risk",
             "predicted_class_raw": predicted_class,
             "probability_high_risk": probability_default,
             "probability_low_risk": probability_non_default,
-            "message": "Prediction successful"
+            "message": "Prediction successful",
         }
 
     except Exception as e:
         print(f"Error during prediction: {e}")
         import traceback
+
         traceback.print_exc()
         return {"error": f"Prediction failed: {str(e)}"}
 
+
 def main():
     """Main function for command-line interface to make predictions."""
-    parser = argparse.ArgumentParser(description="Predict creditworthiness for an applicant.")
-    parser.add_argument("--input_data", type=str, required=False,
-                        help="JSON string or path to a JSON file containing applicant data.")
-    
+    parser = argparse.ArgumentParser(
+        description="Predict creditworthiness for an applicant."
+    )
+    parser.add_argument(
+        "--input_data",
+        type=str,
+        required=False,
+        help="JSON string or path to a JSON file containing applicant data.",
+    )
+
     args = parser.parse_args()
 
     print("--- Credit Scoring Prediction Script ---")
@@ -149,16 +164,18 @@ def main():
                 print(f"Error decoding JSON string: {e}")
                 print("Please provide a valid JSON string or a path to a JSON file.")
                 return
-        
+
         if applicant_data_dict:
             # Ensure the dict is a single record, not a list of records for this CLI example
             if isinstance(applicant_data_dict, list):
                 if len(applicant_data_dict) == 1:
                     applicant_data_dict = applicant_data_dict[0]
                 else:
-                    print("Error: For CLI, please provide data for a single applicant, not a list.")
+                    print(
+                        "Error: For CLI, please provide data for a single applicant, not a list."
+                    )
                     return
-            
+
             result = predict_credit_score(applicant_data_dict)
             print("\nPrediction Result:")
             print(json.dumps(result, indent=4))
@@ -168,7 +185,7 @@ def main():
     else:
         # Example usage with dummy data if no input is provided
         print("\nNo input data provided. Running with an example...")
-        # IMPORTANT: This dummy data MUST have the same features/columns 
+        # IMPORTANT: This dummy data MUST have the same features/columns
         # that the preprocessor was trained on in data_preprocessing.py.
         # The actual column names depend on your `borrower_data.csv` and `feature_engineering` steps.
         # Let_s assume some common features for demonstration.
@@ -179,10 +196,10 @@ def main():
             "credit_history_length_months": 120,
             "num_open_credit_lines": 5,
             "employment_length_years": 5,
-            "loan_purpose_category": "debt_consolidation", # Example categorical feature
+            "loan_purpose_category": "debt_consolidation",  # Example categorical feature
             # Add ALL other features the model expects, including those from transaction aggregation if any
             # e.g., from transaction_summary in feature_engineering:
-            # "loan_amount_sum": 50000, 
+            # "loan_amount_sum": 50000,
             # "loan_amount_mean": 10000,
             # "loan_amount_count": 5,
             # "interest_rate_mean": 0.07,
@@ -190,18 +207,22 @@ def main():
             # "defaulted_mean": 0.0
         }
         print(f"Example Applicant Data:\n{json.dumps(example_applicant, indent=2)}")
-        
+
         # To make this example runnable, we need to know the *exact* features the preprocessor expects.
         # This is a common failure point if not handled carefully.
         # For now, this example will likely fail unless `example_applicant` perfectly matches the schema.
-        print("\nNote: The example prediction below might fail if the dummy data fields do not perfectly match the features the model was trained on.") 
-        print("You should provide actual data via --input_data for a meaningful prediction.")
+        print(
+            "\nNote: The example prediction below might fail if the dummy data fields do not perfectly match the features the model was trained on."
+        )
+        print(
+            "You should provide actual data via --input_data for a meaningful prediction."
+        )
         result = predict_credit_score(example_applicant)
         print("\nExample Prediction Result:")
         print(json.dumps(result, indent=4))
 
     print("\n--- Prediction Script Finished ---")
 
+
 if __name__ == "__main__":
     main()
-
