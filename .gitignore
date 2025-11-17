@@ -1,102 +1,201 @@
-# Global .gitignore for LendSmart Project
 
 # General
-.DS_Store
 *.log
 *.tmp
 *.swp
-*.swo
+*~
+.DS_Store
+Thumbs.db
 
-# IDE specific
-.idea/
-.vscode/
-*.iml
-*.project
-*.classpath
-
-# Build artifacts
-build/
-dist/
-
-# Node.js / JavaScript / TypeScript
-node_modules/
-npm-debug.log
-yarn-error.log
-package-lock.json # Often committed, but can be ignored in some monorepo setups if using a single lock file at root
-# yarn.lock # Same as above
-*.tsbuildinfo
+# Environment variables
+.env
+.env.*
+!.env.example
 
 # Python
 __pycache__/
 *.py[cod]
-*.egg-info/
-.env
-.venv/
+*$py.class
+
+# Python Virtual Environment
 venv/
 ENV/
 env/
-# Jupyter Notebook checkpoints
-.ipynb_checkpoints/
+*/venv/
+*/ENV/
+*/env/
+.venv
 
-# Operating System files
-Thumbs.db
+# Python Distribution / Installation
+.Python
+build/
+dist/
+downloads/
+eggs/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+
+# Flask specific
+instance/
+.webassets-cache
+
+# Celery stuff
+celerybeat-schedule.*
+
+# SageMath files
+*.sage.py
+
+# Scrapy files
+.scrapy
+
+# Node.js / React / Webpack
+node_modules/
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+# It is generally recommended to commit lock files
+# package-lock.json
+# yarn.lock
+
+# Frontend build artifacts
+/code/frontend/build/
+/code/frontend/dist/
+.cache/
+
+# Jest cache
+/code/frontend/.jest-cache
+
+# Webpack cache
+.webpack/
+
+# Blockchain / Solidity / Truffle / Hardhat
+build/contracts/
+contracts/build/
+artifacts/
+cache/
+typechain-types/
+
+# Docker
+*.dockerignore
+# If you store built images or context tarballs locally:
+# *.tar
+# *.tar.gz
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+*.tfvars
+*.tfvars.json
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+
+# Kubernetes
+# Secrets should ideally be managed outside git, e.g., using Sealed Secrets or Vault.
+# If storing unencrypted secrets, uncomment the line below, but this is NOT recommended.
+# *-secrets.yaml
+
+# Ansible
+*.retry
+# Vault password files (should be kept secure and out of git)
+*.vault
+*.vault_pass
+*.vault_password
+
+# IDEs and Editors
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+.project
+.classpath
+.settings/
+*.tmproj
+
+# Large data files (consider Git LFS if needed)
+/resources/datasets/*.csv
+
+# Specific project files
+git-auto-commit.sh
+
+
+# Additional IDE/Editor Metadata
+*.iml
+.project
+.classpath
+.settings/
+.idea/workspace.xml
+.idea/modules.xml
+.idea/vcs.xml
+.idea/misc.xml
+.idea/*.iml
+
+# More Logs and Caches
+*.cache
+*.pid
+*.sock
+*.sqlite
+*.sqlite3
+/tmp/
+/temp/
+.sass-cache/
+.npm/
+.bower/
+.grunt/
+.nyc_output/
+.serverless/
+.terraform/
+.terraform.lock.hcl
+
+# OS generated files
+.DS_Store
+.Trashes
+ehthumbs.db
 Desktop.ini
 
-# Sensitive files
-*.env
-.env.*
-!/.env.example # Keep example env files
+# Compiled/Build files
+/build/
+/dist/
+/out/
+/target/
+/bin/
+/obj/
+*.o
+*.a
+*.so
+*.dll
+*.class
+*.pyc
+*.whl
+*.egg
 
-# Specific to sub-projects (can also be in their own .gitignores)
-
-# Backend (Node.js)
-LendSmart/backend/node_modules/
-LendSmart/backend/.env
-LendSmart/backend/coverage/
-
-# Smart Contracts (Hardhat)
-LendSmart/smart-contracts/node_modules/
-LendSmart/smart-contracts/.env
-LendSmart/smart-contracts/cache/
-LendSmart/smart-contracts/artifacts/
-LendSmart/smart-contracts/coverage/
-LendSmart/smart-contracts/coverage.json
-LendSmart/smart-contracts/typechain-types/
-
-# ML Model (Python)
-LendSmart/ml-model/venv/
-LendSmart/ml-model/.env
-LendSmart/ml-model/__pycache__/
-LendSmart/ml-model/saved_models/*.joblib # Model files can be large, consider Git LFS or not committing them
-LendSmart/ml-model/saved_models/*.pkl
-LendSmart/ml-model/processed_data/*.csv # Processed data can also be large
-LendSmart/ml-model/.ipynb_checkpoints/
-
-# Mobile Frontend (React Native)
-LendSmart/mobile-frontend/node_modules/
-LendSmart/mobile-frontend/.env
-LendSmart/mobile-frontend/ios/build/
-LendSmart/mobile-frontend/ios/Pods/
-LendSmart/mobile-frontend/android/build/
-LendSmart/mobile-frontend/android/app/build/
-LendSmart/mobile-frontend/android/.gradle/
-LendSmart/mobile-frontend/android/captures/
-LendSmart/mobile-frontend/.expo/
-
-# Web Frontend (React)
-LendSmart/web-frontend/node_modules/
-LendSmart/web-frontend/.env
-LendSmart/web-frontend/build/
-LendSmart/web-frontend/coverage/
-
-# If using a global lock file at the root for a monorepo (e.g. with pnpm or yarn workspaces)
-# then individual package-lock.json or yarn.lock files in subdirectories might be ignored.
-# Example for pnpm:
-# pnpm-lock.yaml (at root, should be committed)
-# **/node_modules
-
-# Zip files (unless specifically intended for version control)
-*.zip
-
-# Specific Files
+# Specific project files
 git-auto-commit.sh
