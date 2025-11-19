@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { 
-  Typography, 
-  Box, 
-  Paper, 
-  Grid, 
-  TextField, 
-  Button, 
+import {
+  Typography,
+  Box,
+  Paper,
+  Grid,
+  TextField,
+  Button,
   CircularProgress,
   Alert,
   Avatar,
@@ -16,24 +16,24 @@ import PersonIcon from '@mui/icons-material/Person';
 
 const Profile = () => {
   const { user, updateProfile, updatePassword, loading, error: apiError } = useApi();
-  
+
   const [profileData, setProfileData] = useState({
     name: user?.name || '',
     email: user?.email || '',
     walletAddress: user?.walletAddress || ''
   });
-  
+
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
     newPassword: '',
     confirmPassword: ''
   });
-  
+
   const [profileError, setProfileError] = useState(null);
   const [passwordError, setPasswordError] = useState(null);
   const [profileSuccess, setProfileSuccess] = useState(false);
   const [passwordSuccess, setPasswordSuccess] = useState(false);
-  
+
   const handleProfileChange = (e) => {
     const { name, value } = e.target;
     setProfileData({
@@ -41,7 +41,7 @@ const Profile = () => {
       [name]: value
     });
   };
-  
+
   const handlePasswordChange = (e) => {
     const { name, value } = e.target;
     setPasswordData({
@@ -49,12 +49,12 @@ const Profile = () => {
       [name]: value
     });
   };
-  
+
   const handleProfileSubmit = async (e) => {
     e.preventDefault();
     setProfileError(null);
     setProfileSuccess(false);
-    
+
     try {
       await updateProfile(profileData);
       setProfileSuccess(true);
@@ -62,23 +62,23 @@ const Profile = () => {
       setProfileError(err.response?.data?.message || 'Failed to update profile');
     }
   };
-  
+
   const handlePasswordSubmit = async (e) => {
     e.preventDefault();
     setPasswordError(null);
     setPasswordSuccess(false);
-    
+
     if (passwordData.newPassword !== passwordData.confirmPassword) {
       setPasswordError('New passwords do not match');
       return;
     }
-    
+
     try {
       await updatePassword({
         currentPassword: passwordData.currentPassword,
         newPassword: passwordData.newPassword
       });
-      
+
       setPasswordSuccess(true);
       setPasswordData({
         currentPassword: '',
@@ -89,13 +89,13 @@ const Profile = () => {
       setPasswordError(err.response?.data?.message || 'Failed to update password');
     }
   };
-  
+
   return (
     <Box>
       <Typography variant="h4" component="h1" gutterBottom>
         Profile
       </Typography>
-      
+
       <Grid container spacing={4}>
         <Grid item xs={12} md={6}>
           <Paper elevation={3} sx={{ p: 3 }}>
@@ -107,25 +107,25 @@ const Profile = () => {
                 Account Information
               </Typography>
             </Box>
-            
+
             {apiError && (
               <Alert severity="error" sx={{ mb: 3 }}>
                 {apiError}
               </Alert>
             )}
-            
+
             {profileError && (
               <Alert severity="error" sx={{ mb: 3 }}>
                 {profileError}
               </Alert>
             )}
-            
+
             {profileSuccess && (
               <Alert severity="success" sx={{ mb: 3 }}>
                 Profile updated successfully!
               </Alert>
             )}
-            
+
             <form onSubmit={handleProfileSubmit}>
               <TextField
                 label="Full Name"
@@ -136,7 +136,7 @@ const Profile = () => {
                 margin="normal"
                 required
               />
-              
+
               <TextField
                 label="Email Address"
                 name="email"
@@ -147,7 +147,7 @@ const Profile = () => {
                 margin="normal"
                 required
               />
-              
+
               <TextField
                 label="Wallet Address (Optional)"
                 name="walletAddress"
@@ -157,7 +157,7 @@ const Profile = () => {
                 margin="normal"
                 helperText="Your Ethereum wallet address for blockchain transactions"
               />
-              
+
               <Button
                 type="submit"
                 variant="contained"
@@ -169,25 +169,25 @@ const Profile = () => {
             </form>
           </Paper>
         </Grid>
-        
+
         <Grid item xs={12} md={6}>
           <Paper elevation={3} sx={{ p: 3 }}>
             <Typography variant="h6" gutterBottom>
               Change Password
             </Typography>
-            
+
             {passwordError && (
               <Alert severity="error" sx={{ mb: 3 }}>
                 {passwordError}
               </Alert>
             )}
-            
+
             {passwordSuccess && (
               <Alert severity="success" sx={{ mb: 3 }}>
                 Password updated successfully!
               </Alert>
             )}
-            
+
             <form onSubmit={handlePasswordSubmit}>
               <TextField
                 label="Current Password"
@@ -199,7 +199,7 @@ const Profile = () => {
                 margin="normal"
                 required
               />
-              
+
               <TextField
                 label="New Password"
                 name="newPassword"
@@ -210,7 +210,7 @@ const Profile = () => {
                 margin="normal"
                 required
               />
-              
+
               <TextField
                 label="Confirm New Password"
                 name="confirmPassword"
@@ -221,7 +221,7 @@ const Profile = () => {
                 margin="normal"
                 required
               />
-              
+
               <Button
                 type="submit"
                 variant="contained"
@@ -232,12 +232,12 @@ const Profile = () => {
               </Button>
             </form>
           </Paper>
-          
+
           <Paper elevation={3} sx={{ p: 3, mt: 3 }}>
             <Typography variant="h6" gutterBottom>
               Account Security
             </Typography>
-            
+
             <Box sx={{ mb: 2 }}>
               <Typography variant="body2" color="text.secondary">
                 Member Since
@@ -246,13 +246,13 @@ const Profile = () => {
                 {user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
               </Typography>
             </Box>
-            
+
             <Divider sx={{ my: 2 }} />
-            
+
             <Typography variant="body2" color="text.secondary" paragraph>
               For security reasons, we recommend:
             </Typography>
-            
+
             <ul>
               <li>
                 <Typography variant="body2">

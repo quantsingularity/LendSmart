@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { 
-  Typography, 
-  Box, 
-  Paper, 
-  TextField, 
-  Button, 
-  Grid, 
-  Alert, 
+import {
+  Typography,
+  Box,
+  Paper,
+  TextField,
+  Button,
+  Grid,
+  Alert,
   CircularProgress,
   Avatar
 } from '@mui/material';
@@ -17,14 +17,14 @@ import { Link as RouterLink, useNavigate } from 'react-router-dom';
 const Login = () => {
   const navigate = useNavigate();
   const { login, loading, error: apiError } = useApi();
-  
+
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   });
-  
+
   const [error, setError] = useState(null);
-  
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({
@@ -32,11 +32,11 @@ const Login = () => {
       [name]: value
     });
   };
-  
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
-    
+
     try {
       await login(formData.email, formData.password);
       navigate('/dashboard');
@@ -44,7 +44,7 @@ const Login = () => {
       setError(err.response?.data?.message || 'Login failed');
     }
   };
-  
+
   return (
     <Box
       sx={{
@@ -59,18 +59,18 @@ const Login = () => {
       <Avatar sx={{ m: 1, bgcolor: 'secondary.main' }}>
         <LockOutlinedIcon />
       </Avatar>
-      
+
       <Typography component="h1" variant="h5">
         Sign in
       </Typography>
-      
+
       <Paper elevation={3} sx={{ p: 4, mt: 3, width: '100%' }}>
         {(error || apiError) && (
           <Alert severity="error" sx={{ mb: 3 }}>
             {error || apiError}
           </Alert>
         )}
-        
+
         <form onSubmit={handleSubmit}>
           <TextField
             label="Email Address"
@@ -84,7 +84,7 @@ const Login = () => {
             autoComplete="email"
             autoFocus
           />
-          
+
           <TextField
             label="Password"
             name="password"
@@ -96,7 +96,7 @@ const Login = () => {
             margin="normal"
             autoComplete="current-password"
           />
-          
+
           <Button
             type="submit"
             fullWidth
@@ -106,7 +106,7 @@ const Login = () => {
           >
             {loading ? <CircularProgress size={24} /> : 'Sign In'}
           </Button>
-          
+
           <Grid container>
             <Grid item xs>
               <RouterLink to="/" style={{ textDecoration: 'none' }}>

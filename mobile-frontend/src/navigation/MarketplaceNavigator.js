@@ -21,22 +21,21 @@ const MarketplaceNavigator = () => {
         },
       }}
     >
-      <Stack.Screen 
-        name="MarketplaceList" 
-        component={MarketplaceScreen} 
-        options={{ title: 'Loan Marketplace' }} 
+      <Stack.Screen
+        name="MarketplaceList"
+        component={MarketplaceScreen}
+        options={{ title: 'Loan Marketplace' }}
       />
-      <Stack.Screen 
-        name="LoanDetails" 
-        component={LoanDetailsScreen} 
-        options={({ route }) => ({ 
+      <Stack.Screen
+        name="LoanDetails"
+        component={LoanDetailsScreen}
+        options={({ route }) => ({
           title: `Loan Details`, // Title can be dynamic if needed
-          // Example: title: `Loan #${route.params?.loanId}` 
-        })} 
+          // Example: title: `Loan #${route.params?.loanId}`
+        })}
       />
     </Stack.Navigator>
   );
 };
 
 export default MarketplaceNavigator;
-

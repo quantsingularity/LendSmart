@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Typography, 
-  Box, 
-  Paper, 
-  Grid, 
-  TextField, 
-  Button, 
+import {
+  Typography,
+  Box,
+  Paper,
+  Grid,
+  TextField,
+  Button,
   CircularProgress,
   Alert,
   Table,
@@ -26,7 +26,7 @@ import { useBlockchain } from '../contexts/BlockchainContext';
 const RiskAssessment = () => {
   const { getLoan, setRiskScore } = useApi();
   const { setLoanRiskScore, isConnected, connectWallet } = useBlockchain();
-  
+
   const [loans, setLoans] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
@@ -36,16 +36,16 @@ const RiskAssessment = () => {
   const [riskScore, setRiskScoreValue] = useState('');
   const [shouldReject, setShouldReject] = useState(false);
   const [privateKey, setPrivateKey] = useState('');
-  
+
   useEffect(() => {
     fetchPendingLoans();
   }, []);
-  
+
   const fetchPendingLoans = async () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       // In a real implementation, this would fetch loans pending risk assessment
       // For now, we'll simulate with a mock API call
       const mockLoans = [
@@ -81,7 +81,7 @@ const RiskAssessment = () => {
           isCollateralized: false
         }
       ];
-      
+
       setLoans(mockLoans);
       setLoading(false);
     } catch (err) {
@@ -90,7 +90,7 @@ const RiskAssessment = () => {
       setLoading(false);
     }
   };
-  
+
   const handleConnectWallet = async () => {
     try {
       await connectWallet();
@@ -98,13 +98,13 @@ const RiskAssessment = () => {
       setError('Failed to connect wallet');
     }
   };
-  
+
   const handleSelectLoan = async (loan) => {
     setSelectedLoan(loan);
     setRiskScoreValue('');
     setShouldReject(false);
   };
-  
+
   const handleSubmitRiskScore = async () => {
     if (!isConnected) {
       try {
@@ -114,48 +114,48 @@ const RiskAssessment = () => {
         return;
       }
     }
-    
+
     if (!privateKey) {
       setError('Private key is required for blockchain transaction');
       return;
     }
-    
+
     if (!riskScore || isNaN(parseInt(riskScore))) {
       setError('Please enter a valid risk score');
       return;
     }
-    
+
     try {
       setActionLoading(true);
       setError(null);
       setSuccess(null);
-      
+
       // Submit to blockchain
       const blockchainResult = await setLoanRiskScore(
         selectedLoan.blockchainId,
         parseInt(riskScore),
         shouldReject
       );
-      
+
       if (!blockchainResult) {
         throw new Error('Failed to set risk score on blockchain');
       }
-      
+
       // Submit to backend
       await setRiskScore(selectedLoan.id, {
         riskScore: parseInt(riskScore),
         shouldReject,
         transactionHash: blockchainResult.transactionHash
       });
-      
+
       setSuccess(`Risk score set successfully for loan ${selectedLoan.blockchainId}`);
       setSelectedLoan(null);
-      
+
       // Refresh loans after a short delay
       setTimeout(() => {
         fetchPendingLoans();
       }, 2000);
-      
+
       setActionLoading(false);
     } catch (err) {
       console.error('Error setting risk score:', err);
@@ -163,7 +163,7 @@ const RiskAssessment = () => {
       setActionLoading(false);
     }
   };
-  
+
   const renderLoanTable = () => {
     if (loans.length === 0) {
       return (
@@ -174,7 +174,7 @@ const RiskAssessment = () => {
         </Paper>
       );
     }
-    
+
     return (
       <TableContainer component={Paper}>
         <Table>
@@ -220,16 +220,16 @@ const RiskAssessment = () => {
       </TableContainer>
     );
   };
-  
+
   const renderRiskAssessmentForm = () => {
     if (!selectedLoan) return null;
-    
+
     return (
       <Paper elevation={3} sx={{ p: 3, mt: 3 }}>
         <Typography variant="h6" gutterBottom>
           Risk Assessment for Loan #{selectedLoan.blockchainId}
         </Typography>
-        
+
         <Grid container spacing={2}>
           <Grid item xs={12} sm={6}>
             <Typography variant="body2" color="text.secondary">
@@ -239,7 +239,7 @@ const RiskAssessment = () => {
               {selectedLoan.borrower.name}
             </Typography>
           </Grid>
-          
+
           <Grid item xs={12} sm={6}>
             <Typography variant="body2" color="text.secondary">
               Borrower Address
@@ -248,7 +248,7 @@ const RiskAssessment = () => {
               {`${selectedLoan.borrower.address.substring(0, 6)}...${selectedLoan.borrower.address.substring(selectedLoan.borrower.address.length - 4)}`}
             </Typography>
           </Grid>
-          
+
           <Grid item xs={12} sm={6}>
             <Typography variant="body2" color="text.secondary">
               Principal Amount
@@ -257,7 +257,7 @@ const RiskAssessment = () => {
               {selectedLoan.principal} Tokens
             </Typography>
           </Grid>
-          
+
           <Grid item xs={12} sm={6}>
             <Typography variant="body2" color="text.secondary">
               Collateral
@@ -266,7 +266,7 @@ const RiskAssessment = () => {
               {selectedLoan.isCollateralized ? `${selectedLoan.collateralAmount} Tokens` : 'None'}
             </Typography>
           </Grid>
-          
+
           <Grid item xs={12}>
             <Typography variant="body2" color="text.secondary">
               Purpose
@@ -275,7 +275,7 @@ const RiskAssessment = () => {
               {selectedLoan.purpose}
             </Typography>
           </Grid>
-          
+
           <Grid item xs={12}>
             <TextField
               label="Risk Score (0-100)"
@@ -289,7 +289,7 @@ const RiskAssessment = () => {
               helperText="0 = Highest Risk, 100 = Lowest Risk"
             />
           </Grid>
-          
+
           <Grid item xs={12}>
             <FormControl fullWidth margin="normal">
               <InputLabel>Recommendation</InputLabel>
@@ -303,7 +303,7 @@ const RiskAssessment = () => {
               </Select>
             </FormControl>
           </Grid>
-          
+
           <Grid item xs={12}>
             <TextField
               label="Private Key (for blockchain transaction)"
@@ -316,7 +316,7 @@ const RiskAssessment = () => {
               helperText="Your private key is only used for this transaction and not stored"
             />
           </Grid>
-          
+
           <Grid item xs={12}>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
               <Button
@@ -339,7 +339,7 @@ const RiskAssessment = () => {
       </Paper>
     );
   };
-  
+
   if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
@@ -347,25 +347,25 @@ const RiskAssessment = () => {
       </Box>
     );
   }
-  
+
   return (
     <Box>
       <Typography variant="h4" component="h1" gutterBottom>
         Risk Assessment Dashboard
       </Typography>
-      
+
       {error && (
         <Alert severity="error" sx={{ mb: 3 }}>
           {error}
         </Alert>
       )}
-      
+
       {success && (
         <Alert severity="success" sx={{ mb: 3 }}>
           {success}
         </Alert>
       )}
-      
+
       {!isConnected && (
         <Alert severity="info" sx={{ mb: 3 }} action={
           <Button color="inherit" size="small" onClick={handleConnectWallet}>
@@ -375,14 +375,14 @@ const RiskAssessment = () => {
           Please connect your wallet to perform risk assessment
         </Alert>
       )}
-      
+
       <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
         <Typography variant="h6" gutterBottom>
           Loans Pending Risk Assessment
         </Typography>
         {renderLoanTable()}
       </Paper>
-      
+
       {renderRiskAssessmentForm()}
     </Box>
   );

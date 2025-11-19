@@ -68,7 +68,7 @@ const MarketplaceScreen = ({ navigation }) => {
 
   const handleFundLoan = (loanId) => {
     // Navigate to details screen where funding happens
-    navigation.navigate('LoanDetails', { loanId: loanId, focusFund: true }); 
+    navigation.navigate('LoanDetails', { loanId: loanId, focusFund: true });
   };
 
   const renderLoanItem = ({ item }) => {
@@ -260,8 +260,8 @@ const createStyles = (theme) => StyleSheet.create({
     flexShrink: 1, // Allow text to wrap
   },
   progressContainer: {
-    height: 6, 
-    backgroundColor: theme.colors.border, 
+    height: 6,
+    backgroundColor: theme.colors.border,
     borderRadius: theme.borderRadius.sm,
     marginTop: theme.spacing.sm,
     overflow: 'hidden',
@@ -307,4 +307,3 @@ const createStyles = (theme) => StyleSheet.create({
 });
 
 export default MarketplaceScreen;
-

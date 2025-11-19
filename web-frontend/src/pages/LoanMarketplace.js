@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Typography, 
-  Box, 
-  Paper, 
-  Grid, 
-  Card, 
-  CardContent, 
+import {
+  Typography,
+  Box,
+  Paper,
+  Grid,
+  Card,
+  CardContent,
   CardActions,
   Button,
   Chip,
@@ -27,7 +27,7 @@ const LoanMarketplace = () => {
   const navigate = useNavigate();
   const { getLoans } = useApi();
   const { isConnected } = useBlockchain();
-  
+
   const [loans, setLoans] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -37,19 +37,19 @@ const LoanMarketplace = () => {
     minAmount: '',
     maxAmount: ''
   });
-  
+
   useEffect(() => {
     fetchLoans();
   }, []);
-  
+
   const fetchLoans = async () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       // Only get loans with status 'Requested' for the marketplace
       const result = await getLoans({ status: 'Requested' });
-      
+
       setLoans(result.data);
       setLoading(false);
     } catch (err) {
@@ -58,11 +58,11 @@ const LoanMarketplace = () => {
       setLoading(false);
     }
   };
-  
+
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);
   };
-  
+
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilters({
@@ -70,30 +70,30 @@ const LoanMarketplace = () => {
       [name]: value
     });
   };
-  
+
   const applyFilters = () => {
     // This would typically make an API call with filters
     // For now, we'll just refresh the loans
     fetchLoans();
   };
-  
+
   const handleViewLoan = (id) => {
     navigate(`/loans/${id}`);
   };
-  
+
   // Filter loans based on search term
-  const filteredLoans = loans.filter(loan => 
+  const filteredLoans = loans.filter(loan =>
     loan.purpose?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     loan.borrower?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     loan.blockchainId?.toString().includes(searchTerm)
   );
-  
+
   return (
     <Box>
       <Typography variant="h4" component="h1" gutterBottom>
         Loan Marketplace
       </Typography>
-      
+
       <Paper elevation={3} sx={{ p: 3, mb: 4 }}>
         <Grid container spacing={2} alignItems="center">
           <Grid item xs={12} md={6}>
@@ -111,7 +111,7 @@ const LoanMarketplace = () => {
               }}
             />
           </Grid>
-          
+
           <Grid item xs={12} md={6}>
             <Box sx={{ display: 'flex', gap: 2 }}>
               <TextField
@@ -132,8 +132,8 @@ const LoanMarketplace = () => {
                 onChange={handleFilterChange}
                 sx={{ flexGrow: 1 }}
               />
-              <Button 
-                variant="contained" 
+              <Button
+                variant="contained"
                 startIcon={<FilterListIcon />}
                 onClick={applyFilters}
               >
@@ -146,13 +146,13 @@ const LoanMarketplace = () => {
           </Grid>
         </Grid>
       </Paper>
-      
+
       {error && (
         <Alert severity="error" sx={{ mb: 3 }}>
           {error}
         </Alert>
       )}
-      
+
       {loading ? (
         <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
           <CircularProgress />
@@ -162,8 +162,8 @@ const LoanMarketplace = () => {
           <Typography variant="h6" color="text.secondary">
             No loans available matching your criteria
           </Typography>
-          <Button 
-            variant="contained" 
+          <Button
+            variant="contained"
             sx={{ mt: 2 }}
             onClick={() => navigate('/apply')}
             disabled={!isConnected}
@@ -181,19 +181,19 @@ const LoanMarketplace = () => {
                     <Typography variant="h6" component="div" noWrap>
                       {loan.purpose}
                     </Typography>
-                    <Chip 
-                      label={loan.status} 
-                      color={loan.status === 'Requested' ? 'primary' : 'default'} 
-                      size="small" 
+                    <Chip
+                      label={loan.status}
+                      color={loan.status === 'Requested' ? 'primary' : 'default'}
+                      size="small"
                     />
                   </Box>
-                  
+
                   <Typography color="text.secondary" gutterBottom>
                     ID: {loan.blockchainId}
                   </Typography>
-                  
+
                   <Divider sx={{ my: 1.5 }} />
-                  
+
                   <Grid container spacing={1}>
                     <Grid item xs={6}>
                       <Typography variant="body2" color="text.secondary">
@@ -230,8 +230,8 @@ const LoanMarketplace = () => {
                   </Grid>
                 </CardContent>
                 <CardActions>
-                  <Button 
-                    size="small" 
+                  <Button
+                    size="small"
                     onClick={() => handleViewLoan(loan._id || loan.blockchainId)}
                     fullWidth
                   >

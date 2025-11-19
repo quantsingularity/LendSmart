@@ -90,7 +90,7 @@ describe('MarketplaceScreen', () => {
     // Test pressing the card itself (first loan: Debt Consolidation)
     const loanCard = await findByText('Debt Consolidation');
     // Card press is on the Card component, which is an ancestor. We'll target a button for more directness.
-    
+
     const detailsButtons = await findAllByText('Details');
     fireEvent.press(detailsButtons[0]); // Click details for the first loan (ID '1')
     expect(mockNavigate).toHaveBeenCalledWith('LoanDetails', { loanId: '1' });
@@ -191,4 +191,3 @@ describe('MarketplaceScreen', () => {
   });
 
 });
-

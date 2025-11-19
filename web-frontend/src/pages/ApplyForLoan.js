@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { 
-  Typography, 
-  Box, 
-  Paper, 
-  TextField, 
-  Button, 
-  Grid, 
-  Alert, 
+import {
+  Typography,
+  Box,
+  Paper,
+  TextField,
+  Button,
+  Grid,
+  Alert,
   CircularProgress,
   FormControlLabel,
   Checkbox,
@@ -20,7 +20,7 @@ const ApplyForLoan = () => {
   const navigate = useNavigate();
   const { applyForLoan } = useApi();
   const { requestLoan, isConnected, connectWallet, isLoading: blockchainLoading, error: blockchainError } = useBlockchain();
-  
+
   const [formData, setFormData] = useState({
     token: '0x0000000000000000000000000000000000000000', // Default to ETH
     principal: '',
@@ -34,11 +34,11 @@ const ApplyForLoan = () => {
     collateralDecimals: 18,
     privateKey: ''
   });
-  
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
-  
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData({
@@ -46,10 +46,10 @@ const ApplyForLoan = () => {
       [name]: type === 'checkbox' ? checked : value
     });
   };
-  
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!isConnected) {
       try {
         await connectWallet();
@@ -58,30 +58,30 @@ const ApplyForLoan = () => {
         return;
       }
     }
-    
+
     try {
       setLoading(true);
       setError(null);
-      
+
       // First submit to blockchain
       const blockchainResult = await requestLoan(formData);
-      
+
       if (!blockchainResult) {
         throw new Error('Failed to submit loan request to blockchain');
       }
-      
+
       // Then submit to backend with blockchain data
       const backendData = {
         ...formData,
         blockchainId: blockchainResult.loanId,
         transactionHash: blockchainResult.transactionHash
       };
-      
+
       await applyForLoan(backendData);
-      
+
       setSuccess(true);
       setLoading(false);
-      
+
       // Redirect to loan details page after short delay
       setTimeout(() => {
         navigate(`/loans/${blockchainResult.loanId}`);
@@ -92,32 +92,32 @@ const ApplyForLoan = () => {
       setLoading(false);
     }
   };
-  
+
   return (
     <Box>
       <Typography variant="h4" component="h1" gutterBottom>
         Apply for Loan
       </Typography>
-      
+
       <Paper elevation={3} sx={{ p: 4, mt: 3 }}>
         {success ? (
           <Alert severity="success" sx={{ mb: 3 }}>
             Loan application submitted successfully! Redirecting to loan details...
           </Alert>
         ) : null}
-        
+
         {error ? (
           <Alert severity="error" sx={{ mb: 3 }}>
             {error}
           </Alert>
         ) : null}
-        
+
         {blockchainError ? (
           <Alert severity="error" sx={{ mb: 3 }}>
             {blockchainError}
           </Alert>
         ) : null}
-        
+
         <form onSubmit={handleSubmit}>
           <Grid container spacing={3}>
             <Grid item xs={12}>
@@ -131,7 +131,7 @@ const ApplyForLoan = () => {
                 helperText="Address of the token you want to borrow (use 0x0 for ETH)"
               />
             </Grid>
-            
+
             <Grid item xs={12} sm={6}>
               <TextField
                 label="Principal Amount"
@@ -146,7 +146,7 @@ const ApplyForLoan = () => {
                 }}
               />
             </Grid>
-            
+
             <Grid item xs={12} sm={6}>
               <TextField
                 label="Token Decimals"
@@ -159,7 +159,7 @@ const ApplyForLoan = () => {
                 helperText="Usually 18 for ETH and most ERC20 tokens"
               />
             </Grid>
-            
+
             <Grid item xs={12} sm={6}>
               <TextField
                 label="Interest Rate"
@@ -175,7 +175,7 @@ const ApplyForLoan = () => {
                 helperText="Annual interest rate (e.g., 5 for 5%)"
               />
             </Grid>
-            
+
             <Grid item xs={12} sm={6}>
               <TextField
                 label="Duration"
@@ -191,7 +191,7 @@ const ApplyForLoan = () => {
                 helperText="Loan duration in days"
               />
             </Grid>
-            
+
             <Grid item xs={12}>
               <TextField
                 label="Purpose"
@@ -205,7 +205,7 @@ const ApplyForLoan = () => {
                 helperText="Describe the purpose of this loan"
               />
             </Grid>
-            
+
             <Grid item xs={12}>
               <FormControlLabel
                 control={
@@ -218,7 +218,7 @@ const ApplyForLoan = () => {
                 label="Collateralized Loan"
               />
             </Grid>
-            
+
             {formData.isCollateralized && (
               <>
                 <Grid item xs={12}>
@@ -232,7 +232,7 @@ const ApplyForLoan = () => {
                     helperText="Address of the token you want to use as collateral"
                   />
                 </Grid>
-                
+
                 <Grid item xs={12} sm={6}>
                   <TextField
                     label="Collateral Amount"
@@ -247,7 +247,7 @@ const ApplyForLoan = () => {
                     }}
                   />
                 </Grid>
-                
+
                 <Grid item xs={12} sm={6}>
                   <TextField
                     label="Collateral Token Decimals"
@@ -262,7 +262,7 @@ const ApplyForLoan = () => {
                 </Grid>
               </>
             )}
-            
+
             <Grid item xs={12}>
               <TextField
                 label="Private Key (for blockchain transaction)"
@@ -275,7 +275,7 @@ const ApplyForLoan = () => {
                 helperText="Your private key is only used for this transaction and not stored"
               />
             </Grid>
-            
+
             <Grid item xs={12}>
               <Button
                 type="submit"

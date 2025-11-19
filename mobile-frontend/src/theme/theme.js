@@ -8,7 +8,7 @@ import { DefaultTheme, DarkTheme } from 'react-native-paper';
 //    module.exports = { project: { ios: {}, android: {} }, assets: ['./src/assets/fonts/'] };
 // 3. Run `npx react-native link`.
 
-// --- Color Palette --- 
+// --- Color Palette ---
 // Refined colors for better balance and modern feel.
 
 export const lightColors = {
@@ -17,10 +17,10 @@ export const lightColors = {
   success: '#34C759', // Apple's Green
   warning: '#FF9500', // Apple's Orange
   error: '#FF3B30', // Apple's Red (same as secondary for strong error indication)
-  
+
   background: '#F2F2F7', // Slightly off-white (iOS style)
   surface: '#FFFFFF', // Pure white for cards/modals
-  
+
   textPrimary: '#000000', // Pure black for high contrast
   textSecondary: '#8A8A8E', // Gray for secondary text (iOS style)
   textTertiary: '#C7C7CC', // Lighter gray for hints or disabled states
@@ -52,7 +52,7 @@ export const darkColors = {
   backdrop: 'rgba(0, 0, 0, 0.6)', // Slightly darker backdrop
 };
 
-// --- Typography --- 
+// --- Typography ---
 // Using Inter as the primary font for its clean look.
 // Ensure font files are linked as described above.
 export const fonts = {
@@ -80,7 +80,7 @@ export const fontSizes = {
   footnote: 12, // Footnotes, very small text
 };
 
-// --- Spacing & Radius --- 
+// --- Spacing & Radius ---
 // Consistent spacing scale
 export const spacing = {
   xxs: 2,
@@ -101,7 +101,7 @@ export const borderRadius = {
   full: 999, // For circular elements
 };
 
-// --- React Native Paper Theme Integration --- 
+// --- React Native Paper Theme Integration ---
 
 // Helper function to map fonts for Paper
 const mapPaperFonts = (fontConfig) => ({
@@ -110,7 +110,7 @@ const mapPaperFonts = (fontConfig) => ({
   light: { fontFamily: fontConfig.primary, fontWeight: '300' }, // Assuming Inter-Light exists or map appropriately
   thin: { fontFamily: fontConfig.primary, fontWeight: '100' }, // Assuming Inter-Thin exists
   // Add mappings for bold etc. if Paper uses them or if you customize components
-  bold: { fontFamily: fontConfig.primaryBold, fontWeight: '700' }, 
+  bold: { fontFamily: fontConfig.primaryBold, fontWeight: '700' },
 });
 
 export const CombinedLightTheme = {
@@ -163,4 +163,3 @@ export const CombinedDarkTheme = {
   borderRadius: borderRadius,
   fonts: fonts, // Keep custom font names accessible
 };
-
