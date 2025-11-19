@@ -27,7 +27,7 @@ export const ThemeProvider = ({ children }) => {
   const systemColorScheme = useColorScheme(); // 'light', 'dark', or null
   const [themeMode, setThemeModeState] = useState(THEME_MODES.SYSTEM);
   const [isLoading, setIsLoading] = useState(true);
-
+  
   // Load saved theme preference on mount
   useEffect(() => {
     const loadThemePreference = async () => {
@@ -42,10 +42,10 @@ export const ThemeProvider = ({ children }) => {
         setIsLoading(false);
       }
     };
-
+    
     loadThemePreference();
   }, []);
-
+  
   // Determine if dark mode should be active based on theme mode and system preference
   const isDark = useMemo(() => {
     if (themeMode === THEME_MODES.SYSTEM) {
@@ -53,25 +53,25 @@ export const ThemeProvider = ({ children }) => {
     }
     return themeMode === THEME_MODES.DARK;
   }, [themeMode, systemColorScheme]);
-
+  
   // Get the appropriate theme object based on dark mode state
-  const theme = useMemo(() =>
-    isDark ? CombinedDarkTheme : CombinedLightTheme,
+  const theme = useMemo(() => 
+    isDark ? CombinedDarkTheme : CombinedLightTheme, 
   [isDark]);
-
+  
   // Toggle between light and dark mode
   const toggleTheme = useCallback(() => {
     const newThemeMode = isDark ? THEME_MODES.LIGHT : THEME_MODES.DARK;
     setThemeMode(newThemeMode);
   }, [isDark]);
-
+  
   // Set theme mode and persist to storage
   const setThemeMode = useCallback(async (mode) => {
     if (!Object.values(THEME_MODES).includes(mode)) {
       console.error(`Invalid theme mode: ${mode}`);
       return;
     }
-
+    
     try {
       await AsyncStorage.setItem(THEME_PREFERENCE_KEY, mode);
       setThemeModeState(mode);
@@ -79,10 +79,10 @@ export const ThemeProvider = ({ children }) => {
       console.error('Failed to save theme preference:', error);
     }
   }, []);
-
+  
   // Extract colors and fonts for easier access
   const { colors, fonts } = theme;
-
+  
   // Create context value with memoization for performance
   const contextValue = useMemo(() => ({
     isDark,
@@ -95,16 +95,16 @@ export const ThemeProvider = ({ children }) => {
     isLoading,
     THEME_MODES,
   }), [
-    isDark,
-    theme,
-    themeMode,
-    toggleTheme,
-    setThemeMode,
-    colors,
-    fonts,
+    isDark, 
+    theme, 
+    themeMode, 
+    toggleTheme, 
+    setThemeMode, 
+    colors, 
+    fonts, 
     isLoading
   ]);
-
+  
   return (
     <ThemeContext.Provider value={contextValue}>
       {children}

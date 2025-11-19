@@ -88,7 +88,7 @@ const AppRouter = () => {
           <Route path="/loans/:id" element={<LoanDetailsPage />} />
 
           {/* Protected Routes - Any authenticated user */}
-          <Route
+          <Route 
             path="/dashboard"
             element={
               <ProtectedRoute>
@@ -96,7 +96,7 @@ const AppRouter = () => {
               </ProtectedRoute>
             }
           />
-          <Route
+          <Route 
             path="/profile"
             element={
               <ProtectedRoute>
@@ -104,7 +104,7 @@ const AppRouter = () => {
               </ProtectedRoute>
             }
           />
-          <Route
+          <Route 
             path="/settings"
             element={
               <ProtectedRoute>
@@ -112,7 +112,7 @@ const AppRouter = () => {
               </ProtectedRoute>
             }
           />
-          <Route
+          <Route 
             path="/wallet"
             element={
               <ProtectedRoute>
@@ -120,7 +120,7 @@ const AppRouter = () => {
               </ProtectedRoute>
             }
           />
-          <Route
+          <Route 
             path="/transactions"
             element={
               <ProtectedRoute>
@@ -128,7 +128,7 @@ const AppRouter = () => {
               </ProtectedRoute>
             }
           />
-          <Route
+          <Route 
             path="/kyc-verification"
             element={
               <ProtectedRoute>
@@ -138,7 +138,7 @@ const AppRouter = () => {
           />
 
           {/* Borrower-specific Routes */}
-          <Route
+          <Route 
             path="/loans/apply"
             element={
               <ProtectedRoute requiredRoles={["borrower"]}>
@@ -148,7 +148,7 @@ const AppRouter = () => {
           />
 
           {/* Admin-specific Routes */}
-          <Route
+          <Route 
             path="/admin"
             element={
               <ProtectedRoute requiredRoles={["admin"]}>
@@ -156,7 +156,7 @@ const AppRouter = () => {
               </ProtectedRoute>
             }
           />
-          <Route
+          <Route 
             path="/admin/*"
             element={
               <ProtectedRoute requiredRoles={["admin"]}>

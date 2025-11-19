@@ -55,16 +55,16 @@ export const initBlockchainService = async () => {
     const network = await provider.getNetwork();
 
     // Check if on the correct network
-    if (CHAIN_ID !== 0 && network.chainId !== BigInt(CHAIN_ID)) {
+    if (CHAIN_ID !== 0 && network.chainId !== BigInt(String(CHAIN_ID))) {
       console.warn(`Connected to wrong network. Expected chain ID: ${CHAIN_ID}, got: ${network.chainId}`);
-
+      
       // Try to switch network
       try {
         await window.ethereum.request({
           method: 'wallet_switchEthereumChain',
           params: [{ chainId: `0x${CHAIN_ID.toString(16)}` }],
         });
-
+        
         // Re-initialize after switch
         provider = new ethers.BrowserProvider(window.ethereum);
         signer = await provider.getSigner();
@@ -88,7 +88,7 @@ export const initBlockchainService = async () => {
                 }
               ],
             });
-
+            
             // Re-initialize after adding network
             provider = new ethers.BrowserProvider(window.ethereum);
             signer = await provider.getSigner();
@@ -106,9 +106,9 @@ export const initBlockchainService = async () => {
     // Initialize contract instances
     if (CONTRACT_ADDRESS && CONTRACT_ADDRESS !== "") {
       loanContract = new ethers.Contract(CONTRACT_ADDRESS, LoanContractABI.abi, signer);
-
+      
       // For read-only operations, use a public RPC if user is not connected
-      const readOnlyProvider = NETWORK_RPC_URL ?
+      const readOnlyProvider = NETWORK_RPC_URL ? 
         new ethers.JsonRpcProvider(NETWORK_RPC_URL) : provider;
       loanContractReadOnly = new ethers.Contract(CONTRACT_ADDRESS, LoanContractABI.abi, readOnlyProvider);
     } else {
@@ -122,10 +122,10 @@ export const initBlockchainService = async () => {
 
     isInitialized = true;
     walletConnected = true;
-
+    
     console.log("Blockchain service initialized successfully");
     console.log("Connected account:", await signer.getAddress());
-
+    
     return true;
   } catch (error) {
     console.error("Error initializing blockchain service:", error);
@@ -142,14 +142,14 @@ const handleAccountsChanged = async (accounts) => {
     // User disconnected their wallet
     walletConnected = false;
     console.log("Wallet disconnected");
-
+    
     // Use read-only provider for contract interactions
     if (CONTRACT_ADDRESS && CONTRACT_ADDRESS !== "") {
-      const readOnlyProvider = NETWORK_RPC_URL ?
+      const readOnlyProvider = NETWORK_RPC_URL ? 
         new ethers.JsonRpcProvider(NETWORK_RPC_URL) : provider;
       loanContractReadOnly = new ethers.Contract(CONTRACT_ADDRESS, LoanContractABI.abi, readOnlyProvider);
     }
-
+    
     // Dispatch event for UI to update
     window.dispatchEvent(new CustomEvent('walletDisconnected'));
   } else {
@@ -157,17 +157,17 @@ const handleAccountsChanged = async (accounts) => {
     try {
       provider = new ethers.BrowserProvider(window.ethereum);
       signer = await provider.getSigner();
-
+      
       if (CONTRACT_ADDRESS && CONTRACT_ADDRESS !== "") {
         loanContract = new ethers.Contract(CONTRACT_ADDRESS, LoanContractABI.abi, signer);
       }
-
+      
       walletConnected = true;
       console.log("Wallet account changed:", accounts[0]);
-
+      
       // Dispatch event for UI to update
-      window.dispatchEvent(new CustomEvent('walletAccountChanged', {
-        detail: { account: accounts[0] }
+      window.dispatchEvent(new CustomEvent('walletAccountChanged', { 
+        detail: { account: accounts[0] } 
       }));
     } catch (error) {
       console.error("Error handling account change:", error);
@@ -189,7 +189,7 @@ const handleChainChanged = () => {
 const handleDisconnect = () => {
   walletConnected = false;
   console.log("Wallet disconnected");
-
+  
   // Dispatch event for UI to update
   window.dispatchEvent(new CustomEvent('walletDisconnected'));
 };
@@ -203,7 +203,7 @@ export const getConnectedAccount = async () => {
     const success = await initBlockchainService();
     if (!success) return null;
   }
-
+  
   try {
     return signer ? await signer.getAddress() : null;
   } catch (error) {
@@ -221,7 +221,7 @@ export const getNetworkInfo = async () => {
     const success = await initBlockchainService();
     if (!success) return null;
   }
-
+  
   try {
     const network = await provider.getNetwork();
     return {
@@ -240,21 +240,21 @@ export const getNetworkInfo = async () => {
  */
 export const disconnectWallet = async () => {
   if (!walletConnected) return true;
-
+  
   try {
     // For most wallets, we can't force disconnect, but we can clean up our state
     walletConnected = false;
-
+    
     // Use read-only provider for contract interactions
     if (CONTRACT_ADDRESS && CONTRACT_ADDRESS !== "") {
-      const readOnlyProvider = NETWORK_RPC_URL ?
+      const readOnlyProvider = NETWORK_RPC_URL ? 
         new ethers.JsonRpcProvider(NETWORK_RPC_URL) : provider;
       loanContractReadOnly = new ethers.Contract(CONTRACT_ADDRESS, LoanContractABI.abi, readOnlyProvider);
     }
-
+    
     // Dispatch event for UI to update
     window.dispatchEvent(new CustomEvent('walletDisconnected'));
-
+    
     return true;
   } catch (error) {
     console.error("Error disconnecting wallet:", error);
@@ -279,12 +279,12 @@ export const deployLoanContract = async (borrowerAddress, lenderAddress, amount,
     console.log("Blockchain features are disabled");
     return null;
   }
-
+  
   if (!walletConnected) {
     const success = await initBlockchainService();
     if (!success) throw new Error("Wallet connection required");
   }
-
+  
   try {
     // Get the contract factory
     const loanContractFactory = new ethers.ContractFactory(
@@ -292,16 +292,16 @@ export const deployLoanContract = async (borrowerAddress, lenderAddress, amount,
       LoanContractABI.bytecode,
       signer
     );
-
+    
     // Convert amount to wei (assuming amount is in ETH)
     const amountWei = ethers.parseEther(amount.toString());
-
+    
     // Convert interest rate to basis points (e.g., 5.0% -> 500)
     const interestRateBps = Math.round(interestRate * 100);
-
+    
     // Convert term months to seconds
     const termSeconds = termMonths * 30 * 24 * 60 * 60;
-
+    
     // Deploy the contract
     const contract = await loanContractFactory.deploy(
       borrowerAddress,
@@ -311,14 +311,14 @@ export const deployLoanContract = async (borrowerAddress, lenderAddress, amount,
       termSeconds,
       loanId
     );
-
+    
     // Wait for deployment to complete
     await contract.waitForDeployment();
-
+    
     // Get the contract address
     const contractAddress = await contract.getAddress();
     console.log(`Loan contract deployed at: ${contractAddress}`);
-
+    
     return contractAddress;
   } catch (error) {
     console.error("Error deploying loan contract:", error);
@@ -339,31 +339,31 @@ export const fundLoan = async (contractAddress, borrowerAddress, lenderAddress, 
     console.log("Blockchain features are disabled");
     return null;
   }
-
+  
   if (!walletConnected) {
     const success = await initBlockchainService();
     if (!success) throw new Error("Wallet connection required");
   }
-
+  
   try {
     // Verify the connected account matches the lender
     const connectedAccount = await getConnectedAccount();
     if (connectedAccount.toLowerCase() !== lenderAddress.toLowerCase()) {
       throw new Error("Connected wallet does not match lender address");
     }
-
+    
     // Create contract instance for this specific loan
     const loanContract = new ethers.Contract(contractAddress, LoanContractABI.abi, signer);
-
+    
     // Convert amount to wei
     const amountWei = ethers.parseEther(amount.toString());
-
+    
     // Send transaction to fund the loan
     const tx = await loanContract.fundLoan({ value: amountWei });
-
+    
     // Wait for transaction to be mined
     await tx.wait();
-
+    
     console.log(`Loan funded successfully. Transaction hash: ${tx.hash}`);
     return tx.hash;
   } catch (error) {
@@ -386,31 +386,31 @@ export const repayLoan = async (contractAddress, borrowerAddress, lenderAddress,
     console.log("Blockchain features are disabled");
     return null;
   }
-
+  
   if (!walletConnected) {
     const success = await initBlockchainService();
     if (!success) throw new Error("Wallet connection required");
   }
-
+  
   try {
     // Verify the connected account matches the borrower
     const connectedAccount = await getConnectedAccount();
     if (connectedAccount.toLowerCase() !== borrowerAddress.toLowerCase()) {
       throw new Error("Connected wallet does not match borrower address");
     }
-
+    
     // Create contract instance for this specific loan
     const loanContract = new ethers.Contract(contractAddress, LoanContractABI.abi, signer);
-
+    
     // Convert amount to wei
     const amountWei = ethers.parseEther(amount.toString());
-
+    
     // Send transaction to repay the loan
     const tx = await loanContract.repayLoan(installmentNumber, { value: amountWei });
-
+    
     // Wait for transaction to be mined
     await tx.wait();
-
+    
     console.log(`Loan repayment successful. Transaction hash: ${tx.hash}`);
     return tx.hash;
   } catch (error) {
@@ -429,15 +429,15 @@ export const getLoanDetails = async (contractAddress) => {
     console.log("Blockchain features are disabled");
     return null;
   }
-
+  
   try {
     // Create a read-only contract instance
     const provider = new ethers.JsonRpcProvider(NETWORK_RPC_URL);
     const contract = new ethers.Contract(contractAddress, LoanContractABI.abi, provider);
-
+    
     // Get loan details
     const details = await contract.getLoanDetails();
-
+    
     // Format the response
     return {
       borrower: details.borrower,
@@ -468,34 +468,34 @@ export const getLoanTransactionHistory = async (contractAddress) => {
     console.log("Blockchain features are disabled");
     return [];
   }
-
+  
   try {
     // Create a provider to query events
     const provider = new ethers.JsonRpcProvider(NETWORK_RPC_URL);
     const contract = new ethers.Contract(contractAddress, LoanContractABI.abi, provider);
-
+    
     // Get the contract creation block
     const code = await provider.getCode(contractAddress);
     if (code === "0x") {
       throw new Error("Contract not found at the provided address");
     }
-
+    
     // Get funding events
     const fundingFilter = contract.filters.LoanFunded();
     const fundingEvents = await contract.queryFilter(fundingFilter);
-
+    
     // Get repayment events
     const repaymentFilter = contract.filters.LoanRepayment();
     const repaymentEvents = await contract.queryFilter(repaymentFilter);
-
+    
     // Get completion events
     const completionFilter = contract.filters.LoanCompleted();
     const completionEvents = await contract.queryFilter(completionFilter);
-
+    
     // Get default events
     const defaultFilter = contract.filters.LoanDefaulted();
     const defaultEvents = await contract.queryFilter(defaultFilter);
-
+    
     // Combine and format all events
     const allEvents = [
       ...fundingEvents.map(event => ({
@@ -524,10 +524,10 @@ export const getLoanTransactionHistory = async (contractAddress) => {
         hash: event.transactionHash
       }))
     ];
-
+    
     // Sort by timestamp
     allEvents.sort((a, b) => a.timestamp - b.timestamp);
-
+    
     return allEvents;
   } catch (error) {
     console.error("Error getting loan transaction history:", error);
@@ -544,7 +544,7 @@ export const getWalletBalance = async () => {
     const success = await initBlockchainService();
     if (!success) return "0";
   }
-
+  
   try {
     const address = await signer.getAddress();
     const balance = await provider.getBalance(address);
@@ -568,13 +568,13 @@ export const estimateGas = async (contractAddress, method, params = [], options 
     const success = await initBlockchainService();
     if (!success) throw new Error("Wallet connection required");
   }
-
+  
   try {
     const contract = new ethers.Contract(contractAddress, LoanContractABI.abi, signer);
     const gasEstimate = await contract[method].estimateGas(...params, options);
     const gasPrice = await provider.getGasPrice();
     const gasCost = gasEstimate * gasPrice;
-
+    
     return ethers.formatEther(gasCost);
   } catch (error) {
     console.error("Error estimating gas:", error);
@@ -601,7 +601,7 @@ const getNetworkName = (chainId) => {
     42161: "Arbitrum One",
     421613: "Arbitrum Goerli"
   };
-
+  
   return networks[chainId] || `Chain ID ${chainId}`;
 };
 
@@ -622,7 +622,7 @@ const getBlockExplorerUrl = (chainId) => {
     42161: "https://arbiscan.io",
     421613: "https://goerli.arbiscan.io"
   };
-
+  
   return explorers[chainId] || "";
 };
 
@@ -640,7 +640,7 @@ const getLoanStatusString = (status) => {
     4: "Defaulted",
     5: "Cancelled"
   };
-
+  
   return statuses[status] || "Unknown";
 };
 

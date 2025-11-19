@@ -105,7 +105,7 @@ describe('RegisterScreen', () => {
     fireEvent.changeText(getByLabelText('Password'), 'short');
     fireEvent.press(registerButton);
     await waitFor(() => expect(getByText('Password must be at least 8 characters')).toBeTruthy());
-
+    
     // Test password complexity (missing uppercase)
     fireEvent.changeText(getByLabelText('Password'), 'password123');
     fireEvent.press(registerButton);
@@ -133,10 +133,10 @@ describe('RegisterScreen', () => {
 
     await waitFor(() => {
       expect(mockRegister).toHaveBeenCalledTimes(1);
-      expect(mockRegister).toHaveBeenCalledWith({
+      expect(mockRegister).toHaveBeenCalledWith({ 
         name: 'Test User',
-        email: 'test@example.com',
-        password: 'Password123'
+        email: 'test@example.com', 
+        password: 'Password123' 
       });
       expect(Alert.alert).toHaveBeenCalledWith(
         'Registration Successful',
@@ -144,7 +144,7 @@ describe('RegisterScreen', () => {
         [{ text: 'OK', onPress: expect.any(Function) }]
       );
     });
-
+    
     // Simulate pressing OK on the alert
     const alertOkButton = Alert.alert.mock.calls[0][2][0].onPress;
     act(() => {
@@ -200,3 +200,4 @@ describe('RegisterScreen', () => {
     expect(mockNavigate).toHaveBeenCalledWith('Login');
   });
 });
+

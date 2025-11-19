@@ -43,3 +43,4 @@ main.container {
   padding-bottom: 20px;
   min-height: calc(100vh - 120px); /* Adjust based on navbar and footer height */
 }
+

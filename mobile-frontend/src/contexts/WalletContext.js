@@ -74,3 +74,4 @@ WalletProvider.propTypes = {
 
 // Custom hook for easy context usage
 export const useWallet = () => useContext(WalletContext);
+

@@ -188,3 +188,4 @@ npm run lint
 ## License
 
 This project is licensed under the [Specify License, e.g., MIT License] - see the `LICENSE` file in the root project directory for details.
+

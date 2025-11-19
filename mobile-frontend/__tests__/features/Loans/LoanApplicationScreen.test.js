@@ -106,7 +106,7 @@ describe('LoanApplicationScreen', () => {
     fireEvent.changeText(getByLabelText('Loan Term (Months)'), '40');
     fireEvent.press(submitButton);
     await waitFor(() => expect(getByText('Maximum term is 36 months')).toBeTruthy());
-
+    
     // Test with purpose too short
     fireEvent.changeText(getByLabelText('Purpose of Loan'), 'Short');
     fireEvent.press(submitButton);
@@ -123,7 +123,7 @@ describe('LoanApplicationScreen', () => {
     fireEvent.changeText(getByLabelText('Loan Amount ($)'), '2000');
     fireEvent.changeText(getByLabelText('Loan Term (Months)'), '24');
     fireEvent.changeText(getByLabelText('Purpose of Loan'), 'Consolidating existing debts for better management.');
-
+    
     // Press submit
     fireEvent.press(getByText('Submit Application'));
 
@@ -175,7 +175,7 @@ describe('LoanApplicationScreen', () => {
     // or mock the actual apiService.post to reject.
     // For this test, we'll assume the component's internal simulated API can fail.
     // This requires a way to trigger the failure in the component's handleSubmitLoan.
-    // The current component always simulates success.
+    // The current component always simulates success. 
     // To test this properly, the component's simulated API call would need a way to be influenced to fail.
     // For now, this test case is conceptual for the current component structure.
     // If apiService.post was mocked:
@@ -194,7 +194,7 @@ describe('LoanApplicationScreen', () => {
     fireEvent.changeText(getByLabelText('Loan Amount ($)'), '1500');
     fireEvent.changeText(getByLabelText('Loan Term (Months)'), '18');
     fireEvent.changeText(getByLabelText('Purpose of Loan'), 'Home renovation project funding.');
-
+    
     const submitButton = getByText('Submit Application');
     fireEvent.press(submitButton);
 
@@ -213,3 +213,4 @@ describe('LoanApplicationScreen', () => {
   });
 
 });
+

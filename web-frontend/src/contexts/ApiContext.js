@@ -27,16 +27,16 @@ export const ApiProvider = ({ children }) => {
       setIsAuthenticated(false);
       setUser(null);
     }
-  }, [token]);
+  }, [token, loadUser]);
 
   // Load user data
   const loadUser = async () => {
     try {
       setLoading(true);
       setError(null);
-
+      
       const res = await axios.get(`${API_URL}/auth/me`);
-
+      
       setUser(res.data.data);
       setIsAuthenticated(true);
       setLoading(false);
@@ -56,15 +56,15 @@ export const ApiProvider = ({ children }) => {
     try {
       setLoading(true);
       setError(null);
-
+      
       const res = await axios.post(`${API_URL}/auth/register`, userData);
-
+      
       setToken(res.data.token);
       localStorage.setItem('token', res.data.token);
       setUser(res.data.user);
       setIsAuthenticated(true);
       setLoading(false);
-
+      
       return res.data;
     } catch (err) {
       console.error('Error registering user:', err);
@@ -79,15 +79,15 @@ export const ApiProvider = ({ children }) => {
     try {
       setLoading(true);
       setError(null);
-
+      
       const res = await axios.post(`${API_URL}/auth/login`, { email, password });
-
+      
       setToken(res.data.token);
       localStorage.setItem('token', res.data.token);
       setUser(res.data.user);
       setIsAuthenticated(true);
       setLoading(false);
-
+      
       return res.data;
     } catch (err) {
       console.error('Error logging in:', err);
@@ -117,12 +117,12 @@ export const ApiProvider = ({ children }) => {
     try {
       setLoading(true);
       setError(null);
-
+      
       const res = await axios.put(`${API_URL}/auth/updatedetails`, userData);
-
+      
       setUser(res.data.data);
       setLoading(false);
-
+      
       return res.data;
     } catch (err) {
       console.error('Error updating profile:', err);
@@ -137,13 +137,13 @@ export const ApiProvider = ({ children }) => {
     try {
       setLoading(true);
       setError(null);
-
+      
       const res = await axios.put(`${API_URL}/auth/updatepassword`, passwordData);
-
+      
       setToken(res.data.token);
       localStorage.setItem('token', res.data.token);
       setLoading(false);
-
+      
       return res.data;
     } catch (err) {
       console.error('Error updating password:', err);
@@ -158,10 +158,10 @@ export const ApiProvider = ({ children }) => {
     try {
       setLoading(true);
       setError(null);
-
+      
       const queryParams = new URLSearchParams(filters).toString();
       const res = await axios.get(`${API_URL}/loans${queryParams ? `?${queryParams}` : ''}`);
-
+      
       setLoading(false);
       return res.data;
     } catch (err) {
@@ -177,9 +177,9 @@ export const ApiProvider = ({ children }) => {
     try {
       setLoading(true);
       setError(null);
-
+      
       const res = await axios.get(`${API_URL}/loans/user/my-loans`);
-
+      
       setLoading(false);
       return res.data;
     } catch (err) {
@@ -195,9 +195,9 @@ export const ApiProvider = ({ children }) => {
     try {
       setLoading(true);
       setError(null);
-
+      
       const res = await axios.get(`${API_URL}/loans/${id}`);
-
+      
       setLoading(false);
       return res.data;
     } catch (err) {
@@ -213,9 +213,9 @@ export const ApiProvider = ({ children }) => {
     try {
       setLoading(true);
       setError(null);
-
+      
       const res = await axios.post(`${API_URL}/loans/apply`, loanData);
-
+      
       setLoading(false);
       return res.data;
     } catch (err) {
@@ -231,9 +231,9 @@ export const ApiProvider = ({ children }) => {
     try {
       setLoading(true);
       setError(null);
-
+      
       const res = await axios.post(`${API_URL}/loans/${id}/fund`, data);
-
+      
       setLoading(false);
       return res.data;
     } catch (err) {
@@ -249,9 +249,9 @@ export const ApiProvider = ({ children }) => {
     try {
       setLoading(true);
       setError(null);
-
+      
       const res = await axios.post(`${API_URL}/loans/${id}/disburse`, data);
-
+      
       setLoading(false);
       return res.data;
     } catch (err) {
@@ -267,9 +267,9 @@ export const ApiProvider = ({ children }) => {
     try {
       setLoading(true);
       setError(null);
-
+      
       const res = await axios.post(`${API_URL}/loans/${id}/repay`, data);
-
+      
       setLoading(false);
       return res.data;
     } catch (err) {
@@ -285,9 +285,9 @@ export const ApiProvider = ({ children }) => {
     try {
       setLoading(true);
       setError(null);
-
+      
       const res = await axios.post(`${API_URL}/loans/${id}/cancel`, data);
-
+      
       setLoading(false);
       return res.data;
     } catch (err) {
@@ -303,9 +303,9 @@ export const ApiProvider = ({ children }) => {
     try {
       setLoading(true);
       setError(null);
-
+      
       const res = await axios.post(`${API_URL}/loans/${id}/schedule`, data);
-
+      
       setLoading(false);
       return res.data;
     } catch (err) {
@@ -321,9 +321,9 @@ export const ApiProvider = ({ children }) => {
     try {
       setLoading(true);
       setError(null);
-
+      
       const res = await axios.post(`${API_URL}/loans/${id}/collateral`, data);
-
+      
       setLoading(false);
       return res.data;
     } catch (err) {
@@ -339,9 +339,9 @@ export const ApiProvider = ({ children }) => {
     try {
       setLoading(true);
       setError(null);
-
+      
       const res = await axios.post(`${API_URL}/loans/${id}/risk`, data);
-
+      
       setLoading(false);
       return res.data;
     } catch (err) {
@@ -357,9 +357,9 @@ export const ApiProvider = ({ children }) => {
     try {
       setLoading(true);
       setError(null);
-
+      
       const res = await axios.post(`${API_URL}/loans/${id}/default`, data);
-
+      
       setLoading(false);
       return res.data;
     } catch (err) {
@@ -375,9 +375,9 @@ export const ApiProvider = ({ children }) => {
     try {
       setLoading(true);
       setError(null);
-
+      
       const res = await axios.get(`${API_URL}/loans/reputation/${address}`);
-
+      
       setLoading(false);
       return res.data;
     } catch (err) {

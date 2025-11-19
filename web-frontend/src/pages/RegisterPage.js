@@ -26,7 +26,7 @@ const RegisterPage = () => {
     //   const registrationData = { username, email, password, role };
     //   const userData = await apiService.register(registrationData);
     //   // Optionally login the user immediately
-    //   // login(userData);
+    //   // login(userData); 
     //   // navigate("/dashboard"); // or to a "please verify your email" page
     //   alert("Registration successful! Please login.");
     //   navigate("/login");
@@ -139,3 +139,4 @@ const RegisterPage = () => {
 };
 
 export default RegisterPage;
+

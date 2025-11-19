@@ -5,7 +5,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage"; // For sto
 // For development or testnets, or if using a wallet SDK that manages keys, this might differ.
 
 // Assuming ABIs and addresses are bundled or managed similarly to the web version
-import LoanContractABI from "../contracts/LoanContract.json";
+import LoanContractABI from "../contracts/LoanContract.json"; 
 import ContractAddress from "../contracts/LoanContract-address.json";
 
 // For mobile, direct RPC URLs might be used for read-only, but transactions need a wallet.
@@ -107,7 +107,7 @@ export const requestLoanOnChain = async (tokenAddress, principal, interestRate, 
         // Mobile: May want to show transaction progress to user
         // const receipt = await tx.wait();
         // return receipt;
-        return tx;
+        return tx; 
     } catch (error) {
         console.error("Mobile: Error requesting loan on chain:", error);
         throw error;
@@ -118,7 +118,7 @@ export const fundLoanOnChain = async (loanId, tokenAddress, amountToFund) => {
     const contract = getSignerOrThrow();
     try {
         // ERC20 Approve step (simplified - assumes generic ERC20 ABI is part of LoanContractABI or separate)
-        const tokenContract = new ethers.Contract(tokenAddress, LoanContractABI.abi_erc20, signer);
+        const tokenContract = new ethers.Contract(tokenAddress, LoanContractABI.abi_erc20, signer); 
         const amount = ethers.parseUnits(amountToFund.toString(), 18);
         const approveTx = await tokenContract.approve(CONTRACT_ADDRESS, amount);
         await approveTx.wait();
@@ -219,3 +219,4 @@ if (LoanContractABI && !LoanContractABI.abi_erc20) {
 // for example, in your main App.js or a context provider.
 // For development, you might pass a hardcoded private key (NOT FOR PRODUCTION).
 // Example: initMobileBlockchainService("YOUR_DEVELOPMENT_PRIVATE_KEY");
+

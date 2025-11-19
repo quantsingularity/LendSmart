@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import {
-  Typography,
-  Box,
-  Paper,
-  TextField,
-  Button,
-  Grid,
-  Alert,
+import { 
+  Typography, 
+  Box, 
+  Paper, 
+  TextField, 
+  Button, 
+  Grid, 
+  Alert, 
   CircularProgress,
   Avatar
 } from '@mui/material';
@@ -17,16 +17,16 @@ import { Link as RouterLink, useNavigate } from 'react-router-dom';
 const Register = () => {
   const navigate = useNavigate();
   const { register, loading, error: apiError } = useApi();
-
+  
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     password: '',
     confirmPassword: ''
   });
-
+  
   const [error, setError] = useState(null);
-
+  
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({
@@ -34,17 +34,17 @@ const Register = () => {
       [name]: value
     });
   };
-
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
-
+    
     // Validate passwords match
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
       return;
     }
-
+    
     try {
       await register({
         name: formData.name,
@@ -56,7 +56,7 @@ const Register = () => {
       setError(err.response?.data?.message || 'Registration failed');
     }
   };
-
+  
   return (
     <Box
       sx={{
@@ -71,18 +71,18 @@ const Register = () => {
       <Avatar sx={{ m: 1, bgcolor: 'secondary.main' }}>
         <PersonAddIcon />
       </Avatar>
-
+      
       <Typography component="h1" variant="h5">
         Sign up
       </Typography>
-
+      
       <Paper elevation={3} sx={{ p: 4, mt: 3, width: '100%' }}>
         {(error || apiError) && (
           <Alert severity="error" sx={{ mb: 3 }}>
             {error || apiError}
           </Alert>
         )}
-
+        
         <form onSubmit={handleSubmit}>
           <Grid container spacing={2}>
             <Grid item xs={12}>
@@ -97,7 +97,7 @@ const Register = () => {
                 autoFocus
               />
             </Grid>
-
+            
             <Grid item xs={12}>
               <TextField
                 label="Email Address"
@@ -110,7 +110,7 @@ const Register = () => {
                 autoComplete="email"
               />
             </Grid>
-
+            
             <Grid item xs={12}>
               <TextField
                 label="Password"
@@ -123,7 +123,7 @@ const Register = () => {
                 autoComplete="new-password"
               />
             </Grid>
-
+            
             <Grid item xs={12}>
               <TextField
                 label="Confirm Password"
@@ -137,7 +137,7 @@ const Register = () => {
               />
             </Grid>
           </Grid>
-
+          
           <Button
             type="submit"
             fullWidth
@@ -147,7 +147,7 @@ const Register = () => {
           >
             {loading ? <CircularProgress size={24} /> : 'Sign Up'}
           </Button>
-
+          
           <Grid container justifyContent="flex-end">
             <Grid item>
               <RouterLink to="/login" style={{ textDecoration: 'none' }}>

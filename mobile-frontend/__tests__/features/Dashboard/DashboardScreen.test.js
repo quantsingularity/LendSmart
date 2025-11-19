@@ -78,10 +78,10 @@ describe('DashboardScreen', () => {
     const { getByTestId, queryByText } = render(
         // DashboardScreen has an ActivityIndicator but it's not directly testable by role/text easily without testID
         // We will check that the main content is not rendered.
-        <DashboardScreen navigation={mockNavigation} />,
+        <DashboardScreen navigation={mockNavigation} />, 
         { wrapper: AllTheProviders }
     );
-    // The component renders ActivityIndicator, not a specific text.
+    // The component renders ActivityIndicator, not a specific text. 
     // We'll check that the greeting is NOT there, implying loading or redirect.
     expect(queryByText('Hello, Test!')).toBeNull();
     // If ActivityIndicator had a testID="loading-indicator", we could use: expect(getByTestId('loading-indicator')).toBeTruthy();
@@ -110,7 +110,7 @@ describe('DashboardScreen', () => {
       <DashboardScreen navigation={mockNavigation} />,
       { wrapper: AllTheProviders }
     );
-
+    
     // To test RefreshControl, we need to find the ScrollView and trigger its onRefresh prop.
     // This is not straightforward with RTL without specific testIDs or accessibility props on ScrollView.
     // However, we can test the onRefresh function if it were exposed or by simulating the refresh state change.
@@ -151,3 +151,4 @@ describe('DashboardScreen', () => {
   });
 
 });
+

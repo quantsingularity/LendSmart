@@ -6,7 +6,7 @@ import { useTheme } from 'react-native-paper';
 // Import screen components and navigators
 import DashboardScreen from '../features/Dashboard/DashboardScreen';
 // Import the new MarketplaceNavigator
-import MarketplaceNavigator from './MarketplaceNavigator';
+import MarketplaceNavigator from './MarketplaceNavigator'; 
 import LoanApplicationScreen from '../features/Loans/LoanApplicationScreen';
 import ProfileScreen from '../features/Profile/ProfileScreen';
 
@@ -40,14 +40,14 @@ const MainTabNavigator = () => {
           borderTopColor: theme.colors.border,
         },
         // Hide the header for the tab navigator itself, as nested navigators will have their own
-        headerShown: false,
+        headerShown: false, 
       })}
     >
       <Tab.Screen name="Dashboard" component={DashboardScreen} />
       {/* Use MarketplaceNavigator instead of MarketplaceScreen directly */}
-      <Tab.Screen
-        name="MarketplaceNav"
-        component={MarketplaceNavigator}
+      <Tab.Screen 
+        name="MarketplaceNav" 
+        component={MarketplaceNavigator} 
         options={{ title: 'Marketplace' }} // Set the tab label
       />
       <Tab.Screen name="Apply" component={LoanApplicationScreen} options={{ title: 'Apply for Loan', headerShown: true }} />
@@ -57,3 +57,4 @@ const MainTabNavigator = () => {
 };
 
 export default MainTabNavigator;
+

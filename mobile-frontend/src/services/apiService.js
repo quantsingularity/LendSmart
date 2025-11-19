@@ -84,3 +84,4 @@ export const fundLoan = (loanId, fundingData) => mobileApiService.post(`/loans/$
 export const recordRepayment = (loanId, repaymentData) => mobileApiService.post(`/loans/${loanId}/repay`, repaymentData);
 
 export default mobileApiService;
+

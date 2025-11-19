@@ -43,3 +43,4 @@ describe('App (React Native Template Entry Point)', () => {
     }
   });
 });
+

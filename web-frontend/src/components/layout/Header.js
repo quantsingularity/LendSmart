@@ -9,7 +9,7 @@ import { useBlockchain } from '../../contexts/BlockchainContext';
 const Header = () => {
   const { isAuthenticated, user, logout } = useApi();
   const { isConnected, account, connectWallet, disconnectWallet } = useBlockchain();
-
+  
   const [anchorElNav, setAnchorElNav] = React.useState(null);
   const [anchorElUser, setAnchorElUser] = React.useState(null);
 
@@ -113,10 +113,10 @@ const Header = () => {
                 if (page.auth && !isAuthenticated) return null;
                 // Skip if page requires specific role and user doesn't have it
                 if (page.role && (!user || user.role !== page.role)) return null;
-
+                
                 return (
-                  <MenuItem
-                    key={page.title}
+                  <MenuItem 
+                    key={page.title} 
                     onClick={handleCloseNavMenu}
                     component={RouterLink}
                     to={page.path}
@@ -155,7 +155,7 @@ const Header = () => {
               if (page.auth && !isAuthenticated) return null;
               // Skip if page requires specific role and user doesn't have it
               if (page.role && (!user || user.role !== page.role)) return null;
-
+              
               return (
                 <Button
                   key={page.title}
@@ -172,14 +172,14 @@ const Header = () => {
 
           {/* Wallet Connection Button */}
           <Box sx={{ mr: 2 }}>
-            <Button
-              variant="outlined"
-              color="inherit"
+            <Button 
+              variant="outlined" 
+              color="inherit" 
               onClick={handleWalletConnect}
               sx={{ borderColor: 'white', '&:hover': { borderColor: 'white', backgroundColor: 'rgba(255,255,255,0.1)' } }}
             >
-              {isConnected
-                ? `${account.substring(0, 6)}...${account.substring(account.length - 4)}`
+              {isConnected 
+                ? `${account.substring(0, 6)}...${account.substring(account.length - 4)}` 
                 : 'Connect Wallet'}
             </Button>
           </Box>
@@ -210,8 +210,8 @@ const Header = () => {
                   onClose={handleCloseUserMenu}
                 >
                   {settings.map((setting) => (
-                    <MenuItem
-                      key={setting.title}
+                    <MenuItem 
+                      key={setting.title} 
                       onClick={handleCloseUserMenu}
                       component={RouterLink}
                       to={setting.path}
@@ -226,18 +226,18 @@ const Header = () => {
               </>
             ) : (
               <Box sx={{ display: 'flex' }}>
-                <Button
-                  color="inherit"
-                  component={RouterLink}
+                <Button 
+                  color="inherit" 
+                  component={RouterLink} 
                   to="/login"
                   sx={{ mr: 1 }}
                 >
                   Login
                 </Button>
-                <Button
-                  variant="outlined"
-                  color="inherit"
-                  component={RouterLink}
+                <Button 
+                  variant="outlined" 
+                  color="inherit" 
+                  component={RouterLink} 
                   to="/register"
                   sx={{ borderColor: 'white', '&:hover': { borderColor: 'white', backgroundColor: 'rgba(255,255,255,0.1)' } }}
                 >

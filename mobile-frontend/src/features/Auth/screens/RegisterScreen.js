@@ -227,3 +227,4 @@ const createStyles = (theme) => StyleSheet.create({
 });
 
 export default RegisterScreen;
+

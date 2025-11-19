@@ -28,7 +28,7 @@ const DashboardPage = () => {
     <div className="page-container dashboard">
       <h2>Welcome to your Dashboard, {user?.username || "User"}!</h2>
       <p>Here you can manage your loan applications, investments, and profile settings.</p>
-
+      
       <div className="dashboard-sections">
         <section className="dashboard-section">
           <h3>My Profile</h3>
@@ -40,7 +40,7 @@ const DashboardPage = () => {
         <section className="dashboard-section">
           <h3>My Loans (as Borrower)</h3>
           {/* Placeholder for loans list - map through loans state */}
-          <p>You have no active loan applications.</p>
+          <p>You have no active loan applications.</p> 
           <a href="/loans/apply" className="button">Apply for a New Loan</a>
         </section>
 
@@ -87,3 +87,4 @@ const DashboardPage = () => {
 };
 
 export default DashboardPage;
+
