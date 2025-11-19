@@ -10,16 +10,10 @@ import seaborn as sns
 from sklearn.compose import ColumnTransformer
 from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
 from sklearn.impute import SimpleImputer
-from sklearn.metrics import (
-    accuracy_score,
-    classification_report,
-    confusion_matrix,
-    f1_score,
-    precision_score,
-    recall_score,
-    roc_auc_score,
-)
-from sklearn.model_selection import GridSearchCV, StratifiedKFold, train_test_split
+from sklearn.metrics import (accuracy_score, confusion_matrix, f1_score,
+                             precision_score, recall_score, roc_auc_score)
+from sklearn.model_selection import (GridSearchCV, StratifiedKFold,
+                                     train_test_split)
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
@@ -124,7 +118,6 @@ def preprocess_data(data):
 
         # Apply preprocessor
         X = data.drop("default", axis=1) if "default" in data.columns else data
-        processed_data = preprocessor
 
         # Save preprocessor
         joblib.dump(preprocessor, PREPROCESSOR_PATH)

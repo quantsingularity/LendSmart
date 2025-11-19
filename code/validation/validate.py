@@ -12,7 +12,6 @@ import sys
 import uuid
 from datetime import datetime
 
-import numpy as np
 import pandas as pd
 
 # Add paths to modules
@@ -47,7 +46,7 @@ sys.path.append(
 try:
     from compliance import ComplianceDocumentGenerator, ComplianceFramework
     from data_sources import AlternativeDataManager
-    from enhanced_models import EnhancedCreditScoringModel, ModelIntegrator
+    from enhanced_models import EnhancedCreditScoringModel
     from integration import EnhancedLendingSystem
     from scoring import AlternativeDataScoreAggregator
 

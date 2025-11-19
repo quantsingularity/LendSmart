@@ -7,7 +7,7 @@ to enhance traditional credit scoring with non-traditional data points.
 
 import logging
 import os
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, Optional, Tuple
 
 import joblib
 import numpy as np
@@ -78,7 +78,6 @@ class AlternativeDataScorer:
             filepath: Path to save the model
         """
         # Default implementation - override in subclasses if needed
-        pass
 
     def load_model(self, filepath: str) -> None:
         """
@@ -88,7 +87,6 @@ class AlternativeDataScorer:
             filepath: Path to the saved model
         """
         # Default implementation - override in subclasses if needed
-        pass
 
 
 class DigitalFootprintScorer(AlternativeDataScorer):

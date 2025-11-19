@@ -9,13 +9,9 @@ import hashlib
 import json
 import logging
 import os
-import re
 import uuid
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple, Union
-
-import numpy as np
-import pandas as pd
+from typing import Any, Dict, List, Optional, Tuple
 
 # Configure logging
 logging.basicConfig(
@@ -26,8 +22,6 @@ logger = logging.getLogger("compliance_framework")
 
 class ComplianceError(Exception):
     """Exception raised for compliance violations"""
-
-    pass
 
 
 class ComplianceCheck:

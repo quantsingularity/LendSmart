@@ -10,11 +10,10 @@ import logging
 import os
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 import pandas as pd
-import requests
 
 # Configure logging
 logging.basicConfig(
@@ -25,8 +24,6 @@ logger = logging.getLogger("alternative_data_sources")
 
 class DataSourceError(Exception):
     """Exception raised for errors in data source operations"""
-
-    pass
 
 
 class AlternativeDataSource(ABC):
@@ -62,7 +59,6 @@ class AlternativeDataSource(ABC):
         Returns:
             DataFrame containing the alternative data
         """
-        pass
 
     @abstractmethod
     def get_features(self) -> List[str]:
@@ -72,7 +68,6 @@ class AlternativeDataSource(ABC):
         Returns:
             List of feature names
         """
-        pass
 
     def cache_data(self, borrower_id: str, data: pd.DataFrame) -> None:
         """
@@ -192,7 +187,7 @@ class DigitalFootprintDataSource(AlternativeDataSource):
         try:
             # Simulate API call delay and response
             # In production, this would be a real API call
-            email = kwargs.get("email", f"{borrower_id}@example.com")
+            kwargs.get("email", f"{borrower_id}@example.com")
 
             # Generate synthetic data for demonstration
             data = {

@@ -11,9 +11,8 @@ import os
 import sys
 import uuid
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Tuple
 
-import numpy as np
 import pandas as pd
 
 # Add paths to new modules
@@ -40,10 +39,9 @@ sys.path.append(
 )
 
 from compliance import ComplianceDocumentGenerator, ComplianceFramework
-
 # Import from new modules
 from data_sources import AlternativeDataManager
-from enhanced_models import EnhancedCreditScoringModel, ModelIntegrator
+from enhanced_models import ModelIntegrator
 from scoring import AlternativeDataScoreAggregator
 
 # Import from existing modules
