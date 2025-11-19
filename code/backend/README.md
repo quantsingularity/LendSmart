@@ -48,7 +48,7 @@ The LendSmart backend is designed with enterprise-grade architecture principles:
 
 ## 📋 Prerequisites
 
-- Node.js 16+ 
+- Node.js 16+
 - MongoDB 5.0+
 - Redis 6.0+
 - npm or yarn
@@ -70,7 +70,7 @@ The LendSmart backend is designed with enterprise-grade architecture principles:
    ```bash
    cp .env.example .env
    ```
-   
+
    Configure the following environment variables:
    ```env
    # Server Configuration
@@ -420,4 +420,3 @@ For support and questions:
 - Follows financial industry best practices
 - Implements OWASP security guidelines
 - Designed for scalability and maintainability
-

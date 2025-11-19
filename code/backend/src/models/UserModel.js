@@ -18,7 +18,7 @@ const userSchema = new mongoose.Schema({
     maxlength: [30, 'Username cannot exceed 30 characters'],
     match: [/^[a-zA-Z0-9_]+$/, 'Username can only contain letters, numbers, and underscores']
   },
-  
+
   email: {
     type: String,
     required: [true, 'Email is required'],
@@ -27,14 +27,14 @@ const userSchema = new mongoose.Schema({
     trim: true,
     match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Please enter a valid email']
   },
-  
+
   password: {
     type: String,
     required: [true, 'Password is required'],
     minlength: [8, 'Password must be at least 8 characters'],
     select: false // Don't include password in queries by default
   },
-  
+
   // Personal Information (Encrypted)
   firstName: {
     type: String,
@@ -42,26 +42,26 @@ const userSchema = new mongoose.Schema({
     trim: true,
     maxlength: [50, 'First name cannot exceed 50 characters']
   },
-  
+
   lastName: {
     type: String,
     required: [true, 'Last name is required'],
     trim: true,
     maxlength: [50, 'Last name cannot exceed 50 characters']
   },
-  
+
   dateOfBirth: {
     type: Date,
     required: [true, 'Date of birth is required']
   },
-  
+
   // Contact Information (Encrypted)
   phoneNumber: {
     type: String,
     required: [true, 'Phone number is required'],
     match: [/^\+?[\d\s\-\(\)]+$/, 'Please enter a valid phone number']
   },
-  
+
   address: {
     street: { type: String, trim: true },
     city: { type: String, trim: true },
@@ -69,61 +69,61 @@ const userSchema = new mongoose.Schema({
     zipCode: { type: String, trim: true },
     country: { type: String, trim: true, default: 'US' }
   },
-  
+
   // Financial Information (Encrypted)
   income: {
     type: Number,
     min: [0, 'Income cannot be negative']
   },
-  
+
   employmentStatus: {
     type: String,
     enum: ['full-time', 'part-time', 'contract', 'self-employed', 'unemployed', 'student', 'retired'],
     required: [true, 'Employment status is required']
   },
-  
+
   employer: {
     type: String,
     trim: true,
     maxlength: [100, 'Employer name cannot exceed 100 characters']
   },
-  
+
   // Identity Verification
   socialSecurityNumber: {
     type: String,
     match: [/^\d{3}-?\d{2}-?\d{4}$/, 'Please enter a valid SSN format']
   },
-  
+
   // Account Status
   role: {
     type: String,
     enum: ['user', 'admin', 'risk-assessor', 'support'],
     default: 'user'
   },
-  
+
   accountStatus: {
     type: String,
     enum: ['active', 'suspended', 'closed', 'pending'],
     default: 'pending'
   },
-  
+
   // Verification Status
   emailVerified: {
     type: Boolean,
     default: false
   },
-  
+
   phoneVerified: {
     type: Boolean,
     default: false
   },
-  
+
   kycStatus: {
     type: String,
     enum: ['not_started', 'pending', 'verified', 'rejected'],
     default: 'not_started'
   },
-  
+
   kycDocuments: [{
     type: {
       type: String,
@@ -145,7 +145,7 @@ const userSchema = new mongoose.Schema({
       ref: 'User'
     }
   }],
-  
+
   // Credit Information
   creditScore: {
     type: Number,
@@ -153,23 +153,23 @@ const userSchema = new mongoose.Schema({
     max: [850, 'Credit score cannot exceed 850'],
     default: 600
   },
-  
+
   creditScoreLastUpdated: {
     type: Date,
     default: Date.now
   },
-  
+
   // Security Features
   mfaEnabled: {
     type: Boolean,
     default: false
   },
-  
+
   mfaSecret: {
     type: String,
     select: false
   },
-  
+
   mfaBackupCodes: [{
     code: String,
     used: {
@@ -178,7 +178,7 @@ const userSchema = new mongoose.Schema({
     },
     usedAt: Date
   }],
-  
+
   // Session Management
   refreshTokens: [{
     token: String,
@@ -194,7 +194,7 @@ const userSchema = new mongoose.Schema({
       default: true
     }
   }],
-  
+
   // Security Tracking
   lastLogin: Date,
   lastLoginIP: String,
@@ -203,19 +203,19 @@ const userSchema = new mongoose.Schema({
     default: 0
   },
   lockUntil: Date,
-  
+
   passwordResetToken: String,
   passwordResetExpires: Date,
   passwordChangedAt: Date,
-  
+
   // Email Verification
   emailVerificationToken: String,
   emailVerificationExpires: Date,
-  
+
   // Phone Verification
   phoneVerificationCode: String,
   phoneVerificationExpires: Date,
-  
+
   // Blockchain Integration
   walletAddress: {
     type: String,
@@ -223,7 +223,7 @@ const userSchema = new mongoose.Schema({
     sparse: true,
     match: [/^0x[a-fA-F0-9]{40}$/, 'Please enter a valid Ethereum wallet address']
   },
-  
+
   // Privacy and Compliance
   gdprConsents: [{
     consentType: {
@@ -235,24 +235,24 @@ const userSchema = new mongoose.Schema({
     ipAddress: String,
     userAgent: String
   }],
-  
+
   dataRetentionPolicy: {
     type: String,
     enum: ['standard', 'extended', 'minimal'],
     default: 'standard'
   },
-  
+
   // Audit Trail
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   },
-  
+
   updatedBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   },
-  
+
   // Metadata
   metadata: {
     registrationSource: String,
@@ -320,14 +320,14 @@ userSchema.pre('save', async function(next) {
     this.password = await bcrypt.hash(this.password, salt);
     this.passwordChangedAt = new Date();
   }
-  
+
   // Encrypt sensitive fields
-  if (this.isModified('firstName') || this.isModified('lastName') || 
+  if (this.isModified('firstName') || this.isModified('lastName') ||
       this.isModified('phoneNumber') || this.isModified('socialSecurityNumber') ||
       this.isModified('income')) {
-    
+
     const encryptionService = getEncryptionService();
-    
+
     if (this.isModified('firstName')) {
       this.firstName = encryptionService.encrypt(this.firstName);
     }
@@ -344,17 +344,17 @@ userSchema.pre('save', async function(next) {
       this.income = encryptionService.encrypt(this.income.toString());
     }
   }
-  
+
   next();
 });
 
 // Post-find middleware to decrypt sensitive fields
 userSchema.post(['find', 'findOne', 'findOneAndUpdate'], async function(docs) {
   if (!docs) return;
-  
+
   const documents = Array.isArray(docs) ? docs : [docs];
   const encryptionService = getEncryptionService();
-  
+
   for (const doc of documents) {
     if (doc && typeof doc.toObject === 'function') {
       try {
@@ -414,14 +414,14 @@ userSchema.methods.incrementLoginAttempts = function() {
       $set: { loginAttempts: 1 }
     });
   }
-  
+
   const updates = { $inc: { loginAttempts: 1 } };
-  
+
   // Lock account after 5 failed attempts for 2 hours
   if (this.loginAttempts + 1 >= 5 && !this.isAccountLocked) {
     updates.$set = { lockUntil: Date.now() + 2 * 60 * 60 * 1000 }; // 2 hours
   }
-  
+
   return this.updateOne(updates);
 };
 
@@ -440,12 +440,12 @@ userSchema.methods.addRefreshToken = function(token, ipAddress, userAgent) {
     userAgent,
     isActive: true
   });
-  
+
   // Keep only the last 5 refresh tokens
   if (this.refreshTokens.length > 5) {
     this.refreshTokens = this.refreshTokens.slice(-5);
   }
-  
+
   return this.save();
 };
 
@@ -464,7 +464,7 @@ userSchema.methods.updateCreditScore = async function() {
 userSchema.methods.recordGDPRConsent = function(consentType, granted, ipAddress, userAgent) {
   // Remove existing consent of the same type
   this.gdprConsents = this.gdprConsents.filter(consent => consent.consentType !== consentType);
-  
+
   // Add new consent record
   this.gdprConsents.push({
     consentType,
@@ -473,13 +473,13 @@ userSchema.methods.recordGDPRConsent = function(consentType, granted, ipAddress,
     ipAddress,
     userAgent
   });
-  
+
   return this.save();
 };
 
 userSchema.methods.toSafeObject = function() {
   const obj = this.toObject();
-  
+
   // Remove sensitive fields
   delete obj.password;
   delete obj.mfaSecret;
@@ -491,7 +491,7 @@ userSchema.methods.toSafeObject = function() {
   delete obj.socialSecurityNumber;
   delete obj.loginAttempts;
   delete obj.lockUntil;
-  
+
   return obj;
 };
 
@@ -513,7 +513,7 @@ userSchema.statics.getActiveUsers = function() {
 };
 
 userSchema.statics.getVerifiedUsers = function() {
-  return this.find({ 
+  return this.find({
     accountStatus: 'active',
     emailVerified: true,
     kycStatus: 'verified'

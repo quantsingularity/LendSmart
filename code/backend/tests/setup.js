@@ -32,13 +32,13 @@ class TestSetup {
 
     // Setup in-memory MongoDB
     await this.setupTestDatabase();
-    
+
     // Setup mock Redis
     this.setupMockRedis();
-    
+
     // Create test users
     await this.createTestUsers();
-    
+
     console.log('✅ Test environment setup completed');
   }
 
@@ -52,18 +52,18 @@ class TestSetup {
           dbName: 'lendsmart_test'
         }
       });
-      
+
       const mongoUri = this.mongoServer.getUri();
-      
+
       await mongoose.connect(mongoUri, {
         useNewUrlParser: true,
         useUnifiedTopology: true
       });
-      
+
       this.testDatabase = mongoose.connection;
-      
+
       console.log('✅ Test database connected');
-      
+
     } catch (error) {
       console.error('❌ Failed to setup test database:', error);
       throw error;
@@ -75,10 +75,10 @@ class TestSetup {
    */
   setupMockRedis() {
     this.redisClient = Redis.createClient();
-    
+
     // Mock Redis methods for testing
     global.mockRedis = this.redisClient;
-    
+
     console.log('✅ Mock Redis setup completed');
   }
 
@@ -87,7 +87,7 @@ class TestSetup {
    */
   async createTestUsers() {
     const User = require('../src/models/UserModel');
-    
+
     const testUserData = [
       {
         username: 'testuser',
@@ -175,28 +175,28 @@ class TestSetup {
       try {
         const user = new User(userData);
         await user.save();
-        
+
         // Generate test tokens
         const token = jwt.sign(
           { id: user._id, role: user.role },
           process.env.JWT_SECRET,
           { expiresIn: process.env.JWT_EXPIRE }
         );
-        
+
         const refreshToken = jwt.sign(
           { id: user._id },
           process.env.REFRESH_TOKEN_SECRET,
           { expiresIn: process.env.REFRESH_TOKEN_EXPIRE }
         );
-        
+
         this.testUsers.set(userData.username, user);
         this.testTokens.set(userData.username, { token, refreshToken });
-        
+
       } catch (error) {
         console.error(`Failed to create test user ${userData.username}:`, error);
       }
     }
-    
+
     console.log(`✅ Created ${this.testUsers.size} test users`);
   }
 
@@ -221,7 +221,7 @@ class TestSetup {
     const Loan = require('../src/models/LoanModel');
     const borrower = this.getTestUser(borrowerUsername);
     const lender = lenderUsername ? this.getTestUser(lenderUsername) : null;
-    
+
     const loanData = {
       borrower: borrower._id,
       lender: lender?._id,
@@ -249,10 +249,10 @@ class TestSetup {
         processingFee: 50
       }
     };
-    
+
     const loan = new Loan(loanData);
     await loan.save();
-    
+
     return loan;
   }
 
@@ -268,22 +268,22 @@ class TestSetup {
           await collection.deleteMany({});
         }
       }
-      
+
       // Close database connections
       if (mongoose.connection.readyState !== 0) {
         await mongoose.connection.close();
       }
-      
+
       if (this.mongoServer) {
         await this.mongoServer.stop();
       }
-      
+
       // Clear test data
       this.testUsers.clear();
       this.testTokens.clear();
-      
+
       console.log('✅ Test cleanup completed');
-      
+
     } catch (error) {
       console.error('❌ Test cleanup failed:', error);
     }
@@ -298,10 +298,10 @@ class TestSetup {
       for (const collection of collections) {
         await collection.deleteMany({});
       }
-      
+
       // Recreate test users
       await this.createTestUsers();
-      
+
     } catch (error) {
       console.error('❌ Database reset failed:', error);
       throw error;
@@ -395,7 +395,7 @@ class TestSetup {
       end: jest.fn().mockReturnThis(),
       statusCode: 200
     };
-    
+
     return res;
   }
 
@@ -405,7 +405,7 @@ class TestSetup {
   assertResponseStructure(response, expectedStructure) {
     for (const key in expectedStructure) {
       expect(response).toHaveProperty(key);
-      
+
       if (typeof expectedStructure[key] === 'object' && expectedStructure[key] !== null) {
         this.assertResponseStructure(response[key], expectedStructure[key]);
       }
@@ -428,7 +428,7 @@ class TestSetup {
         employmentStatus: 'full-time',
         income: 60000
       },
-      
+
       validLoan: {
         amount: 15000,
         interestRate: 10.5,
@@ -436,7 +436,7 @@ class TestSetup {
         termUnit: 'months',
         purpose: 'home_improvement'
       },
-      
+
       invalidUser: {
         username: 'a', // Too short
         email: 'invalid-email',
@@ -444,7 +444,7 @@ class TestSetup {
         firstName: '',
         lastName: ''
       },
-      
+
       invalidLoan: {
         amount: -1000, // Negative amount
         interestRate: 100, // Too high
@@ -463,4 +463,3 @@ global.testSetup = testSetup;
 global.expect = require('chai').expect;
 
 module.exports = testSetup;
-

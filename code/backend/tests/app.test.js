@@ -25,7 +25,7 @@ describe("GET / (API Root)", () => {
 
 //   beforeAll(async () => {
 //     // You might need to connect to a test database here if not already handled
-//     // await connectDB(); 
+//     // await connectDB();
 
 //     // Register and login a test user to get a token
 //     await request(app)
@@ -36,7 +36,7 @@ describe("GET / (API Root)", () => {
 //         password: "password123",
 //         role: "borrower",
 //       });
-    
+
 //     const loginRes = await request(app)
 //       .post("/api/auth/login")
 //       .send({
@@ -72,4 +72,3 @@ describe("GET / (API Root)", () => {
 // afterAll(async () => {
 //   await mongoose.connection.close();
 // });
-

@@ -200,4 +200,3 @@ LABEL org.opencontainers.image.version="1.0.0"
 LABEL org.opencontainers.image.vendor="LendSmart"
 LABEL org.opencontainers.image.licenses="PROPRIETARY"
 LABEL org.opencontainers.image.source="https://github.com/lendsmart/backend"
-

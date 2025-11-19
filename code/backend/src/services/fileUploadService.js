@@ -16,7 +16,7 @@ class FileUploadService {
   constructor() {
     this.encryptionService = getEncryptionService();
     this.auditLogger = getAuditLogger();
-    
+
     // Upload configuration
     this.config = {
       maxFileSize: 10 * 1024 * 1024, // 10MB
@@ -27,7 +27,7 @@ class FileUploadService {
       tempDir: process.env.TEMP_DIR || './temp',
       encryptFiles: process.env.ENCRYPT_FILES === 'true'
     };
-    
+
     // Ensure upload directories exist
     this.initializeDirectories();
   }
@@ -223,8 +223,8 @@ class FileUploadService {
       /[<>:"|?*]/ // Invalid filename characters
     ];
 
-    return suspiciousPatterns.some(pattern => 
-      pattern.test(file.originalname) || 
+    return suspiciousPatterns.some(pattern =>
+      pattern.test(file.originalname) ||
       (file.buffer && pattern.test(file.buffer.toString()))
     );
   }
@@ -394,7 +394,7 @@ class FileUploadService {
     // For now, just check file size and basic patterns
     try {
       const stats = await fs.stat(filePath);
-      
+
       // Reject extremely large files
       if (stats.size > 50 * 1024 * 1024) { // 50MB
         return { clean: false, reason: 'File too large' };
@@ -436,7 +436,7 @@ class FileUploadService {
       // const dataBuffer = await fs.readFile(filePath);
       // const data = await pdfParse(dataBuffer);
       // return data.text;
-      
+
       return 'Text extraction not implemented';
     } catch (error) {
       logger.error('PDF text extraction failed', {
@@ -513,7 +513,7 @@ class FileUploadService {
     try {
       // Use Sharp to validate and get image metadata
       const metadata = await sharp(imagePath).metadata();
-      
+
       // Check if it's a valid image
       if (!metadata.format) {
         return { valid: false, reason: 'Invalid image format' };
@@ -568,7 +568,7 @@ class FileUploadService {
       await fs.mkdir(thumbnailDir, { recursive: true });
 
       const filename = path.basename(imagePath, path.extname(imagePath));
-      
+
       const thumbnails = {
         small: path.join(thumbnailDir, `${filename}_small.jpg`),
         medium: path.join(thumbnailDir, `${filename}_medium.jpg`),
@@ -581,12 +581,12 @@ class FileUploadService {
           .resize(150, 150, { fit: 'cover' })
           .jpeg({ quality: 80 })
           .toFile(thumbnails.small),
-        
+
         sharp(imagePath)
           .resize(300, 300, { fit: 'cover' })
           .jpeg({ quality: 85 })
           .toFile(thumbnails.medium),
-        
+
         sharp(imagePath)
           .resize(600, 600, { fit: 'cover' })
           .jpeg({ quality: 90 })
@@ -657,7 +657,7 @@ class FileUploadService {
 
       // This would typically query the database for old file records
       // and remove both the database records and physical files
-      
+
       logger.info('File cleanup completed', {
         cutoffDate: cutoffDate.toISOString(),
         maxAge
@@ -672,4 +672,3 @@ class FileUploadService {
 }
 
 module.exports = new FileUploadService();
-

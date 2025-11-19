@@ -42,7 +42,7 @@ describe('Security Middleware', () => {
 
       const responses = await Promise.all(promises);
       const blockedResponses = responses.filter(res => res.status === 429);
-      
+
       expect(blockedResponses.length).toBeGreaterThan(0);
     });
   });
@@ -274,7 +274,7 @@ describe('Input Validation Middleware', () => {
 
   describe('User Registration Validation', () => {
     test('should validate valid user registration data', async () => {
-      app.post('/register', 
+      app.post('/register',
         inputValidator.validateUserRegistration,
         (req, res) => res.json({ success: true })
       );
@@ -299,7 +299,7 @@ describe('Input Validation Middleware', () => {
     });
 
     test('should reject invalid email format', async () => {
-      app.post('/register', 
+      app.post('/register',
         inputValidator.validateUserRegistration,
         (req, res) => res.json({ success: true })
       );
@@ -320,7 +320,7 @@ describe('Input Validation Middleware', () => {
     });
 
     test('should reject weak passwords', async () => {
-      app.post('/register', 
+      app.post('/register',
         inputValidator.validateUserRegistration,
         (req, res) => res.json({ success: true })
       );
@@ -349,7 +349,7 @@ describe('Input Validation Middleware', () => {
     });
 
     test('should reject missing required fields', async () => {
-      app.post('/register', 
+      app.post('/register',
         inputValidator.validateUserRegistration,
         (req, res) => res.json({ success: true })
       );
@@ -370,7 +370,7 @@ describe('Input Validation Middleware', () => {
 
   describe('Loan Application Validation', () => {
     test('should validate valid loan application', async () => {
-      app.post('/loan', 
+      app.post('/loan',
         inputValidator.validateLoanApplication,
         (req, res) => res.json({ success: true })
       );
@@ -402,7 +402,7 @@ describe('Input Validation Middleware', () => {
     });
 
     test('should reject invalid loan amount', async () => {
-      app.post('/loan', 
+      app.post('/loan',
         inputValidator.validateLoanApplication,
         (req, res) => res.json({ success: true })
       );
@@ -424,7 +424,7 @@ describe('Input Validation Middleware', () => {
     });
 
     test('should reject invalid loan purpose', async () => {
-      app.post('/loan', 
+      app.post('/loan',
         inputValidator.validateLoanApplication,
         (req, res) => res.json({ success: true })
       );
@@ -444,7 +444,7 @@ describe('Input Validation Middleware', () => {
 
   describe('Payment Validation', () => {
     test('should validate valid payment data', async () => {
-      app.post('/payment', 
+      app.post('/payment',
         inputValidator.validatePayment,
         (req, res) => res.json({ success: true })
       );
@@ -468,7 +468,7 @@ describe('Input Validation Middleware', () => {
     });
 
     test('should reject invalid payment amount', async () => {
-      app.post('/payment', 
+      app.post('/payment',
         inputValidator.validatePayment,
         (req, res) => res.json({ success: true })
       );
@@ -486,7 +486,7 @@ describe('Input Validation Middleware', () => {
     });
 
     test('should reject invalid payment method', async () => {
-      app.post('/payment', 
+      app.post('/payment',
         inputValidator.validatePayment,
         (req, res) => res.json({ success: true })
       );
@@ -655,4 +655,3 @@ describe('Error Handler Middleware', () => {
     process.env.NODE_ENV = originalEnv;
   });
 });
-

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 // Import TextInput from react-native
-import { View, StyleSheet, ScrollView, ActivityIndicator, Alert, TextInput } from 'react-native'; 
+import { View, StyleSheet, ScrollView, ActivityIndicator, Alert, TextInput } from 'react-native';
 import { Text, Card, Button, useTheme, Divider, List } from 'react-native-paper';
 // Removed unused MaterialCommunityIcons import
 import PropTypes from 'prop-types';
@@ -63,7 +63,7 @@ const LoanDetailsScreen = ({ route, navigation }) => {
       ]);
       return;
     }
-    
+
     // Basic validation
     const amountToFund = parseFloat(fundingAmount);
     if (isNaN(amountToFund) || amountToFund <= 0) {
@@ -307,4 +307,3 @@ const createStyles = (theme) => StyleSheet.create({
 });
 
 export default LoanDetailsScreen;
-

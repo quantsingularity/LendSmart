@@ -50,30 +50,30 @@ check_docker() {
         echo "Please install Docker first: https://docs.docker.com/get-docker/"
         return 1
     fi
-    
+
     if ! command -v docker-compose &> /dev/null; then
         echo -e "${RED}Error: Docker Compose is not installed${NC}"
         echo "Please install Docker Compose first: https://docs.docker.com/compose/install/"
         return 1
     fi
-    
+
     return 0
 }
 
 # Function to setup Docker environment
 setup_docker() {
     echo -e "${BLUE}Setting up Docker environment for LendSmart...${NC}"
-    
+
     # Check if Docker is installed
     check_docker || return 1
-    
+
     # Check if docker-compose.yml exists
     if [ ! -f "$COMPOSE_FILE" ]; then
         echo -e "${YELLOW}Docker Compose file not found, creating one...${NC}"
-        
+
         # Create Docker directory if it doesn't exist
         mkdir -p "$DOCKER_DIR"
-        
+
         # Create docker-compose.yml
         cat > "$COMPOSE_FILE" << 'EOF'
 version: '3.8'
@@ -168,22 +168,22 @@ volumes:
   postgres-data:
   redis-data:
 EOF
-        
+
         echo -e "${GREEN}Docker Compose file created at $COMPOSE_FILE${NC}"
     fi
-    
+
     # Check if Dockerfiles exist for each service, create if not
     create_dockerfile "backend" "Node.js"
     create_dockerfile "web-frontend" "React"
     create_dockerfile "ml-model" "Python"
-    
+
     # Build all images
     echo -e "${YELLOW}Building Docker images...${NC}"
     docker-compose -f "$COMPOSE_FILE" build
-    
+
     echo -e "${GREEN}Docker environment setup complete!${NC}"
     echo -e "You can now start the services with: ./docker_orchestrator.sh start"
-    
+
     return 0
 }
 
@@ -193,15 +193,15 @@ create_dockerfile() {
     local type=$2
     local dockerfile_dir="$PROJECT_ROOT/$service"
     local dockerfile="$dockerfile_dir/Dockerfile"
-    
+
     if [ ! -d "$dockerfile_dir" ]; then
         echo -e "${YELLOW}Directory for $service not found, skipping Dockerfile creation${NC}"
         return 0
     fi
-    
+
     if [ ! -f "$dockerfile" ]; then
         echo -e "${YELLOW}Dockerfile for $service not found, creating one...${NC}"
-        
+
         case "$type" in
             "Node.js")
                 cat > "$dockerfile" << 'EOF'
@@ -255,30 +255,30 @@ CMD ["python", "app.py"]
 EOF
                 ;;
         esac
-        
+
         echo -e "${GREEN}Dockerfile created for $service${NC}"
     fi
-    
+
     return 0
 }
 
 # Function to start all services
 start_services() {
     echo -e "${BLUE}Starting LendSmart services...${NC}"
-    
+
     # Check if Docker is installed
     check_docker || return 1
-    
+
     # Check if docker-compose.yml exists
     if [ ! -f "$COMPOSE_FILE" ]; then
         echo -e "${RED}Error: Docker Compose file not found: $COMPOSE_FILE${NC}"
         echo "Please run setup first: ./docker_orchestrator.sh setup"
         return 1
     fi
-    
+
     # Start services
     docker-compose -f "$COMPOSE_FILE" up -d
-    
+
     # Check if services started successfully
     if [ $? -eq 0 ]; then
         echo -e "${GREEN}LendSmart services started successfully!${NC}"
@@ -292,26 +292,26 @@ start_services() {
         echo -e "${RED}Failed to start LendSmart services!${NC}"
         return 1
     fi
-    
+
     return 0
 }
 
 # Function to stop all services
 stop_services() {
     echo -e "${BLUE}Stopping LendSmart services...${NC}"
-    
+
     # Check if Docker is installed
     check_docker || return 1
-    
+
     # Check if docker-compose.yml exists
     if [ ! -f "$COMPOSE_FILE" ]; then
         echo -e "${RED}Error: Docker Compose file not found: $COMPOSE_FILE${NC}"
         return 1
     fi
-    
+
     # Stop services
     docker-compose -f "$COMPOSE_FILE" down
-    
+
     # Check if services stopped successfully
     if [ $? -eq 0 ]; then
         echo -e "${GREEN}LendSmart services stopped successfully!${NC}"
@@ -319,55 +319,55 @@ stop_services() {
         echo -e "${RED}Failed to stop LendSmart services!${NC}"
         return 1
     fi
-    
+
     return 0
 }
 
 # Function to restart all services
 restart_services() {
     echo -e "${BLUE}Restarting LendSmart services...${NC}"
-    
+
     # Stop services
     stop_services
-    
+
     # Start services
     start_services
-    
+
     return 0
 }
 
 # Function to show status of all services
 show_status() {
     echo -e "${BLUE}LendSmart services status:${NC}"
-    
+
     # Check if Docker is installed
     check_docker || return 1
-    
+
     # Check if docker-compose.yml exists
     if [ ! -f "$COMPOSE_FILE" ]; then
         echo -e "${RED}Error: Docker Compose file not found: $COMPOSE_FILE${NC}"
         return 1
     fi
-    
+
     # Show status
     docker-compose -f "$COMPOSE_FILE" ps
-    
+
     return 0
 }
 
 # Function to show logs for a specific service or all services
 show_logs() {
     local service=$1
-    
+
     # Check if Docker is installed
     check_docker || return 1
-    
+
     # Check if docker-compose.yml exists
     if [ ! -f "$COMPOSE_FILE" ]; then
         echo -e "${RED}Error: Docker Compose file not found: $COMPOSE_FILE${NC}"
         return 1
     fi
-    
+
     # Show logs
     if [ -z "$service" ]; then
         echo -e "${BLUE}Showing logs for all services...${NC}"
@@ -376,23 +376,23 @@ show_logs() {
         echo -e "${BLUE}Showing logs for $service...${NC}"
         docker-compose -f "$COMPOSE_FILE" logs --tail=100 -f "$service"
     fi
-    
+
     return 0
 }
 
 # Function to build or rebuild a specific service or all services
 build_service() {
     local service=$1
-    
+
     # Check if Docker is installed
     check_docker || return 1
-    
+
     # Check if docker-compose.yml exists
     if [ ! -f "$COMPOSE_FILE" ]; then
         echo -e "${RED}Error: Docker Compose file not found: $COMPOSE_FILE${NC}"
         return 1
     fi
-    
+
     # Build service
     if [ -z "$service" ]; then
         echo -e "${BLUE}Building all services...${NC}"
@@ -401,7 +401,7 @@ build_service() {
         echo -e "${BLUE}Building $service...${NC}"
         docker-compose -f "$COMPOSE_FILE" build "$service"
     fi
-    
+
     # Check if build was successful
     if [ $? -eq 0 ]; then
         echo -e "${GREEN}Build successful!${NC}"
@@ -409,7 +409,7 @@ build_service() {
         echo -e "${RED}Build failed!${NC}"
         return 1
     fi
-    
+
     return 0
 }
 
@@ -418,83 +418,83 @@ exec_command() {
     local service=$1
     shift
     local command=$@
-    
+
     # Check if Docker is installed
     check_docker || return 1
-    
+
     # Check if docker-compose.yml exists
     if [ ! -f "$COMPOSE_FILE" ]; then
         echo -e "${RED}Error: Docker Compose file not found: $COMPOSE_FILE${NC}"
         return 1
     fi
-    
+
     # Check if service is specified
     if [ -z "$service" ]; then
         echo -e "${RED}Error: No service specified${NC}"
         echo "Usage: ./docker_orchestrator.sh exec [SERVICE] [COMMAND]"
         return 1
     fi
-    
+
     # Check if command is specified
     if [ -z "$command" ]; then
         echo -e "${YELLOW}No command specified, using default shell${NC}"
         command="sh"
     fi
-    
+
     # Execute command
     echo -e "${BLUE}Executing command in $service container: $command${NC}"
     docker-compose -f "$COMPOSE_FILE" exec "$service" $command
-    
+
     return 0
 }
 
 # Function to clean Docker resources
 clean_resources() {
     echo -e "${BLUE}Cleaning Docker resources...${NC}"
-    
+
     # Check if Docker is installed
     check_docker || return 1
-    
+
     # Check if docker-compose.yml exists
     if [ ! -f "$COMPOSE_FILE" ]; then
         echo -e "${RED}Error: Docker Compose file not found: $COMPOSE_FILE${NC}"
         return 1
     fi
-    
+
     # Stop and remove containers, networks, and volumes
     echo -e "${YELLOW}Stopping and removing containers, networks, and volumes...${NC}"
     docker-compose -f "$COMPOSE_FILE" down -v
-    
+
     echo -e "${GREEN}Docker resources cleaned!${NC}"
-    
+
     return 0
 }
 
 # Function to prune unused Docker resources
 prune_resources() {
     echo -e "${BLUE}Pruning unused Docker resources...${NC}"
-    
+
     # Check if Docker is installed
     check_docker || return 1
-    
+
     # Prune containers
     echo -e "${YELLOW}Pruning containers...${NC}"
     docker container prune -f
-    
+
     # Prune images
     echo -e "${YELLOW}Pruning images...${NC}"
     docker image prune -f
-    
+
     # Prune networks
     echo -e "${YELLOW}Pruning networks...${NC}"
     docker network prune -f
-    
+
     # Prune volumes
     echo -e "${YELLOW}Pruning volumes...${NC}"
     docker volume prune -f
-    
+
     echo -e "${GREEN}Unused Docker resources pruned!${NC}"
-    
+
     return 0
 }
 
@@ -503,7 +503,7 @@ main() {
     # Parse command
     local command=$1
     shift
-    
+
     case "$command" in
         setup)
             setup_docker

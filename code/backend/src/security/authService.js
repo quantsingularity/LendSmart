@@ -55,9 +55,9 @@ class AuthService {
     this.lockoutDuration = parseInt(process.env.LOCKOUT_DURATION) || 900; // 15 minutes
     this.encryptionService = getEncryptionService();
     this.auditLogger = getAuditLogger();
-    
+
     // Warn if using default secrets in production
-    if (process.env.NODE_ENV === 'production' && 
+    if (process.env.NODE_ENV === 'production' &&
         (this.jwtSecret.includes('default') || this.refreshSecret.includes('default'))) {
       logger.error('Using default JWT secrets in production! This is a security risk.');
     }
@@ -71,12 +71,12 @@ class AuthService {
   async register(userData) {
     try {
       const { email, password, username, firstName, lastName, phoneNumber, ip, userAgent } = userData;
-      
+
       // Check if user already exists
       const existingUser = await User.findOne({
         $or: [{ email: email.toLowerCase() }, { username: username.toLowerCase() }]
       });
-      
+
       if (existingUser) {
         await this.auditLogger.logAuthEvent({
           action: 'registration_failed',
@@ -88,13 +88,13 @@ class AuthService {
           success: false,
           timestamp: new Date().toISOString()
         });
-        
+
         return {
           success: false,
           message: 'User already exists with this email or username'
         };
       }
-      
+
       // Validate password strength
       const passwordValidation = this.validatePasswordStrength(password);
       if (!passwordValidation.isValid) {
@@ -104,7 +104,7 @@ class AuthService {
           requirements: passwordValidation.requirements
         };
       }
-      
+
       // Create user - encryption will be handled by model middleware
       const user = new User({
         username: username.toLowerCase(),
@@ -123,19 +123,19 @@ class AuthService {
           preferredLanguage: 'en'
         }
       });
-      
+
       await user.save();
-      
+
       // Generate email verification token
       const verificationToken = user.generateEmailVerificationToken();
       await user.save();
-      
+
       // Generate authentication tokens
       const tokens = await this.generateTokens(user);
-      
+
       // Store session
       await this.storeSession(user._id, tokens.refreshToken, ip, userAgent);
-      
+
       // Audit log
       await this.auditLogger.logAuthEvent({
         action: 'user_registered',
@@ -147,7 +147,7 @@ class AuthService {
         success: true,
         timestamp: new Date().toISOString()
       });
-      
+
       // Log registration event
       logger.info('User registered', {
         userId: user._id,
@@ -155,7 +155,7 @@ class AuthService {
         ip,
         userAgent
       });
-      
+
       return {
         success: true,
         user: this.sanitizeUser(user),
@@ -163,11 +163,11 @@ class AuthService {
         verificationToken
       };
     } catch (error) {
-      logger.error('Registration failed', { 
-        error: error.message, 
-        userData: { email: userData.email, username: userData.username } 
+      logger.error('Registration failed', {
+        error: error.message,
+        userData: { email: userData.email, username: userData.username }
       });
-      
+
       return {
         success: false,
         message: 'Registration failed. Please try again.'
@@ -183,18 +183,18 @@ class AuthService {
   async login(credentials) {
     try {
       const { email, password, mfaToken, ip, userAgent } = credentials;
-      
+
       // Check for account lockout
       await this.checkAccountLockout(email);
-      
+
       // Find user by email or username
       const user = await User.findOne({
         $or: [
-          { email: email.toLowerCase() }, 
+          { email: email.toLowerCase() },
           { username: email.toLowerCase() }
         ]
       }).select('+password');
-      
+
       if (!user) {
         await this.recordFailedAttempt(email, ip);
         await this.auditLogger.logAuthEvent({
@@ -206,13 +206,13 @@ class AuthService {
           success: false,
           timestamp: new Date().toISOString()
         });
-        
+
         return {
           success: false,
           message: 'Invalid credentials'
         };
       }
-      
+
       // Verify password
       const isPasswordValid = await user.matchPassword(password);
       if (!isPasswordValid) {
@@ -227,13 +227,13 @@ class AuthService {
           success: false,
           timestamp: new Date().toISOString()
         });
-        
+
         return {
           success: false,
           message: 'Invalid credentials'
         };
       }
-      
+
       // Check if account is active
       if (user.accountStatus !== 'active' && user.accountStatus !== 'pending') {
         await this.auditLogger.logAuthEvent({
@@ -246,13 +246,13 @@ class AuthService {
           success: false,
           timestamp: new Date().toISOString()
         });
-        
+
         return {
           success: false,
           message: 'Account is deactivated'
         };
       }
-      
+
       // Check MFA if enabled
       if (user.mfaEnabled) {
         if (!mfaToken) {
@@ -263,7 +263,7 @@ class AuthService {
             tempToken: await this.generateTempToken(user._id)
           };
         }
-        
+
         const isMFAValid = await this.verifyMFA(user, mfaToken);
         if (!isMFAValid) {
           await this.recordFailedAttempt(email, ip);
@@ -277,28 +277,28 @@ class AuthService {
             success: false,
             timestamp: new Date().toISOString()
           });
-          
+
           return {
             success: false,
             message: 'Invalid MFA token'
           };
         }
       }
-      
+
       // Clear failed attempts
       await this.clearFailedAttempts(email);
-      
+
       // Update last login
       user.lastLogin = new Date();
       user.lastLoginIP = ip;
       await user.save();
-      
+
       // Generate tokens
       const tokens = await this.generateTokens(user);
-      
+
       // Store session
       await this.storeSession(user._id, tokens.refreshToken, ip, userAgent);
-      
+
       // Audit log
       await this.auditLogger.logAuthEvent({
         action: 'user_login',
@@ -311,7 +311,7 @@ class AuthService {
         success: true,
         timestamp: new Date().toISOString()
       });
-      
+
       // Log successful login
       logger.info('User logged in', {
         userId: user._id,
@@ -319,7 +319,7 @@ class AuthService {
         ip,
         userAgent
       });
-      
+
       return {
         success: true,
         user: this.sanitizeUser(user),
@@ -327,7 +327,7 @@ class AuthService {
       };
     } catch (error) {
       logger.error('Login failed', { error: error.message, email: credentials.email });
-      
+
       return {
         success: false,
         message: 'Login failed. Please try again.'
@@ -345,30 +345,30 @@ class AuthService {
     try {
       // Verify refresh token
       const decoded = jwt.verify(refreshToken, this.refreshSecret);
-      
+
       // Check if session exists
       const sessionKey = `session:${decoded.id}:${refreshToken}`;
       const session = await redisClient.get(sessionKey);
-      
+
       if (!session) {
         throw new Error('Invalid or expired refresh token');
       }
-      
+
       // Get user
       const user = await User.findById(decoded.id);
       if (!user || !user.isActive) {
         throw new Error('User not found or inactive');
       }
-      
+
       // Generate new tokens
       const tokens = await this.generateTokens(user);
-      
+
       // Update session with new refresh token
       await redisClient.del(sessionKey);
       await this.storeSession(user._id, tokens.refreshToken, ip, JSON.parse(session).userAgent);
-      
+
       logger.info('Token refreshed', { userId: user._id, ip });
-      
+
       return {
         success: true,
         tokens
@@ -390,12 +390,12 @@ class AuthService {
         const sessionKey = `session:${userId}:${refreshToken}`;
         await redisClient.del(sessionKey);
       }
-      
+
       // Add access token to blacklist if provided
       // This would require storing the jti (JWT ID) in the token
-      
+
       logger.info('User logged out', { userId });
-      
+
       return { success: true };
     } catch (error) {
       logger.error('Logout failed', { error: error.message, userId });
@@ -414,22 +414,22 @@ class AuthService {
       if (!user) {
         throw new Error('User not found');
       }
-      
+
       // Generate secret
       const secret = speakeasy.generateSecret({
         name: `LendSmart (${user.username})`,
         issuer: 'LendSmart',
         length: 32
       });
-      
+
       // Store encrypted secret temporarily
       const encryptedSecret = await this.encryptionService.encrypt(secret.base32);
       user.mfaTempSecret = encryptedSecret;
       await user.save();
-      
+
       // Generate QR code
       const qrCodeUrl = await QRCode.toDataURL(secret.otpauth_url);
-      
+
       return {
         secret: secret.base32,
         qrCode: qrCodeUrl,
@@ -453,10 +453,10 @@ class AuthService {
       if (!user || !user.mfaTempSecret) {
         throw new Error('MFA setup not initiated');
       }
-      
+
       // Decrypt temporary secret
       const secret = await this.encryptionService.decrypt(user.mfaTempSecret);
-      
+
       // Verify token
       const verified = speakeasy.totp.verify({
         secret,
@@ -464,19 +464,19 @@ class AuthService {
         token,
         window: 2
       });
-      
+
       if (!verified) {
         throw new Error('Invalid MFA token');
       }
-      
+
       // Enable MFA
       user.mfaSecret = user.mfaTempSecret;
       user.mfaEnabled = true;
       user.mfaTempSecret = undefined;
       await user.save();
-      
+
       logger.info('MFA enabled', { userId });
-      
+
       return { success: true };
     } catch (error) {
       logger.error('MFA verification failed', { error: error.message, userId });
@@ -495,10 +495,10 @@ class AuthService {
       if (!user.mfaEnabled || !user.mfaSecret) {
         return false;
       }
-      
+
       // Decrypt MFA secret
       const secret = await this.encryptionService.decrypt(user.mfaSecret);
-      
+
       // Verify TOTP token
       const verified = speakeasy.totp.verify({
         secret,
@@ -506,11 +506,11 @@ class AuthService {
         token,
         window: 2
       });
-      
+
       if (verified) {
         return true;
       }
-      
+
       // Check backup codes if TOTP fails
       return await this.verifyBackupCode(user._id, token);
     } catch (error) {
@@ -531,13 +531,13 @@ class AuthService {
       role: user.role,
       iat: Math.floor(Date.now() / 1000)
     };
-    
+
     const accessToken = jwt.sign(payload, this.jwtSecret, {
       expiresIn: this.jwtExpiry,
       issuer: 'lendsmart',
       audience: 'lendsmart-client'
     });
-    
+
     const refreshToken = jwt.sign(
       { id: user._id },
       this.refreshSecret,
@@ -547,7 +547,7 @@ class AuthService {
         audience: 'lendsmart-client'
       }
     );
-    
+
     return { accessToken, refreshToken };
   }
 
@@ -576,7 +576,7 @@ class AuthService {
       userAgent,
       createdAt: new Date().toISOString()
     };
-    
+
     // Store session with expiry matching refresh token
     const expiry = this.parseExpiry(this.refreshExpiry);
     await redisClient.setex(sessionKey, expiry, JSON.stringify(sessionData));
@@ -590,11 +590,11 @@ class AuthService {
   async recordFailedAttempt(identifier, ip) {
     const key = `failed_attempts:${identifier}`;
     const attempts = await redisClient.incr(key);
-    
+
     if (attempts === 1) {
       await redisClient.expire(key, this.lockoutDuration);
     }
-    
+
     logger.warn('Failed login attempt', { identifier, ip, attempts });
   }
 
@@ -605,7 +605,7 @@ class AuthService {
   async checkAccountLockout(identifier) {
     const key = `failed_attempts:${identifier}`;
     const attempts = await redisClient.get(key);
-    
+
     if (attempts && parseInt(attempts) >= this.maxLoginAttempts) {
       const ttl = await redisClient.ttl(key);
       throw new Error(`Account locked. Try again in ${Math.ceil(ttl / 60)} minutes.`);
@@ -631,15 +631,15 @@ class AuthService {
     for (let i = 0; i < 10; i++) {
       codes.push(crypto.randomBytes(4).toString('hex').toUpperCase());
     }
-    
+
     // Store encrypted backup codes
     const encryptedCodes = await Promise.all(
       codes.map(code => this.encryptionService.encrypt(code))
     );
-    
+
     const key = `backup_codes:${userId}`;
     await redisClient.setex(key, 86400 * 365, JSON.stringify(encryptedCodes)); // 1 year
-    
+
     return codes;
   }
 
@@ -653,7 +653,7 @@ class AuthService {
     try {
       const key = `backup_codes:${userId}`;
       const encryptedCodes = JSON.parse(await redisClient.get(key) || '[]');
-      
+
       for (let i = 0; i < encryptedCodes.length; i++) {
         const decryptedCode = await this.encryptionService.decrypt(encryptedCodes[i]);
         if (decryptedCode === code.toUpperCase()) {
@@ -663,7 +663,7 @@ class AuthService {
           return true;
         }
       }
-      
+
       return false;
     } catch (error) {
       return false;
@@ -678,38 +678,38 @@ class AuthService {
   validatePasswordStrength(password) {
     const requirements = [];
     let isValid = true;
-    
+
     const minLength = 8;
     const hasUpperCase = /[A-Z]/.test(password);
     const hasLowerCase = /[a-z]/.test(password);
     const hasNumbers = /\d/.test(password);
     const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
-    
+
     if (password.length < minLength) {
       requirements.push('At least 8 characters long');
       isValid = false;
     }
-    
+
     if (!hasUpperCase) {
       requirements.push('At least one uppercase letter');
       isValid = false;
     }
-    
+
     if (!hasLowerCase) {
       requirements.push('At least one lowercase letter');
       isValid = false;
     }
-    
+
     if (!hasNumbers) {
       requirements.push('At least one number');
       isValid = false;
     }
-    
+
     if (!hasSpecialChar) {
       requirements.push('At least one special character');
       isValid = false;
     }
-    
+
     return {
       isValid,
       requirements
@@ -741,7 +741,7 @@ class AuthService {
   parseExpiry(expiry) {
     const unit = expiry.slice(-1);
     const value = parseInt(expiry.slice(0, -1));
-    
+
     switch (unit) {
       case 's': return value;
       case 'm': return value * 60;
@@ -753,4 +753,3 @@ class AuthService {
 }
 
 module.exports = new AuthService();
-

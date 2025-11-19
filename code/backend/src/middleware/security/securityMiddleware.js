@@ -15,7 +15,7 @@ class SecurityMiddleware {
     this.suspiciousIPs = new Map();
     this.failedAttempts = new Map();
     this.blockedIPs = new Set();
-    
+
     // Security configuration
     this.config = {
       maxFailedAttempts: parseInt(process.env.MAX_FAILED_ATTEMPTS) || 5,
@@ -28,7 +28,7 @@ class SecurityMiddleware {
 
     // CSRF token storage (in production, use Redis)
     this.csrfTokens = new Map();
-    
+
     // Initialize cleanup intervals
     this.startCleanupTasks();
   }
@@ -224,7 +224,7 @@ class SecurityMiddleware {
     // Check if IP is blocked
     if (this.blockedIPs.has(clientIP)) {
       logger.security.blockedIPAccess(clientIP, req.path, req.method);
-      
+
       return res.status(403).json({
         error: 'Access denied',
         code: 'IP_BLOCKED',
@@ -236,13 +236,13 @@ class SecurityMiddleware {
     const attempts = this.failedAttempts.get(clientIP);
     if (attempts && attempts.count >= this.config.maxFailedAttempts) {
       const timeSinceLastAttempt = Date.now() - attempts.lastAttempt;
-      
+
       if (timeSinceLastAttempt < this.config.blockDuration) {
         // Block the IP
         this.blockedIPs.add(clientIP);
-        
+
         logger.security.ipBlocked(clientIP, attempts.count, 'excessive_failed_attempts');
-        
+
         return res.status(403).json({
           error: 'Access denied',
           code: 'IP_BLOCKED',
@@ -267,10 +267,10 @@ class SecurityMiddleware {
 
     // Check for suspicious patterns
     const suspiciousIndicators = this._detectSuspiciousActivity(req);
-    
+
     if (suspiciousIndicators.length > 0) {
       this._recordSuspiciousActivity(clientIP, suspiciousIndicators);
-      
+
       logger.security.suspiciousActivity(
         req.user?.id || 'anonymous',
         'suspicious_request_pattern',
@@ -290,9 +290,9 @@ class SecurityMiddleware {
       const suspiciousCount = this.suspiciousIPs.get(clientIP)?.count || 0;
       if (suspiciousCount >= this.config.suspiciousThreshold) {
         this.blockedIPs.add(clientIP);
-        
+
         logger.security.ipBlocked(clientIP, suspiciousCount, 'suspicious_activity');
-        
+
         return res.status(403).json({
           error: 'Access denied',
           code: 'SUSPICIOUS_ACTIVITY_DETECTED',
@@ -344,7 +344,7 @@ class SecurityMiddleware {
   generateCSRFToken(sessionId) {
     const token = crypto.randomBytes(32).toString('hex');
     const timestamp = Date.now();
-    
+
     this.csrfTokens.set(token, {
       sessionId,
       timestamp,
@@ -397,7 +397,7 @@ class SecurityMiddleware {
     res.setHeader('X-Request-ID', req.id || crypto.randomUUID());
     res.setHeader('X-API-Version', process.env.API_VERSION || '1.0.0');
     res.setHeader('X-Rate-Limit-Policy', 'strict');
-    
+
     // Remove sensitive headers
     res.removeHeader('X-Powered-By');
     res.removeHeader('Server');
@@ -411,18 +411,18 @@ class SecurityMiddleware {
   sessionSecurity = (req, res, next) => {
     if (req.session) {
       const now = Date.now();
-      
+
       // Check session timeout
       if (req.session.lastActivity) {
         const timeSinceLastActivity = now - req.session.lastActivity;
-        
+
         if (timeSinceLastActivity > this.config.sessionTimeout) {
           req.session.destroy((err) => {
             if (err) {
               logger.error('Session destruction failed', { error: err.message });
             }
           });
-          
+
           return res.status(401).json({
             error: 'Session expired',
             code: 'SESSION_EXPIRED'
@@ -434,9 +434,9 @@ class SecurityMiddleware {
       req.session.lastActivity = now;
 
       // Regenerate session ID periodically
-      if (!req.session.lastRegeneration || 
+      if (!req.session.lastRegeneration ||
           (now - req.session.lastRegeneration) > 15 * 60 * 1000) { // 15 minutes
-        
+
         req.session.regenerate((err) => {
           if (err) {
             logger.error('Session regeneration failed', { error: err.message });
@@ -458,7 +458,7 @@ class SecurityMiddleware {
     attempts.count++;
     attempts.lastAttempt = Date.now();
     attempts.reason = reason;
-    
+
     this.failedAttempts.set(ip, attempts);
 
     logger.security.failedAttempt(ip, attempts.count, reason);
@@ -476,8 +476,8 @@ class SecurityMiddleware {
    * @private
    */
   _getClientIP(req) {
-    return req.ip || 
-           req.connection?.remoteAddress || 
+    return req.ip ||
+           req.connection?.remoteAddress ||
            req.socket?.remoteAddress ||
            req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
            'unknown';
@@ -498,7 +498,7 @@ class SecurityMiddleware {
       /bot/i, /crawler/i, /spider/i, /scraper/i,
       /curl/i, /wget/i, /python/i, /java/i
     ];
-    
+
     if (botPatterns.some(pattern => pattern.test(userAgent))) {
       indicators.push('bot_user_agent');
     }
@@ -509,7 +509,7 @@ class SecurityMiddleware {
       /\.php$/i, /\.asp$/i, /\.jsp$/i,
       /\/etc\/passwd/i, /\/proc\//i
     ];
-    
+
     if (suspiciousPaths.some(pattern => pattern.test(path))) {
       indicators.push('suspicious_path');
     }
@@ -519,13 +519,13 @@ class SecurityMiddleware {
       /union.*select/i, /drop.*table/i, /insert.*into/i,
       /delete.*from/i, /update.*set/i, /exec.*sp_/i
     ];
-    
+
     const requestString = JSON.stringify({
       query: req.query,
       body: req.body,
       params: req.params
     });
-    
+
     if (sqlPatterns.some(pattern => pattern.test(requestString))) {
       indicators.push('sql_injection_attempt');
     }
@@ -535,7 +535,7 @@ class SecurityMiddleware {
       /<script/i, /javascript:/i, /on\w+\s*=/i,
       /eval\s*\(/i, /expression\s*\(/i
     ];
-    
+
     if (xssPatterns.some(pattern => pattern.test(requestString))) {
       indicators.push('xss_attempt');
     }
@@ -564,7 +564,7 @@ class SecurityMiddleware {
     activity.count++;
     activity.lastActivity = Date.now();
     activity.indicators.push(...indicators);
-    
+
     this.suspiciousIPs.set(ip, activity);
   }
 
@@ -584,7 +584,7 @@ class SecurityMiddleware {
    */
   _validateCSRFToken(token, sessionToken) {
     const tokenData = this.csrfTokens.get(token);
-    
+
     if (!tokenData || tokenData.used) {
       return false;
     }
@@ -597,7 +597,7 @@ class SecurityMiddleware {
 
     // Mark token as used (one-time use)
     tokenData.used = true;
-    
+
     return token === sessionToken;
   }
 
@@ -634,7 +634,7 @@ class SecurityMiddleware {
 
     // Remove null bytes
     value = value.replace(/\0/g, '');
-    
+
     // Limit string length to prevent DoS
     if (value.length > 10000) {
       value = value.substring(0, 10000);
@@ -652,12 +652,12 @@ class SecurityMiddleware {
    */
   _sanitizeHeaders(headers) {
     const sanitized = { ...headers };
-    
+
     // Remove sensitive headers
     delete sanitized.authorization;
     delete sanitized.cookie;
     delete sanitized['x-api-key'];
-    
+
     return sanitized;
   }
 
@@ -671,7 +671,7 @@ class SecurityMiddleware {
     }
 
     const sanitized = { ...body };
-    
+
     // Remove sensitive fields
     const sensitiveFields = [
       'password', 'confirmPassword', 'currentPassword', 'newPassword',
@@ -694,7 +694,7 @@ class SecurityMiddleware {
    */
   _rateLimitHandler(req, res) {
     const clientIP = this._getClientIP(req);
-    
+
     logger.security.rateLimitExceeded(
       clientIP,
       req.path,
@@ -711,7 +711,7 @@ class SecurityMiddleware {
    */
   _authRateLimitHandler(req, res) {
     const clientIP = this._getClientIP(req);
-    
+
     logger.security.authRateLimitExceeded(
       clientIP,
       req.body?.email || 'unknown',
@@ -734,7 +734,7 @@ class SecurityMiddleware {
     // Skip for trusted IPs (if configured)
     const trustedIPs = process.env.TRUSTED_IPS?.split(',') || [];
     const clientIP = this._getClientIP(req);
-    
+
     return trustedIPs.includes(clientIP);
   }
 
@@ -798,4 +798,3 @@ class SecurityMiddleware {
 }
 
 module.exports = new SecurityMiddleware();
-

@@ -10,7 +10,7 @@ const logger = require('../utils/logger');
 class RateLimiter {
   constructor() {
     this.auditLogger = getAuditLogger();
-    
+
     // Redis store for distributed rate limiting (fallback to memory store)
     let store;
     try {
@@ -205,12 +205,12 @@ class RateLimiter {
         if (req.user?.kycStatus === 'verified') {
           return Math.floor(baseConfig.max * 1.5);
         }
-        
+
         // Decrease limits for suspicious users
         if (req.user?.accountStatus === 'suspended') {
           return Math.floor(baseConfig.max * 0.5);
         }
-        
+
         return baseConfig.max;
       },
       keyGenerator: (req) => {
@@ -288,19 +288,19 @@ class RateLimiter {
   createIPWhitelist(whitelist = []) {
     return (req, res, next) => {
       const clientIP = req.ip;
-      
+
       // Check if IP is whitelisted
       if (whitelist.includes(clientIP)) {
         return next();
       }
-      
+
       // Check if IP is in CIDR ranges
       for (const range of whitelist) {
         if (this.isIPInRange(clientIP, range)) {
           return next();
         }
       }
-      
+
       // Apply rate limiting for non-whitelisted IPs
       return this.globalLimiter(req, res, next);
     };
@@ -316,13 +316,13 @@ class RateLimiter {
     if (!range.includes('/')) {
       return ip === range;
     }
-    
+
     try {
       const [rangeIP, prefixLength] = range.split('/');
       const ipInt = this.ipToInt(ip);
       const rangeInt = this.ipToInt(rangeIP);
       const mask = (0xffffffff << (32 - parseInt(prefixLength))) >>> 0;
-      
+
       return (ipInt & mask) === (rangeInt & mask);
     } catch (error) {
       logger.error('Error checking IP range', { error: error.message, ip, range });
@@ -451,4 +451,3 @@ class RateLimiter {
 const rateLimiter = new RateLimiter();
 
 module.exports = rateLimiter;
-

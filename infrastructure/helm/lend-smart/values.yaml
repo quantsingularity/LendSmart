@@ -108,5 +108,3 @@ redis:
 secrets:
   database_url: ""
   api_key: ""
-
-

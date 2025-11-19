@@ -28,11 +28,11 @@ export const BlockchainProvider = ({ children }) => {
         if (window.ethereum) {
           const web3Provider = new ethers.BrowserProvider(window.ethereum);
           setProvider(web3Provider);
-          
+
           // Get network information
           const network = await web3Provider.getNetwork();
           setChainId(network.chainId);
-          
+
           // Initialize contract
           const contract = new ethers.Contract(
             LEND_SMART_LOAN_ADDRESS,
@@ -40,13 +40,13 @@ export const BlockchainProvider = ({ children }) => {
             web3Provider
           );
           setLendSmartLoanContract(contract);
-          
+
           // Listen for account changes
           window.ethereum.on('accountsChanged', handleAccountsChanged);
-          
+
           // Listen for chain changes
           window.ethereum.on('chainChanged', handleChainChanged);
-          
+
           return () => {
             window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
             window.ethereum.removeListener('chainChanged', handleChainChanged);
@@ -59,7 +59,7 @@ export const BlockchainProvider = ({ children }) => {
         setError('Failed to initialize blockchain connection');
       }
     };
-    
+
     initProvider();
   }, []);
 
@@ -89,24 +89,24 @@ export const BlockchainProvider = ({ children }) => {
       setError('Provider not initialized');
       return;
     }
-    
+
     try {
       setIsLoading(true);
       setError(null);
-      
+
       // Request account access
       const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
       const account = accounts[0];
       setAccount(account);
-      
+
       // Get signer
       const signer = await provider.getSigner();
       setSigner(signer);
-      
+
       // Connect contract with signer
       const contractWithSigner = lendSmartLoanContract.connect(signer);
       setLendSmartLoanContract(contractWithSigner);
-      
+
       setIsConnected(true);
       setIsLoading(false);
     } catch (err) {
@@ -129,11 +129,11 @@ export const BlockchainProvider = ({ children }) => {
       setError('Please connect your wallet first');
       return null;
     }
-    
+
     try {
       setIsLoading(true);
       setError(null);
-      
+
       const tx = await lendSmartLoanContract.requestLoan(
         loanData.token,
         ethers.parseUnits(loanData.principal.toString(), loanData.decimals || 18),
@@ -144,9 +144,9 @@ export const BlockchainProvider = ({ children }) => {
         loanData.collateralToken || ethers.ZeroAddress,
         loanData.collateralAmount ? ethers.parseUnits(loanData.collateralAmount.toString(), loanData.collateralDecimals || 18) : 0
       );
-      
+
       const receipt = await tx.wait();
-      
+
       // Find the LoanRequested event to get the loan ID
       const event = receipt.logs
         .filter(log => log.fragment && log.fragment.name === 'LoanRequested')
@@ -162,7 +162,7 @@ export const BlockchainProvider = ({ children }) => {
             isCollateralized: log.args.isCollateralized
           };
         })[0];
-      
+
       setIsLoading(false);
       return {
         transactionHash: receipt.hash,
@@ -183,20 +183,20 @@ export const BlockchainProvider = ({ children }) => {
       setError('Contract not initialized');
       return [];
     }
-    
+
     try {
       setIsLoading(true);
       setError(null);
-      
+
       const address = userAddress || account;
       if (!address) {
         setError('No address provided');
         setIsLoading(false);
         return [];
       }
-      
+
       const loanIds = await lendSmartLoanContract.getUserLoans(address);
-      
+
       setIsLoading(false);
       return loanIds.map(id => id.toString());
     } catch (err) {
@@ -213,13 +213,13 @@ export const BlockchainProvider = ({ children }) => {
       setError('Contract not initialized');
       return null;
     }
-    
+
     try {
       setIsLoading(true);
       setError(null);
-      
+
       const [loan, schedule, amounts] = await lendSmartLoanContract.getLoanDetails(loanId);
-      
+
       // Convert BigInt values to strings for JSON compatibility
       const formattedLoan = {
         id: loan.id.toString(),
@@ -241,11 +241,11 @@ export const BlockchainProvider = ({ children }) => {
         collateralAmount: loan.collateralAmount.toString(),
         collateralToken: loan.collateralToken
       };
-      
+
       // Format schedule and amounts
       const formattedSchedule = schedule.map(time => time.toString());
       const formattedAmounts = amounts.map(amount => amount.toString());
-      
+
       setIsLoading(false);
       return {
         loan: formattedLoan,
@@ -266,14 +266,14 @@ export const BlockchainProvider = ({ children }) => {
       setError('Please connect your wallet first');
       return null;
     }
-    
+
     try {
       setIsLoading(true);
       setError(null);
-      
+
       const tx = await lendSmartLoanContract.fundLoan(loanId);
       const receipt = await tx.wait();
-      
+
       setIsLoading(false);
       return {
         transactionHash: receipt.hash,
@@ -293,14 +293,14 @@ export const BlockchainProvider = ({ children }) => {
       setError('Please connect your wallet first');
       return null;
     }
-    
+
     try {
       setIsLoading(true);
       setError(null);
-      
+
       const tx = await lendSmartLoanContract.disburseLoan(loanId);
       const receipt = await tx.wait();
-      
+
       setIsLoading(false);
       return {
         transactionHash: receipt.hash,
@@ -320,17 +320,17 @@ export const BlockchainProvider = ({ children }) => {
       setError('Please connect your wallet first');
       return null;
     }
-    
+
     try {
       setIsLoading(true);
       setError(null);
-      
+
       const tx = await lendSmartLoanContract.repayLoan(
         loanId,
         ethers.parseUnits(amount, decimals)
       );
       const receipt = await tx.wait();
-      
+
       setIsLoading(false);
       return {
         transactionHash: receipt.hash,
@@ -350,14 +350,14 @@ export const BlockchainProvider = ({ children }) => {
       setError('Please connect your wallet first');
       return null;
     }
-    
+
     try {
       setIsLoading(true);
       setError(null);
-      
+
       const tx = await lendSmartLoanContract.depositCollateral(loanId);
       const receipt = await tx.wait();
-      
+
       setIsLoading(false);
       return {
         transactionHash: receipt.hash,
@@ -377,14 +377,14 @@ export const BlockchainProvider = ({ children }) => {
       setError('Please connect your wallet first');
       return null;
     }
-    
+
     try {
       setIsLoading(true);
       setError(null);
-      
+
       const tx = await lendSmartLoanContract.createRepaymentSchedule(loanId, numberOfPayments);
       const receipt = await tx.wait();
-      
+
       setIsLoading(false);
       return {
         transactionHash: receipt.hash,
@@ -404,14 +404,14 @@ export const BlockchainProvider = ({ children }) => {
       setError('Please connect your wallet first');
       return null;
     }
-    
+
     try {
       setIsLoading(true);
       setError(null);
-      
+
       const tx = await lendSmartLoanContract.cancelLoanRequest(loanId);
       const receipt = await tx.wait();
-      
+
       setIsLoading(false);
       return {
         transactionHash: receipt.hash,
@@ -431,14 +431,14 @@ export const BlockchainProvider = ({ children }) => {
       setError('Please connect your wallet first');
       return null;
     }
-    
+
     try {
       setIsLoading(true);
       setError(null);
-      
+
       const tx = await lendSmartLoanContract.setLoanRiskScore(loanId, riskScore, shouldReject);
       const receipt = await tx.wait();
-      
+
       setIsLoading(false);
       return {
         transactionHash: receipt.hash,
@@ -458,14 +458,14 @@ export const BlockchainProvider = ({ children }) => {
       setError('Please connect your wallet first');
       return null;
     }
-    
+
     try {
       setIsLoading(true);
       setError(null);
-      
+
       const tx = await lendSmartLoanContract.markLoanAsDefaulted(loanId);
       const receipt = await tx.wait();
-      
+
       setIsLoading(false);
       return {
         transactionHash: receipt.hash,
@@ -485,20 +485,20 @@ export const BlockchainProvider = ({ children }) => {
       setError('Contract not initialized');
       return null;
     }
-    
+
     try {
       setIsLoading(true);
       setError(null);
-      
+
       const address = userAddress || account;
       if (!address) {
         setError('No address provided');
         setIsLoading(false);
         return null;
       }
-      
+
       const score = await lendSmartLoanContract.getUserReputationScore(address);
-      
+
       setIsLoading(false);
       return score.toString();
     } catch (err) {
@@ -520,7 +520,7 @@ export const BlockchainProvider = ({ children }) => {
       5: 'Cancelled',
       6: 'Rejected'
     };
-    
+
     return statusMap[statusCode] || 'Unknown';
   };
 

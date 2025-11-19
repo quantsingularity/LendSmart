@@ -22,7 +22,7 @@ class DatabaseManager {
   async connectMongoDB() {
     try {
       const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/lendsmart_production';
-      
+
       const options = {
         // Connection Pool Settings
         maxPoolSize: parseInt(process.env.MONGO_MAX_POOL_SIZE) || 10,
@@ -30,29 +30,29 @@ class DatabaseManager {
         maxIdleTimeMS: parseInt(process.env.MONGO_MAX_IDLE_TIME) || 30000,
         serverSelectionTimeoutMS: parseInt(process.env.MONGO_SERVER_SELECTION_TIMEOUT) || 5000,
         socketTimeoutMS: parseInt(process.env.MONGO_SOCKET_TIMEOUT) || 45000,
-        
+
         // Replica Set Settings
         readPreference: process.env.MONGO_READ_PREFERENCE || 'primary',
         readConcern: { level: process.env.MONGO_READ_CONCERN || 'majority' },
-        writeConcern: { 
+        writeConcern: {
           w: process.env.MONGO_WRITE_CONCERN || 'majority',
           j: true, // Journal acknowledgment for durability
           wtimeout: parseInt(process.env.MONGO_WRITE_TIMEOUT) || 10000
         },
-        
+
         // Performance Settings
         bufferMaxEntries: 0, // Disable mongoose buffering
         bufferCommands: false, // Disable mongoose buffering
         maxStalenessSeconds: parseInt(process.env.MONGO_MAX_STALENESS) || 90,
-        
+
         // Security Settings
         authSource: process.env.MONGO_AUTH_SOURCE || 'admin',
         ssl: process.env.MONGO_SSL === 'true',
         sslValidate: process.env.MONGO_SSL_VALIDATE !== 'false',
-        
+
         // Monitoring
         heartbeatFrequencyMS: parseInt(process.env.MONGO_HEARTBEAT_FREQUENCY) || 10000,
-        
+
         // Application Settings
         appName: 'LendSmart-Production-Backend',
         compressors: ['zlib'],
@@ -64,7 +64,7 @@ class DatabaseManager {
         console.log('✅ MongoDB connected successfully');
         this.isConnected = true;
         this.connectionRetries = 0;
-        
+
         auditLogger.logSystemEvent('database_connected', {
           database: 'mongodb',
           uri: mongoURI.replace(/\/\/.*@/, '//***:***@'), // Hide credentials
@@ -75,7 +75,7 @@ class DatabaseManager {
       mongoose.connection.on('error', (error) => {
         console.error('❌ MongoDB connection error:', error);
         this.isConnected = false;
-        
+
         auditLogger.logSystemEvent('database_error', {
           database: 'mongodb',
           error: error.message,
@@ -86,11 +86,11 @@ class DatabaseManager {
       mongoose.connection.on('disconnected', () => {
         console.log('⚠️ MongoDB disconnected');
         this.isConnected = false;
-        
+
         auditLogger.logSystemEvent('database_disconnected', {
           database: 'mongodb'
         });
-        
+
         // Attempt to reconnect
         this.handleReconnection();
       });
@@ -98,7 +98,7 @@ class DatabaseManager {
       mongoose.connection.on('reconnected', () => {
         console.log('🔄 MongoDB reconnected');
         this.isConnected = true;
-        
+
         auditLogger.logSystemEvent('database_reconnected', {
           database: 'mongodb'
         });
@@ -106,13 +106,13 @@ class DatabaseManager {
 
       // Connect to MongoDB
       this.mongoConnection = await mongoose.connect(mongoURI, options);
-      
+
       // Set up mongoose global settings
       mongoose.set('strictQuery', true);
       mongoose.set('sanitizeFilter', true);
-      
+
       return this.mongoConnection;
-      
+
     } catch (error) {
       console.error('❌ Failed to connect to MongoDB:', error);
       throw error;
@@ -129,22 +129,22 @@ class DatabaseManager {
         port: parseInt(process.env.REDIS_PORT) || 6379,
         password: process.env.REDIS_PASSWORD,
         db: parseInt(process.env.REDIS_DB) || 0,
-        
+
         // Connection Pool Settings
         maxRetriesPerRequest: 3,
         retryDelayOnFailover: 100,
         enableReadyCheck: true,
         maxLoadingTimeout: 5000,
-        
+
         // Performance Settings
         lazyConnect: true,
         keepAlive: 30000,
         connectTimeout: 10000,
         commandTimeout: 5000,
-        
+
         // Cluster Settings (if using Redis Cluster)
         enableOfflineQueue: false,
-        
+
         // Security
         tls: process.env.REDIS_TLS === 'true' ? {
           rejectUnauthorized: process.env.REDIS_TLS_REJECT_UNAUTHORIZED !== 'false'
@@ -156,7 +156,7 @@ class DatabaseManager {
       // Set up Redis event handlers
       this.redisClient.on('connect', () => {
         console.log('✅ Redis connected successfully');
-        
+
         auditLogger.logSystemEvent('cache_connected', {
           cache: 'redis',
           host: redisConfig.host,
@@ -167,7 +167,7 @@ class DatabaseManager {
 
       this.redisClient.on('error', (error) => {
         console.error('❌ Redis connection error:', error);
-        
+
         auditLogger.logSystemEvent('cache_error', {
           cache: 'redis',
           error: error.message
@@ -176,7 +176,7 @@ class DatabaseManager {
 
       this.redisClient.on('end', () => {
         console.log('⚠️ Redis connection ended');
-        
+
         auditLogger.logSystemEvent('cache_disconnected', {
           cache: 'redis'
         });
@@ -184,7 +184,7 @@ class DatabaseManager {
 
       this.redisClient.on('reconnecting', () => {
         console.log('🔄 Redis reconnecting...');
-        
+
         auditLogger.logSystemEvent('cache_reconnecting', {
           cache: 'redis'
         });
@@ -192,9 +192,9 @@ class DatabaseManager {
 
       // Connect to Redis
       await this.redisClient.connect();
-      
+
       return this.redisClient;
-      
+
     } catch (error) {
       console.error('❌ Failed to connect to Redis:', error);
       // Redis is optional, so we don't throw here
@@ -208,18 +208,18 @@ class DatabaseManager {
   async handleReconnection() {
     if (this.connectionRetries >= this.maxRetries) {
       console.error(`❌ Max reconnection attempts (${this.maxRetries}) reached`);
-      
+
       auditLogger.logSystemEvent('database_reconnection_failed', {
         database: 'mongodb',
         maxRetries: this.maxRetries
       });
-      
+
       return;
     }
 
     this.connectionRetries++;
     console.log(`🔄 Attempting to reconnect to MongoDB (${this.connectionRetries}/${this.maxRetries})...`);
-    
+
     setTimeout(async () => {
       try {
         await this.connectMongoDB();
@@ -234,31 +234,31 @@ class DatabaseManager {
    */
   async initialize() {
     console.log('🚀 Initializing database connections...');
-    
+
     try {
       // Connect to MongoDB
       await this.connectMongoDB();
-      
+
       // Connect to Redis (optional)
       await this.connectRedis();
-      
+
       // Set up database monitoring
       this.setupMonitoring();
-      
+
       console.log('✅ All database connections initialized successfully');
-      
+
       auditLogger.logSystemEvent('database_initialization_complete', {
         mongodb: this.isConnected,
         redis: !!this.redisClient
       });
-      
+
     } catch (error) {
       console.error('❌ Database initialization failed:', error);
-      
+
       auditLogger.logSystemEvent('database_initialization_failed', {
         error: error.message
       });
-      
+
       throw error;
     }
   }
@@ -272,7 +272,7 @@ class DatabaseManager {
       try {
         if (this.isConnected) {
           const stats = await mongoose.connection.db.stats();
-          
+
           // Log database statistics periodically
           if (process.env.NODE_ENV === 'development') {
             console.log('📊 MongoDB Stats:', {
@@ -282,7 +282,7 @@ class DatabaseManager {
               connections: mongoose.connection.readyState
             });
           }
-          
+
           // Alert if database size is getting large
           if (stats.dataSize > 1024 * 1024 * 1024 * 5) { // 5GB
             auditLogger.logSystemEvent('database_size_warning', {
@@ -303,7 +303,7 @@ class DatabaseManager {
         try {
           const info = await this.redisClient.info('memory');
           const memoryUsage = info.match(/used_memory:(\d+)/);
-          
+
           if (memoryUsage && parseInt(memoryUsage[1]) > 1024 * 1024 * 100) { // 100MB
             auditLogger.logSystemEvent('cache_memory_warning', {
               cache: 'redis',
@@ -323,27 +323,27 @@ class DatabaseManager {
    */
   async shutdown() {
     console.log('🔄 Shutting down database connections...');
-    
+
     try {
       // Close MongoDB connection
       if (this.mongoConnection) {
         await mongoose.connection.close();
         console.log('✅ MongoDB connection closed');
       }
-      
+
       // Close Redis connection
       if (this.redisClient) {
         await this.redisClient.quit();
         console.log('✅ Redis connection closed');
       }
-      
+
       auditLogger.logSystemEvent('database_shutdown_complete', {
         timestamp: new Date().toISOString()
       });
-      
+
     } catch (error) {
       console.error('❌ Error during database shutdown:', error);
-      
+
       auditLogger.logSystemEvent('database_shutdown_error', {
         error: error.message
       });
@@ -370,7 +370,7 @@ class DatabaseManager {
     if (!this.redisClient) {
       return { connected: false, status: 'not_configured' };
     }
-    
+
     return {
       connected: this.redisClient.isReady,
       status: this.redisClient.status
@@ -450,7 +450,7 @@ const cache = {
    */
   async set(key, value, ttl = 3600) {
     if (!databaseManager.redisClient) return false;
-    
+
     try {
       const serializedValue = JSON.stringify(value);
       await databaseManager.redisClient.setEx(key, ttl, serializedValue);
@@ -466,7 +466,7 @@ const cache = {
    */
   async get(key) {
     if (!databaseManager.redisClient) return null;
-    
+
     try {
       const value = await databaseManager.redisClient.get(key);
       return value ? JSON.parse(value) : null;
@@ -481,7 +481,7 @@ const cache = {
    */
   async del(key) {
     if (!databaseManager.redisClient) return false;
-    
+
     try {
       await databaseManager.redisClient.del(key);
       return true;
@@ -496,7 +496,7 @@ const cache = {
    */
   async exists(key) {
     if (!databaseManager.redisClient) return false;
-    
+
     try {
       const result = await databaseManager.redisClient.exists(key);
       return result === 1;
@@ -511,7 +511,7 @@ const cache = {
    */
   async clear() {
     if (!databaseManager.redisClient) return false;
-    
+
     try {
       await databaseManager.redisClient.flushDb();
       return true;
@@ -527,4 +527,3 @@ module.exports = {
   cache,
   mongoose
 };
-

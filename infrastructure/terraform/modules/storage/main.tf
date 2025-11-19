@@ -31,5 +31,3 @@ resource "aws_s3_bucket_public_access_block" "app_data_bucket_public_access_bloc
   ignore_public_acls      = true
   restrict_public_buckets = true
 }
-
-

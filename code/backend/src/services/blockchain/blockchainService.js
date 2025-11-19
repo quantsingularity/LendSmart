@@ -13,7 +13,7 @@ class BlockchainService {
     this.wallets = new Map();
     this.contracts = new Map();
     this.eventListeners = new Map();
-    
+
     // Configuration
     this.networks = {
       ethereum: {
@@ -199,7 +199,7 @@ class BlockchainService {
       if (isReadOnly) {
         // Read operation
         const result = await contract[methodName](...args);
-        
+
         logger.info('Contract read operation completed', {
           network: networkName,
           contract: contractAddress,
@@ -265,11 +265,11 @@ class BlockchainService {
         'Contract interaction failed',
         500,
         'CONTRACT_ERROR',
-        { 
-          originalError: error.message, 
-          network: networkName, 
+        {
+          originalError: error.message,
+          network: networkName,
           contract: contractAddress,
-          method: methodName 
+          method: methodName
         }
       );
     }
@@ -302,11 +302,11 @@ class BlockchainService {
 
       // Set up event listener
       const eventFilter = contract.filters[eventName](...Object.values(filter));
-      
+
       const listener = async (...args) => {
         try {
           const event = args[args.length - 1]; // Last argument is the event object
-          
+
           logger.info('Event received', {
             network: networkName,
             contract: contractAddress,
@@ -374,7 +374,7 @@ class BlockchainService {
     if (listener) {
       listener.contract.off(listener.eventFilter, listener.listener);
       this.eventListeners.delete(listenerKey);
-      
+
       logger.info('Event listener removed', { listenerKey });
     }
   }
@@ -476,7 +476,7 @@ class BlockchainService {
         return await operation();
       } catch (error) {
         lastError = error;
-        
+
         if (attempt < this.retryAttempts) {
           const delay = this.retryDelay * Math.pow(2, attempt - 1);
           logger.warn(`Blockchain operation attempt ${attempt} failed, retrying in ${delay}ms`, {
@@ -484,7 +484,7 @@ class BlockchainService {
             attempt,
             maxAttempts: this.retryAttempts
           });
-          
+
           await new Promise(resolve => setTimeout(resolve, delay));
         }
       }
@@ -545,4 +545,3 @@ class BlockchainService {
 }
 
 module.exports = new BlockchainService();
-

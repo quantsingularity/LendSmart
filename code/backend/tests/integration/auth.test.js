@@ -612,7 +612,7 @@ describe('Authentication Integration Tests', () => {
       }
 
       const responses = await Promise.all(promises);
-      
+
       // Some requests should be rate limited
       const rateLimitedResponses = responses.filter(res => res.status === 429);
       expect(rateLimitedResponses.length).to.be.greaterThan(0);
@@ -643,7 +643,7 @@ describe('Authentication Integration Tests', () => {
       }
 
       const responses = await Promise.all(promises);
-      
+
       // Some requests should be rate limited
       const rateLimitedResponses = responses.filter(res => res.status === 429);
       expect(rateLimitedResponses.length).to.be.greaterThan(0);
@@ -665,4 +665,3 @@ describe('Authentication Integration Tests', () => {
     });
   });
 });
-

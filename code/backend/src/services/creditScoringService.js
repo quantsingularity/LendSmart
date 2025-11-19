@@ -10,7 +10,7 @@ const logger = require('../utils/logger');
 class CreditScoringService {
   constructor() {
     this.auditLogger = getAuditLogger();
-    
+
     // Credit scoring weights and thresholds
     this.scoringWeights = {
       creditHistory: 0.35,
@@ -19,14 +19,14 @@ class CreditScoringService {
       employmentStability: 0.10,
       accountAge: 0.05
     };
-    
+
     this.riskThresholds = {
       excellent: 750,
       good: 650,
       fair: 550,
       poor: 450
     };
-    
+
     this.maxDebtToIncomeRatio = 0.43; // 43% DTI ratio limit
     this.minCreditScore = 300;
     this.maxCreditScore = 850;
@@ -55,7 +55,7 @@ class CreditScoringService {
 
       // Calculate base credit score
       const baseScore = await this.calculateBaseCreditScore(user);
-      
+
       // Calculate debt-to-income ratio
       const dtiRatio = await this.calculateDebtToIncomeRatio(
         userId,
@@ -63,16 +63,16 @@ class CreditScoringService {
         requestedAmount,
         existingLoans
       );
-      
+
       // Assess employment stability
       const employmentScore = this.assessEmploymentStability(employmentStatus);
-      
+
       // Calculate payment history score
       const paymentHistoryScore = await this.calculatePaymentHistoryScore(userId);
-      
+
       // Calculate account age score
       const accountAgeScore = this.calculateAccountAgeScore(user.createdAt);
-      
+
       // Combine all factors for final credit score
       const finalCreditScore = this.calculateFinalCreditScore({
         baseScore,
@@ -81,10 +81,10 @@ class CreditScoringService {
         paymentHistoryScore,
         accountAgeScore
       });
-      
+
       // Determine risk level
       const riskLevel = this.determineRiskLevel(finalCreditScore);
-      
+
       // Check approval criteria
       const approvalResult = this.checkApprovalCriteria({
         creditScore: finalCreditScore,
@@ -93,14 +93,14 @@ class CreditScoringService {
         income,
         riskLevel
       });
-      
+
       // Calculate recommended interest rate
       const recommendedRate = this.calculateRecommendedInterestRate(
         finalCreditScore,
         riskLevel,
         requestedAmount
       );
-      
+
       // Generate recommendations
       const recommendations = this.generateRecommendations({
         creditScore: finalCreditScore,
@@ -144,7 +144,7 @@ class CreditScoringService {
         userId: assessmentData.userId,
         requestedAmount: assessmentData.requestedAmount
       });
-      
+
       throw new Error('Credit assessment failed');
     }
   }
@@ -157,23 +157,23 @@ class CreditScoringService {
   async calculateBaseCreditScore(user) {
     // Start with user's existing credit score or default
     let baseScore = user.creditScore || 600;
-    
+
     // Adjust based on KYC verification
     if (user.kycStatus === 'verified') {
       baseScore += 50;
     } else if (user.kycStatus === 'pending') {
       baseScore += 20;
     }
-    
+
     // Adjust based on account verification
     if (user.emailVerified) {
       baseScore += 25;
     }
-    
+
     if (user.phoneVerified) {
       baseScore += 25;
     }
-    
+
     // Ensure score is within valid range
     return Math.max(this.minCreditScore, Math.min(this.maxCreditScore, baseScore));
   }
@@ -190,10 +190,10 @@ class CreditScoringService {
     if (!income || income <= 0) {
       return 1; // 100% DTI if no income provided
     }
-    
+
     // Calculate existing monthly debt payments
     let existingMonthlyDebt = 0;
-    
+
     for (const loan of existingLoans) {
       if (loan.status === 'active' || loan.status === 'funded') {
         // Estimate monthly payment (simplified calculation)
@@ -206,7 +206,7 @@ class CreditScoringService {
         existingMonthlyDebt += monthlyPayment;
       }
     }
-    
+
     // Estimate monthly payment for new loan (assuming 12 months if not specified)
     const estimatedNewPayment = this.estimateMonthlyPayment(
       requestedAmount,
@@ -214,10 +214,10 @@ class CreditScoringService {
       12,
       'months'
     );
-    
+
     const totalMonthlyDebt = existingMonthlyDebt + estimatedNewPayment;
     const monthlyIncome = income;
-    
+
     return totalMonthlyDebt / monthlyIncome;
   }
 
@@ -232,15 +232,15 @@ class CreditScoringService {
   estimateMonthlyPayment(principal, annualRate, term, termUnit) {
     const monthlyRate = (annualRate / 100) / 12;
     const termInMonths = termUnit === 'years' ? term * 12 : term;
-    
+
     if (monthlyRate === 0) {
       return principal / termInMonths;
     }
-    
-    const monthlyPayment = principal * 
+
+    const monthlyPayment = principal *
       (monthlyRate * Math.pow(1 + monthlyRate, termInMonths)) /
       (Math.pow(1 + monthlyRate, termInMonths) - 1);
-    
+
     return monthlyPayment;
   }
 
@@ -259,7 +259,7 @@ class CreditScoringService {
       'student': 40,
       'retired': 80
     };
-    
+
     return employmentScores[employmentStatus] || 30;
   }
 
@@ -275,27 +275,27 @@ class CreditScoringService {
         $or: [{ borrower: userId }, { lender: userId }],
         status: { $in: ['repaid', 'active', 'defaulted'] }
       });
-      
+
       if (loans.length === 0) {
         return 600; // Neutral score for no history
       }
-      
+
       let totalLoans = 0;
       let onTimePayments = 0;
       let latePayments = 0;
       let defaults = 0;
-      
+
       for (const loan of loans) {
         if (loan.borrower.toString() === userId) {
           totalLoans++;
-          
+
           if (loan.status === 'repaid') {
             // Check if repaid on time (simplified - would need more detailed payment tracking)
             onTimePayments++;
           } else if (loan.status === 'defaulted') {
             defaults++;
           }
-          
+
           // Analyze repayment patterns if available
           if (loan.repayments && loan.repayments.length > 0) {
             // Count late payments (simplified logic)
@@ -307,20 +307,20 @@ class CreditScoringService {
           }
         }
       }
-      
+
       if (totalLoans === 0) {
         return 600;
       }
-      
+
       // Calculate score based on payment history
       const onTimeRatio = onTimePayments / totalLoans;
       const defaultRatio = defaults / totalLoans;
-      
+
       let score = 600; // Base score
       score += (onTimeRatio * 200); // Up to 200 points for on-time payments
       score -= (defaultRatio * 300); // Penalty for defaults
       score -= (latePayments * 10); // Penalty for late payments
-      
+
       return Math.max(300, Math.min(850, score));
     } catch (error) {
       logger.error('Payment history calculation error', {
@@ -340,11 +340,11 @@ class CreditScoringService {
     const now = new Date();
     const accountAge = now - new Date(accountCreatedDate);
     const ageInMonths = accountAge / (1000 * 60 * 60 * 24 * 30);
-    
+
     // Score increases with account age, maxing out at 24 months
     const maxMonths = 24;
     const scoreMultiplier = Math.min(ageInMonths / maxMonths, 1);
-    
+
     return 50 + (scoreMultiplier * 50); // 50-100 points based on age
   }
 
@@ -361,13 +361,13 @@ class CreditScoringService {
       paymentHistoryScore,
       accountAgeScore
     } = scores;
-    
+
     // Apply weights to different factors
     let finalScore = baseScore * this.scoringWeights.creditHistory;
     finalScore += paymentHistoryScore * this.scoringWeights.paymentHistory;
     finalScore += employmentScore * this.scoringWeights.employmentStability;
     finalScore += accountAgeScore * this.scoringWeights.accountAge;
-    
+
     // Apply DTI penalty
     if (dtiRatio > this.maxDebtToIncomeRatio) {
       const penalty = (dtiRatio - this.maxDebtToIncomeRatio) * 500;
@@ -377,7 +377,7 @@ class CreditScoringService {
       const bonus = (this.maxDebtToIncomeRatio - dtiRatio) * 100;
       finalScore += bonus;
     }
-    
+
     return Math.max(this.minCreditScore, Math.min(this.maxCreditScore, finalScore));
   }
 
@@ -411,7 +411,7 @@ class CreditScoringService {
       income,
       riskLevel
     } = criteria;
-    
+
     // Minimum credit score requirement
     if (creditScore < this.riskThresholds.poor) {
       return {
@@ -419,7 +419,7 @@ class CreditScoringService {
         reason: 'Credit score below minimum requirement'
       };
     }
-    
+
     // Maximum DTI ratio
     if (dtiRatio > this.maxDebtToIncomeRatio) {
       return {
@@ -427,7 +427,7 @@ class CreditScoringService {
         reason: 'Debt-to-income ratio too high'
       };
     }
-    
+
     // Income verification
     if (!income || income <= 0) {
       return {
@@ -435,7 +435,7 @@ class CreditScoringService {
         reason: 'Income verification required'
       };
     }
-    
+
     // Maximum loan amount based on income
     const maxLoanAmount = income * 12 * 0.3; // 30% of annual income
     if (requestedAmount > maxLoanAmount) {
@@ -444,7 +444,7 @@ class CreditScoringService {
         reason: 'Requested amount exceeds income-based limit'
       };
     }
-    
+
     // Risk-based approval
     if (riskLevel === 'very-high') {
       return {
@@ -452,7 +452,7 @@ class CreditScoringService {
         reason: 'Risk level too high for approval'
       };
     }
-    
+
     return {
       approved: true,
       reason: 'Application meets all approval criteria'
@@ -474,9 +474,9 @@ class CreditScoringService {
       'high': 18.0,
       'very-high': 25.0
     };
-    
+
     let rate = baseRates[riskLevel] || 15.0;
-    
+
     // Adjust based on credit score within risk level
     if (riskLevel === 'low' && creditScore >= 800) {
       rate -= 1.0;
@@ -485,14 +485,14 @@ class CreditScoringService {
     } else if (riskLevel === 'high' && creditScore >= 600) {
       rate -= 2.0;
     }
-    
+
     // Adjust based on loan amount (larger loans get slightly better rates)
     if (requestedAmount >= 50000) {
       rate -= 0.5;
     } else if (requestedAmount >= 25000) {
       rate -= 0.25;
     }
-    
+
     return Math.max(5.0, Math.min(30.0, rate));
   }
 
@@ -504,7 +504,7 @@ class CreditScoringService {
   generateRecommendations(assessmentData) {
     const { creditScore, dtiRatio, riskLevel, approved } = assessmentData;
     const recommendations = [];
-    
+
     if (!approved) {
       if (creditScore < this.riskThresholds.fair) {
         recommendations.push({
@@ -513,7 +513,7 @@ class CreditScoringService {
           priority: 'high'
         });
       }
-      
+
       if (dtiRatio > this.maxDebtToIncomeRatio) {
         recommendations.push({
           type: 'debt_reduction',
@@ -529,7 +529,7 @@ class CreditScoringService {
           priority: 'medium'
         });
       }
-      
+
       if (creditScore < this.riskThresholds.good) {
         recommendations.push({
           type: 'future_improvement',
@@ -538,7 +538,7 @@ class CreditScoringService {
         });
       }
     }
-    
+
     return recommendations;
   }
 
@@ -554,9 +554,9 @@ class CreditScoringService {
       if (!user) {
         throw new Error('User not found');
       }
-      
+
       let scoreChange = 0;
-      
+
       switch (action) {
         case 'on_time_payment':
           scoreChange = 5;
@@ -576,17 +576,17 @@ class CreditScoringService {
         default:
           scoreChange = 0;
       }
-      
+
       // Apply score change
       const newScore = Math.max(
         this.minCreditScore,
         Math.min(this.maxCreditScore, (user.creditScore || 600) + scoreChange)
       );
-      
+
       user.creditScore = newScore;
       user.creditScoreLastUpdated = new Date();
       await user.save();
-      
+
       // Audit log
       await this.auditLogger.logCreditScoreUpdate({
         action: 'credit_score_updated',
@@ -598,14 +598,14 @@ class CreditScoringService {
         details,
         timestamp: new Date().toISOString()
       });
-      
+
       logger.info('Credit score updated', {
         userId,
         action,
         scoreChange,
         newScore
       });
-      
+
     } catch (error) {
       logger.error('Credit score update error', {
         error: error.message,
@@ -617,4 +617,3 @@ class CreditScoringService {
 }
 
 module.exports = new CreditScoringService();
-

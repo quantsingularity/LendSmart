@@ -49,5 +49,3 @@ spec:
       ports:
         - protocol: TCP
           port: 3306 # Assuming database listens on 3306
-
-

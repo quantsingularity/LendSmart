@@ -16,5 +16,3 @@ spec:
   selector:
     {{- include "lend-smart.selectorLabels" . | nindent 4 }}
     app.kubernetes.io/component: backend
-
-

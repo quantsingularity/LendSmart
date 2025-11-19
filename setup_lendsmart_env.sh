@@ -131,7 +131,7 @@ if [ -d "$BACKEND_DIR" ]; then
     deactivate
     echo "Backend setup complete."
 else
-    echo "Warning: Backend directory 
+    echo "Warning: Backend directory
 al$BACKEND_DIR' not found. Skipping backend setup."
 fi
 
@@ -142,7 +142,7 @@ if [ -d "$CODE_BLOCKCHAIN_DIR" ]; then
     echo "Truffle CLI has been installed globally. Use 'truffle compile', 'truffle migrate', etc., within this directory ($CODE_BLOCKCHAIN_DIR)."
     echo "Blockchain component check complete."
 else
-    echo "Warning: Blockchain directory 
+    echo "Warning: Blockchain directory
 al$CODE_BLOCKCHAIN_DIR' not found. Skipping blockchain setup."
 fi
 
@@ -156,7 +156,7 @@ if [ -d "$WEB_FRONTEND_DIR" ]; then
     echo "Web Frontend setup complete."
     cd - > /dev/null
 else
-    echo "Warning: Web Frontend directory 
+    echo "Warning: Web Frontend directory
 al$WEB_FRONTEND_DIR' not found. Skipping web-frontend setup."
 fi
 
@@ -170,7 +170,7 @@ if [ -d "$MOBILE_FRONTEND_DIR" ]; then
     echo "Mobile Frontend setup complete."
     cd - > /dev/null
 else
-    echo "Warning: Mobile Frontend directory 
+    echo "Warning: Mobile Frontend directory
 al$MOBILE_FRONTEND_DIR' not found. Skipping mobile-frontend setup."
 fi
 
@@ -193,7 +193,7 @@ if [ -d "$INFRA_DIR" ]; then
     echo ""
     echo "-----------------------------------------------------------------------------"
     echo "Infrastructure Tools (e.g., Docker, Kubernetes, Terraform - check contents):"
-    echo "The project includes an 
+    echo "The project includes an
 al$INFRA_DIR' directory. Their setup is beyond the scope of this"
     echo "basic development environment script. Please refer to their respective"
     echo "documentation and the project's infrastructure guides for setup if needed."
@@ -225,4 +225,3 @@ chmod +x ./setup_lendsmart_env.sh
 echo "Made the script executable: ./setup_lendsmart_env.sh"
 
 echo "Setup script created at ./setup_lendsmart_env.sh"
-

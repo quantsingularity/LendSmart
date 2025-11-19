@@ -291,12 +291,12 @@ const Button = styled.button`
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease-in-out;
-  
+
   &:hover {
     background: ${props => props.primary ? props.theme.colors.primary : 'rgba(58, 134, 255, 0.1)'};
     transform: translateY(-2px);
   }
-  
+
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
@@ -362,7 +362,7 @@ apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-    
+
     // Handle token refresh for 401 errors
     if (error.response.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
@@ -370,10 +370,10 @@ apiClient.interceptors.response.use(
         const refreshToken = localStorage.getItem('refreshToken');
         const response = await axios.post(`${API_URL}/auth/refresh`, { refreshToken });
         const { token } = response.data;
-        
+
         localStorage.setItem('token', token);
         originalRequest.headers.Authorization = `Bearer ${token}`;
-        
+
         return apiClient(originalRequest);
       } catch (refreshError) {
         // Redirect to login if refresh fails
@@ -383,7 +383,7 @@ apiClient.interceptors.response.use(
         return Promise.reject(refreshError);
       }
     }
-    
+
     return Promise.reject(error);
   }
 );
@@ -414,18 +414,18 @@ class Web3Service {
       try {
         // Request account access
         await window.ethereum.request({ method: 'eth_requestAccounts' });
-        
+
         this.web3 = new Web3(window.ethereum);
         this.networkId = await this.web3.eth.net.getId();
         this.accounts = await this.web3.eth.getAccounts();
-        
+
         // Initialize contracts
         const loanManagerAddress = LoanManagerABI.networks[this.networkId].address;
         this.loanManagerContract = new this.web3.eth.Contract(
           LoanManagerABI.abi,
           loanManagerAddress
         );
-        
+
         return {
           web3: this.web3,
           accounts: this.accounts,
@@ -447,7 +447,7 @@ class Web3Service {
     if (!this.loanManagerContract) {
       throw new Error('Contract not initialized');
     }
-    
+
     try {
       const result = await this.loanManagerContract.methods
         .createLoan(
@@ -456,7 +456,7 @@ class Web3Service {
           loanData.interestRate
         )
         .send({ from: this.accounts[0] });
-      
+
       return result;
     } catch (error) {
       throw new Error(`Failed to create loan: ${error.message}`);

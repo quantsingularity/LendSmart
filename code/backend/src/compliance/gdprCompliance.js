@@ -173,7 +173,7 @@ class GDPRCompliance {
       }
 
       const consents = JSON.parse(consentData);
-      
+
       return {
         hasConsent: true,
         consents,
@@ -201,7 +201,7 @@ class GDPRCompliance {
     try {
       // Get current consent
       const currentConsent = await this.getConsentStatus(userId);
-      
+
       // Record new consent
       const result = await this.recordConsent(userId, newConsents, ip, userAgent);
 
@@ -235,14 +235,14 @@ class GDPRCompliance {
    */
   findWithdrawnConsents(oldConsents, newConsents) {
     const withdrawn = [];
-    
+
     for (const [consentType, oldValue] of Object.entries(oldConsents)) {
       const newValue = newConsents[consentType];
       if (oldValue === true && newValue === false) {
         withdrawn.push(consentType);
       }
     }
-    
+
     return withdrawn;
   }
 
@@ -304,13 +304,13 @@ class GDPRCompliance {
 
       // Collect user data from various sources
       const userData = await this.collectUserData(userId);
-      
+
       // Decrypt sensitive fields for export
       const decryptedData = await this.decryptUserData(userData);
-      
+
       // Format data according to request
       const formattedData = await this.formatExportData(decryptedData, format);
-      
+
       // Create export record
       const exportRecord = {
         exportId: crypto.randomUUID(),
@@ -540,17 +540,17 @@ class GDPRCompliance {
     // Simplified CSV conversion
     // In production, use a proper CSV library
     const csvLines = [];
-    
+
     for (const [section, sectionData] of Object.entries(data)) {
       csvLines.push(`\n[${section.toUpperCase()}]`);
-      
+
       if (Array.isArray(sectionData)) {
         if (sectionData.length > 0) {
           const headers = Object.keys(sectionData[0]);
           csvLines.push(headers.join(','));
-          
+
           for (const item of sectionData) {
-            const values = headers.map(header => 
+            const values = headers.map(header =>
               JSON.stringify(item[header] || '')
             );
             csvLines.push(values.join(','));
@@ -562,7 +562,7 @@ class GDPRCompliance {
         }
       }
     }
-    
+
     return csvLines.join('\n');
   }
 
@@ -574,13 +574,13 @@ class GDPRCompliance {
   convertToXML(data) {
     // Simplified XML conversion
     let xml = '<?xml version="1.0" encoding="UTF-8"?>\n<userData>\n';
-    
+
     for (const [section, sectionData] of Object.entries(data)) {
       xml += `  <${section}>\n`;
       xml += this.objectToXML(sectionData, 4);
       xml += `  </${section}>\n`;
     }
-    
+
     xml += '</userData>';
     return xml;
   }
@@ -594,7 +594,7 @@ class GDPRCompliance {
   objectToXML(obj, indent = 0) {
     const spaces = ' '.repeat(indent);
     let xml = '';
-    
+
     if (Array.isArray(obj)) {
       for (const item of obj) {
         xml += `${spaces}<item>\n`;
@@ -616,7 +616,7 @@ class GDPRCompliance {
     } else {
       xml += `${spaces}${this.escapeXML(String(obj))}\n`;
     }
-    
+
     return xml;
   }
 
@@ -641,7 +641,7 @@ class GDPRCompliance {
    */
   countRecords(userData) {
     let count = 0;
-    
+
     for (const [key, value] of Object.entries(userData)) {
       if (Array.isArray(value)) {
         count += value.length;
@@ -649,7 +649,7 @@ class GDPRCompliance {
         count += 1;
       }
     }
-    
+
     return count;
   }
 
@@ -671,7 +671,7 @@ class GDPRCompliance {
       user.address = null;
       user.dateOfBirth = null;
       user.isActive = false;
-      
+
       await user.save();
       anonymized.profile = true;
     }
@@ -776,4 +776,3 @@ module.exports = {
   GDPRCompliance,
   getGDPRCompliance
 };
-

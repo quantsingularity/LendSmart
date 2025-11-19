@@ -30,5 +30,3 @@ variable "s3_bucket_id" {
   description = "The ID of the S3 bucket for lifecycle policies."
   type        = string
 }
-
-

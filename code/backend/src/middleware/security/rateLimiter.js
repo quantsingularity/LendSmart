@@ -217,7 +217,7 @@ function createCustomLimiter(options) {
       });
     }
   };
-  
+
   return rateLimit({ ...defaultOptions, ...options });
 }
 
@@ -230,7 +230,7 @@ function createRoleLimiter(limits) {
   return (req, res, next) => {
     const userRole = req.user?.role || 'guest';
     const limit = limits[userRole] || limits.default || { max: 100, windowMs: 15 * 60 * 1000 };
-    
+
     const limiter = createCustomLimiter({
       ...limit,
       keyGenerator: (req) => `role:${userRole}:${req.user?.id || req.ip}`,
@@ -239,7 +239,7 @@ function createRoleLimiter(limits) {
         retryAfter: Math.ceil(limit.windowMs / 60000) + ' minutes'
       }
     });
-    
+
     return limiter(req, res, next);
   };
 }
@@ -254,7 +254,7 @@ function createAdaptiveLimiter(baseOptions) {
     try {
       // Get system metrics (simplified example)
       const systemLoad = await getSystemLoad();
-      
+
       // Adjust limits based on system load
       let adjustedMax = baseOptions.max;
       if (systemLoad > 0.8) {
@@ -262,13 +262,13 @@ function createAdaptiveLimiter(baseOptions) {
       } else if (systemLoad > 0.6) {
         adjustedMax = Math.floor(baseOptions.max * 0.75); // Reduce by 25%
       }
-      
+
       const limiter = createCustomLimiter({
         ...baseOptions,
         max: adjustedMax,
         keyGenerator: (req) => `adaptive:${req.user?.id || req.ip}`
       });
-      
+
       return limiter(req, res, next);
     } catch (error) {
       // Fallback to base limiter if adaptive logic fails
@@ -304,11 +304,11 @@ function createWebSocketLimiter(options = {}) {
   const connections = new Map();
   const maxConnections = options.maxConnections || 10;
   const windowMs = options.windowMs || 60000; // 1 minute
-  
+
   return (ws, req, next) => {
     const key = req.user ? `ws:user:${req.user.id}` : `ws:ip:${req.ip}`;
     const now = Date.now();
-    
+
     // Clean old connections
     if (connections.has(key)) {
       const userConnections = connections.get(key).filter(
@@ -316,24 +316,24 @@ function createWebSocketLimiter(options = {}) {
       );
       connections.set(key, userConnections);
     }
-    
+
     const currentConnections = connections.get(key) || [];
-    
+
     if (currentConnections.length >= maxConnections) {
       logger.warn('WebSocket rate limit exceeded', {
         ip: req.ip,
         userId: req.user?.id,
         connections: currentConnections.length
       });
-      
+
       ws.close(1008, 'Rate limit exceeded');
       return;
     }
-    
+
     // Add new connection
     currentConnections.push({ timestamp: now });
     connections.set(key, currentConnections);
-    
+
     // Remove connection on close
     ws.on('close', () => {
       const userConnections = connections.get(key) || [];
@@ -343,7 +343,7 @@ function createWebSocketLimiter(options = {}) {
         connections.set(key, userConnections);
       }
     });
-    
+
     next();
   };
 }
@@ -362,4 +362,3 @@ module.exports = {
   createAdaptiveLimiter,
   createWebSocketLimiter
 };
-

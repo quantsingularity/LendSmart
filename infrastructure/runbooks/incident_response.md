@@ -91,5 +91,3 @@ Incidents are classified based on their severity and impact:
 ## 9. Review and Updates
 
 This runbook will be reviewed and updated at least annually, or after any significant incident or change in infrastructure or processes.
-
-

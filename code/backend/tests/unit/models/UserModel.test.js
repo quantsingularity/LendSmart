@@ -60,7 +60,7 @@ describe('User Model', () => {
       // Password should be hashed
       expect(user.password).to.not.equal(userData.password);
       expect(user.password).to.have.length.greaterThan(50);
-      
+
       // Should be able to verify password
       const isMatch = await bcrypt.compare(userData.password, user.password);
       expect(isMatch).to.be.true;
@@ -99,7 +99,7 @@ describe('User Model', () => {
       };
 
       const user = new User(userData);
-      
+
       try {
         await user.save();
         expect.fail('Should have thrown validation error');
@@ -124,7 +124,7 @@ describe('User Model', () => {
       };
 
       const user = new User(userData);
-      
+
       try {
         await user.save();
         expect.fail('Should have thrown validation error');
@@ -147,7 +147,7 @@ describe('User Model', () => {
       };
 
       const user = new User(userData);
-      
+
       try {
         await user.save();
         expect.fail('Should have thrown validation error');
@@ -184,7 +184,7 @@ describe('User Model', () => {
       await user1.save();
 
       const user2 = new User(userData2);
-      
+
       try {
         await user2.save();
         expect.fail('Should have thrown duplicate key error');
@@ -228,7 +228,7 @@ describe('User Model', () => {
     describe('generatePasswordResetToken', () => {
       it('should generate and set password reset token', () => {
         const token = testUser.generatePasswordResetToken();
-        
+
         expect(token).to.be.a('string');
         expect(token).to.have.length(40); // 20 bytes hex = 40 chars
         expect(testUser.passwordResetToken).to.exist;
@@ -240,7 +240,7 @@ describe('User Model', () => {
     describe('generateEmailVerificationToken', () => {
       it('should generate and set email verification token', () => {
         const token = testUser.generateEmailVerificationToken();
-        
+
         expect(token).to.be.a('string');
         expect(token).to.have.length(40);
         expect(testUser.emailVerificationToken).to.exist;
@@ -252,7 +252,7 @@ describe('User Model', () => {
     describe('generatePhoneVerificationCode', () => {
       it('should generate and set phone verification code', () => {
         const code = testUser.generatePhoneVerificationCode();
-        
+
         expect(code).to.be.a('string');
         expect(code).to.have.length(6);
         expect(code).to.match(/^\d{6}$/); // 6 digits
@@ -266,7 +266,7 @@ describe('User Model', () => {
       it('should increment login attempts', async () => {
         const initialAttempts = testUser.loginAttempts || 0;
         await testUser.incrementLoginAttempts();
-        
+
         const updatedUser = await User.findById(testUser._id);
         expect(updatedUser.loginAttempts).to.equal(initialAttempts + 1);
       });
@@ -275,10 +275,10 @@ describe('User Model', () => {
         // Set login attempts to 4
         testUser.loginAttempts = 4;
         await testUser.save();
-        
+
         // Increment to 5
         await testUser.incrementLoginAttempts();
-        
+
         const updatedUser = await User.findById(testUser._id);
         expect(updatedUser.loginAttempts).to.equal(5);
         expect(updatedUser.lockUntil).to.exist;
@@ -291,9 +291,9 @@ describe('User Model', () => {
         testUser.loginAttempts = 3;
         testUser.lockUntil = new Date(Date.now() + 60000);
         await testUser.save();
-        
+
         await testUser.resetLoginAttempts();
-        
+
         const updatedUser = await User.findById(testUser._id);
         expect(updatedUser.loginAttempts).to.be.undefined;
         expect(updatedUser.lockUntil).to.be.undefined;
@@ -305,9 +305,9 @@ describe('User Model', () => {
         const token = 'test-refresh-token';
         const ipAddress = '192.168.1.1';
         const userAgent = 'Test Agent';
-        
+
         await testUser.addRefreshToken(token, ipAddress, userAgent);
-        
+
         const updatedUser = await User.findById(testUser._id);
         expect(updatedUser.refreshTokens).to.have.length(1);
         expect(updatedUser.refreshTokens[0].token).to.equal(token);
@@ -320,7 +320,7 @@ describe('User Model', () => {
         for (let i = 0; i < 6; i++) {
           await testUser.addRefreshToken(`token-${i}`, '192.168.1.1', 'Test Agent');
         }
-        
+
         const updatedUser = await User.findById(testUser._id);
         expect(updatedUser.refreshTokens).to.have.length(5);
         expect(updatedUser.refreshTokens[0].token).to.equal('token-1'); // First token removed
@@ -333,9 +333,9 @@ describe('User Model', () => {
         const granted = true;
         const ipAddress = '192.168.1.1';
         const userAgent = 'Test Agent';
-        
+
         await testUser.recordGDPRConsent(consentType, granted, ipAddress, userAgent);
-        
+
         const updatedUser = await User.findById(testUser._id);
         expect(updatedUser.gdprConsents).to.have.length(1);
         expect(updatedUser.gdprConsents[0].consentType).to.equal(consentType);
@@ -346,10 +346,10 @@ describe('User Model', () => {
       it('should replace existing consent of same type', async () => {
         // Add initial consent
         await testUser.recordGDPRConsent('marketing', true, '192.168.1.1', 'Test Agent');
-        
+
         // Update consent
         await testUser.recordGDPRConsent('marketing', false, '192.168.1.2', 'Test Agent 2');
-        
+
         const updatedUser = await User.findById(testUser._id);
         expect(updatedUser.gdprConsents).to.have.length(1);
         expect(updatedUser.gdprConsents[0].granted).to.be.false;
@@ -360,7 +360,7 @@ describe('User Model', () => {
     describe('toSafeObject', () => {
       it('should remove sensitive fields from user object', () => {
         const safeUser = testUser.toSafeObject();
-        
+
         expect(safeUser).to.not.have.property('password');
         expect(safeUser).to.not.have.property('mfaSecret');
         expect(safeUser).to.not.have.property('mfaBackupCodes');
@@ -371,7 +371,7 @@ describe('User Model', () => {
         expect(safeUser).to.not.have.property('socialSecurityNumber');
         expect(safeUser).to.not.have.property('loginAttempts');
         expect(safeUser).to.not.have.property('lockUntil');
-        
+
         // Should still have safe fields
         expect(safeUser).to.have.property('username');
         expect(safeUser).to.have.property('email');
@@ -411,7 +411,7 @@ describe('User Model', () => {
         const currentYear = new Date().getFullYear();
         const birthYear = 1990;
         const expectedAge = currentYear - birthYear;
-        
+
         expect(testUser.age).to.be.at.least(expectedAge - 1);
         expect(testUser.age).to.be.at.most(expectedAge);
       });
@@ -532,7 +532,7 @@ describe('User Model', () => {
   describe('Indexes', () => {
     it('should have proper indexes for performance', async () => {
       const indexes = await User.collection.getIndexes();
-      
+
       // Check for required indexes
       const indexNames = Object.keys(indexes);
       expect(indexNames).to.include('email_1');
@@ -541,4 +541,3 @@ describe('User Model', () => {
     });
   });
 });
-

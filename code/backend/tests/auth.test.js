@@ -23,7 +23,7 @@ describe('Authentication System', () => {
   beforeEach(async () => {
     // Clean database before each test
     await User.deleteMany({});
-    
+
     // Create a test user
     const hashedPassword = await bcrypt.hash('TestPassword123!', 12);
     testUser = await User.create({
@@ -440,7 +440,7 @@ describe('Authentication System', () => {
         .set('Authorization', `Bearer ${validToken}`);
 
       // Enable MFA
-      await User.findByIdAndUpdate(testUser._id, { 
+      await User.findByIdAndUpdate(testUser._id, {
         mfaEnabled: true,
         mfaSecret: 'test-mfa-secret'
       });
@@ -460,7 +460,7 @@ describe('Authentication System', () => {
 
     test('should disable MFA with proper verification', async () => {
       // Setup and enable MFA first
-      await User.findByIdAndUpdate(testUser._id, { 
+      await User.findByIdAndUpdate(testUser._id, {
         mfaEnabled: true,
         mfaSecret: 'test-mfa-secret'
       });
@@ -662,4 +662,3 @@ module.exports = {
   createTestUser,
   generateTestToken
 };
-

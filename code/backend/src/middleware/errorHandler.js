@@ -8,7 +8,7 @@ const logger = require('../utils/logger');
 class ErrorHandler {
   constructor() {
     this.auditLogger = getAuditLogger();
-    
+
     // Error codes mapping
     this.errorCodes = {
       // Authentication & Authorization
@@ -17,38 +17,38 @@ class ErrorHandler {
       'TOKEN_INVALID': { status: 401, message: 'Invalid authentication token' },
       'ACCESS_DENIED': { status: 403, message: 'Access denied' },
       'INSUFFICIENT_PERMISSIONS': { status: 403, message: 'Insufficient permissions' },
-      
+
       // Validation
       'VALIDATION_ERROR': { status: 400, message: 'Validation failed' },
       'INVALID_INPUT': { status: 400, message: 'Invalid input provided' },
       'MISSING_REQUIRED_FIELD': { status: 400, message: 'Required field is missing' },
-      
+
       // Business Logic
       'LOAN_NOT_FOUND': { status: 404, message: 'Loan not found' },
       'USER_NOT_FOUND': { status: 404, message: 'User not found' },
       'INSUFFICIENT_FUNDS': { status: 400, message: 'Insufficient funds' },
       'LOAN_ALREADY_FUNDED': { status: 409, message: 'Loan is already funded' },
       'KYC_NOT_VERIFIED': { status: 400, message: 'KYC verification required' },
-      
+
       // Rate Limiting
       'RATE_LIMIT_EXCEEDED': { status: 429, message: 'Rate limit exceeded' },
       'TOO_MANY_REQUESTS': { status: 429, message: 'Too many requests' },
-      
+
       // System
       'INTERNAL_ERROR': { status: 500, message: 'Internal server error' },
       'SERVICE_UNAVAILABLE': { status: 503, message: 'Service temporarily unavailable' },
       'DATABASE_ERROR': { status: 500, message: 'Database operation failed' },
       'EXTERNAL_SERVICE_ERROR': { status: 502, message: 'External service error' },
-      
+
       // Security
       'SECURITY_VIOLATION': { status: 400, message: 'Security violation detected' },
       'SUSPICIOUS_ACTIVITY': { status: 400, message: 'Suspicious activity detected' },
       'ACCOUNT_LOCKED': { status: 423, message: 'Account is locked' },
-      
+
       // Compliance
       'COMPLIANCE_VIOLATION': { status: 400, message: 'Compliance violation' },
       'REGULATORY_RESTRICTION': { status: 403, message: 'Regulatory restriction applies' },
-      
+
       // File Upload
       'FILE_TOO_LARGE': { status: 413, message: 'File size exceeds limit' },
       'INVALID_FILE_TYPE': { status: 400, message: 'Invalid file type' },
@@ -71,15 +71,15 @@ class ErrorHandler {
 
     // Extract error information
     const errorInfo = this.extractErrorInfo(err, req);
-    
+
     // Log error
     this.logError(errorInfo, req);
-    
+
     // Audit security-related errors
     if (this.isSecurityError(err)) {
       this.auditSecurityError(errorInfo, req);
     }
-    
+
     // Send error response
     this.sendErrorResponse(res, errorInfo);
   }
@@ -167,7 +167,7 @@ class ErrorHandler {
     else if (err.status || err.statusCode) {
       statusCode = err.status || err.statusCode;
       message = err.message || 'HTTP error';
-      
+
       if (statusCode === 400) errorCode = 'INVALID_INPUT';
       else if (statusCode === 401) errorCode = 'INVALID_CREDENTIALS';
       else if (statusCode === 403) errorCode = 'ACCESS_DENIED';
@@ -199,7 +199,7 @@ class ErrorHandler {
    */
   extractMongooseValidationErrors(err) {
     const errors = [];
-    
+
     for (const field in err.errors) {
       const error = err.errors[field];
       errors.push({
@@ -209,7 +209,7 @@ class ErrorHandler {
         kind: error.kind
       });
     }
-    
+
     return errors;
   }
 
@@ -221,7 +221,7 @@ class ErrorHandler {
   extractDuplicateKeyError(err) {
     const field = Object.keys(err.keyValue)[0];
     const value = err.keyValue[field];
-    
+
     return {
       field,
       message: `${field} '${value}' already exists`,
@@ -279,7 +279,7 @@ class ErrorHandler {
       'SUSPICIOUS_ACTIVITY',
       'ACCOUNT_LOCKED'
     ];
-    
+
     return securityErrorCodes.includes(err.code) ||
            err.name === 'JsonWebTokenError' ||
            err.name === 'TokenExpiredError' ||
@@ -391,4 +391,3 @@ module.exports = {
   createError: errorHandler.createError.bind(errorHandler),
   asyncHandler: errorHandler.asyncHandler.bind(errorHandler)
 };
-

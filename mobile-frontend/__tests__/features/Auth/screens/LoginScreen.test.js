@@ -18,7 +18,7 @@ const mockAuthContextValue = {
   loading: mockAuthLoading,
   error: mockAuthError,
   // Add other context values if LoginScreen uses them
-  user: null, 
+  user: null,
   isAuthenticated: false,
   register: jest.fn(),
   logout: jest.fn(),
@@ -148,7 +148,7 @@ describe('LoginScreen', () => {
       <LoginScreen navigation={mockNavigation} />,
       { wrapper: AllTheProviders }
     );
-    
+
     // Even if login is not pressed, if error is in context, it should display
     expect(getByText(errorMessage)).toBeTruthy();
 
@@ -160,7 +160,7 @@ describe('LoginScreen', () => {
 
     await waitFor(() => {
         // Simulate error being set in context after API call
-        mockAuthContextValue.error = errorMessage; 
+        mockAuthContextValue.error = errorMessage;
         // Re-render or update state to show error (RTL handles this)
     });
     // This assertion might need adjustment based on how error is set and re-rendered
@@ -180,4 +180,3 @@ describe('LoginScreen', () => {
     expect(mockNavigate).toHaveBeenCalledWith('Register');
   });
 });
-

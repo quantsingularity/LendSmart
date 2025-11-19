@@ -176,7 +176,7 @@ contract LoanContract is Ownable, ReentrancyGuard, Pausable {
         // For this example, we will make it automatic for simplicity
         _disburseLoan(_loanId);
     }
-    
+
     /**
      * @dev Internal function to disburse funds to the borrower.
      * Can be called after funding or by borrower if designed that way.
@@ -232,7 +232,7 @@ contract LoanContract is Ownable, ReentrancyGuard, Pausable {
             if (loan.amountRepaid - amountToRepayThisTime < loan.principal) { // If this payment crosses principal boundary
                 interestPaidThisTime = loan.amountRepaid - loan.principal;
             }
-            if (interestPaidThisTime > totalInterestDue) interestPaidThisTime = totalInterestDue; 
+            if (interestPaidThisTime > totalInterestDue) interestPaidThisTime = totalInterestDue;
 
             interestPortion = interestPaidThisTime;
             principalPortion = amountToRepayThisTime - interestPortion;
@@ -260,7 +260,7 @@ contract LoanContract is Ownable, ReentrancyGuard, Pausable {
         if (loan.amountRepaid >= loan.repaymentAmount) {
             loan.status = LoanStatus.Repaid;
         }
-        
+
         // Check for default status (simplified: if past due date and not fully repaid)
         // More complex default logic would involve checking block.timestamp against loan.fundedTime + loan.duration
         if (loan.status != LoanStatus.Repaid && block.timestamp > loan.fundedTime + loan.duration) {
@@ -358,4 +358,3 @@ contract LoanContract is Ownable, ReentrancyGuard, Pausable {
         token.transfer(_to, _amount);
     }
 }
-

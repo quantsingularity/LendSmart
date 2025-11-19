@@ -69,7 +69,7 @@ check_hardhat() {
         echo "Make sure you're running this script from the project root directory."
         return 1
     fi
-    
+
     if ! grep -q "hardhat" "$CONTRACTS_DIR/package.json"; then
         echo -e "${YELLOW}Warning: Hardhat not found in package.json${NC}"
         echo "Installing Hardhat..."
@@ -77,26 +77,26 @@ check_hardhat() {
         npm install --save-dev hardhat
         cd "$PROJECT_ROOT"
     fi
-    
+
     return 0
 }
 
 # Function to compile contracts
 compile_contracts() {
     echo -e "${BLUE}Compiling smart contracts...${NC}"
-    
+
     # Check if Hardhat is installed
     check_hardhat || return 1
-    
+
     # Navigate to contracts directory
     cd "$CONTRACTS_DIR"
-    
+
     # Clean artifacts first
     npx hardhat clean
-    
+
     # Compile contracts
     npx hardhat compile
-    
+
     # Check compilation status
     if [ $? -eq 0 ]; then
         echo -e "${GREEN}Compilation successful!${NC}"
@@ -104,7 +104,7 @@ compile_contracts() {
         echo -e "${RED}Compilation failed!${NC}"
         return 1
     fi
-    
+
     # Return to project root
     cd "$PROJECT_ROOT"
     return 0
@@ -113,31 +113,31 @@ compile_contracts() {
 # Function to deploy contracts
 deploy_contracts() {
     local network=$1
-    
+
     # Validate network
     validate_network "$network" || return 1
-    
+
     echo -e "${BLUE}Deploying smart contracts to $network...${NC}"
-    
+
     # Check if Hardhat is installed
     check_hardhat || return 1
-    
+
     # Navigate to contracts directory
     cd "$CONTRACTS_DIR"
-    
+
     # Create timestamp for logs
     local timestamp=$(date +"%Y%m%d_%H%M%S")
     local log_file="$LOGS_DIR/deploy_${network}_${timestamp}.log"
-    
+
     # Deploy contracts
     echo -e "${YELLOW}Deployment started. This may take a while...${NC}"
     npx hardhat run scripts/deploy.js --network "$network" | tee "$log_file"
-    
+
     # Check deployment status
     if [ $? -eq 0 ]; then
         echo -e "${GREEN}Deployment to $network successful!${NC}"
         echo -e "Deployment log saved to: $log_file"
-        
+
         # Extract deployed addresses from log file
         grep -i "deployed to" "$log_file" > "$DEPLOYMENT_DIR/${network}_addresses.txt"
         echo -e "Deployment addresses saved to: $DEPLOYMENT_DIR/${network}_addresses.txt"
@@ -146,7 +146,7 @@ deploy_contracts() {
         echo -e "Check the log file for details: $log_file"
         return 1
     fi
-    
+
     # Return to project root
     cd "$PROJECT_ROOT"
     return 0
@@ -155,21 +155,21 @@ deploy_contracts() {
 # Function to verify contracts
 verify_contracts() {
     local network=$1
-    
+
     # Validate network
     validate_network "$network" || return 1
-    
+
     # Skip verification for localhost
     if [ "$network" == "localhost" ]; then
         echo -e "${YELLOW}Verification not needed for localhost network${NC}"
         return 0
     fi
-    
+
     echo -e "${BLUE}Verifying smart contracts on $network...${NC}"
-    
+
     # Check if Hardhat is installed
     check_hardhat || return 1
-    
+
     # Check if deployment addresses exist
     local addresses_file="$DEPLOYMENT_DIR/${network}_addresses.txt"
     if [ ! -f "$addresses_file" ]; then
@@ -177,14 +177,14 @@ verify_contracts() {
         echo "Please deploy contracts to $network first."
         return 1
     fi
-    
+
     # Navigate to contracts directory
     cd "$CONTRACTS_DIR"
-    
+
     # Create timestamp for logs
     local timestamp=$(date +"%Y%m%d_%H%M%S")
     local log_file="$LOGS_DIR/verify_${network}_${timestamp}.log"
-    
+
     # Verify each contract
     echo -e "${YELLOW}Verification started. This may take a while...${NC}"
     while IFS= read -r line; do
@@ -194,10 +194,10 @@ verify_contracts() {
             npx hardhat verify --network "$network" "$contract_address" | tee -a "$log_file"
         fi
     done < "$addresses_file"
-    
+
     echo -e "${GREEN}Verification process completed!${NC}"
     echo -e "Verification log saved to: $log_file"
-    
+
     # Return to project root
     cd "$PROJECT_ROOT"
     return 0
@@ -206,21 +206,21 @@ verify_contracts() {
 # Function to start interactive console
 start_console() {
     local network=$1
-    
+
     # Validate network
     validate_network "$network" || return 1
-    
+
     echo -e "${BLUE}Starting interactive console for $network...${NC}"
-    
+
     # Check if Hardhat is installed
     check_hardhat || return 1
-    
+
     # Navigate to contracts directory
     cd "$CONTRACTS_DIR"
-    
+
     # Start console
     npx hardhat console --network "$network"
-    
+
     # Return to project root
     cd "$PROJECT_ROOT"
     return 0
@@ -229,52 +229,52 @@ start_console() {
 # Function to show deployment status
 show_status() {
     local network=$1
-    
+
     # Validate network
     validate_network "$network" || return 1
-    
+
     echo -e "${BLUE}Deployment status for $network:${NC}"
-    
+
     # Check if deployment addresses exist
     local addresses_file="$DEPLOYMENT_DIR/${network}_addresses.txt"
     if [ ! -f "$addresses_file" ]; then
         echo -e "${YELLOW}No deployment information found for $network${NC}"
         return 0
     fi
-    
+
     # Display deployment information
     echo -e "${GREEN}Deployed contracts:${NC}"
     cat "$addresses_file"
-    
+
     return 0
 }
 
 # Function to generate gas report
 generate_gas_report() {
     echo -e "${BLUE}Generating gas usage report...${NC}"
-    
+
     # Check if Hardhat is installed
     check_hardhat || return 1
-    
+
     # Navigate to contracts directory
     cd "$CONTRACTS_DIR"
-    
+
     # Create timestamp for report
     local timestamp=$(date +"%Y%m%d_%H%M%S")
     local report_file="$LOGS_DIR/gas_report_${timestamp}.txt"
-    
+
     # Set environment variable for gas reporting
     export REPORT_GAS=true
-    
+
     # Run tests with gas reporting
     npx hardhat test | tee "$report_file"
-    
+
     # Unset environment variable
     unset REPORT_GAS
-    
+
     echo -e "${GREEN}Gas report generated!${NC}"
     echo -e "Report saved to: $report_file"
-    
+
     # Return to project root
     cd "$PROJECT_ROOT"
     return 0
@@ -283,38 +283,38 @@ generate_gas_report() {
 # Function to flatten a contract
 flatten_contract() {
     local contract=$1
-    
+
     if [ -z "$contract" ]; then
         echo -e "${RED}Error: No contract specified${NC}"
         echo "Usage: ./smart_contract_manager.sh flatten path/to/Contract.sol"
         return 1
     fi
-    
+
     echo -e "${BLUE}Flattening contract: $contract${NC}"
-    
+
     # Check if Hardhat is installed
     check_hardhat || return 1
-    
+
     # Check if contract file exists
     local contract_path="$CONTRACTS_DIR/contracts/$contract"
     if [ ! -f "$contract_path" ]; then
         echo -e "${RED}Error: Contract file not found: $contract_path${NC}"
         return 1
     fi
-    
+
     # Navigate to contracts directory
     cd "$CONTRACTS_DIR"
-    
+
     # Create output file name
     local output_file="$CONTRACTS_DIR/flattened/$(basename "$contract" .sol)_flattened.sol"
     mkdir -p "$(dirname "$output_file")"
-    
+
     # Flatten contract
     npx hardhat flatten "$contract_path" > "$output_file"
-    
+
     echo -e "${GREEN}Contract flattened successfully!${NC}"
     echo -e "Flattened contract saved to: $output_file"
-    
+
     # Return to project root
     cd "$PROJECT_ROOT"
     return 0
@@ -323,18 +323,18 @@ flatten_contract() {
 # Function to clean artifacts and cache
 clean_artifacts() {
     echo -e "${BLUE}Cleaning artifacts and cache...${NC}"
-    
+
     # Check if Hardhat is installed
     check_hardhat || return 1
-    
+
     # Navigate to contracts directory
     cd "$CONTRACTS_DIR"
-    
+
     # Clean artifacts
     npx hardhat clean
-    
+
     echo -e "${GREEN}Artifacts and cache cleaned!${NC}"
-    
+
     # Return to project root
     cd "$PROJECT_ROOT"
     return 0
@@ -348,11 +348,11 @@ main() {
         echo "Make sure you're running this script from the project root directory."
         return 1
     fi
-    
+
     # Parse command
     local command=$1
     shift
-    
+
     case "$command" in
         compile)
             compile_contracts

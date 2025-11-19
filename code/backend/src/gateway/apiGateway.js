@@ -19,7 +19,7 @@ class APIGateway {
     this.services = new Map();
     this.healthChecks = new Map();
     this.circuitBreakers = new Map();
-    
+
     // Gateway configuration
     this.config = {
       port: process.env.GATEWAY_PORT || 3000,
@@ -93,7 +93,7 @@ class APIGateway {
 
     // CORS configuration
     this.app.use(cors({
-      origin: process.env.NODE_ENV === 'production' 
+      origin: process.env.NODE_ENV === 'production'
         ? process.env.ALLOWED_ORIGINS?.split(',') || ['https://lendsmart.com']
         : true,
       credentials: true,
@@ -121,20 +121,20 @@ class APIGateway {
     this.app.use((req, res, next) => {
       req.id = req.headers['x-request-id'] || this._generateRequestId();
       req.correlationId = req.headers['x-correlation-id'] || req.id;
-      
+
       res.setHeader('X-Request-ID', req.id);
       res.setHeader('X-Correlation-ID', req.correlationId);
-      
+
       next();
     });
 
     // Request logging
     this.app.use((req, res, next) => {
       const startTime = Date.now();
-      
+
       res.on('finish', () => {
         const duration = Date.now() - startTime;
-        
+
         logger.info('Gateway request', {
           requestId: req.id,
           correlationId: req.correlationId,
@@ -147,7 +147,7 @@ class APIGateway {
           userId: req.user?.id
         });
       });
-      
+
       next();
     });
 
@@ -297,7 +297,7 @@ class APIGateway {
         requireAuth: config.requireAuth,
         roles: config.roles
       }));
-      
+
       res.json({ services });
     });
 
@@ -324,7 +324,7 @@ class APIGateway {
    */
   _setupServiceRoute(serviceName, serviceConfig) {
     const routePath = `/api/${serviceName}`;
-    
+
     // Create middleware chain
     const middlewares = [];
 
@@ -338,7 +338,7 @@ class APIGateway {
     // Add authentication if required
     if (serviceConfig.requireAuth) {
       middlewares.push(authMiddleware.authenticate);
-      
+
       // Add authorization if roles/permissions specified
       if (serviceConfig.roles.length > 0 || serviceConfig.permissions.length > 0) {
         middlewares.push(authMiddleware.authorize(serviceConfig.roles, serviceConfig.permissions));
@@ -373,14 +373,14 @@ class APIGateway {
       pathRewrite: serviceConfig.pathRewrite,
       timeout: serviceConfig.timeout,
       proxyTimeout: serviceConfig.timeout,
-      
+
       // Add headers
       onProxyReq: (proxyReq, req, res) => {
         // Add correlation headers
         proxyReq.setHeader('X-Request-ID', req.id);
         proxyReq.setHeader('X-Correlation-ID', req.correlationId);
         proxyReq.setHeader('X-Gateway-Service', serviceName);
-        
+
         // Add user context if authenticated
         if (req.user) {
           proxyReq.setHeader('X-User-ID', req.user.id);
@@ -454,7 +454,7 @@ class APIGateway {
   _circuitBreakerMiddleware(serviceName) {
     return (req, res, next) => {
       const circuitBreaker = this.circuitBreakers.get(serviceName);
-      
+
       if (!circuitBreaker) {
         return next();
       }
@@ -500,7 +500,7 @@ class APIGateway {
    */
   _recordServiceFailure(serviceName) {
     const circuitBreaker = this.circuitBreakers.get(serviceName);
-    
+
     if (circuitBreaker) {
       circuitBreaker.failureCount++;
       circuitBreaker.lastFailureTime = Date.now();
@@ -521,7 +521,7 @@ class APIGateway {
    */
   _recordServiceSuccess(serviceName) {
     const circuitBreaker = this.circuitBreakers.get(serviceName);
-    
+
     if (circuitBreaker) {
       if (circuitBreaker.state === 'HALF_OPEN') {
         circuitBreaker.successCount++;
@@ -637,11 +637,11 @@ class APIGateway {
    */
   _getDetailedHealth() {
     const serviceHealth = {};
-    
+
     for (const [serviceName] of this.services) {
       const health = this.healthChecks.get(serviceName);
       const circuitBreaker = this.circuitBreakers.get(serviceName);
-      
+
       serviceHealth[serviceName] = {
         status: health?.status || 'unknown',
         lastCheck: health?.lastCheck || null,
@@ -672,7 +672,7 @@ class APIGateway {
   _getServiceStatus(serviceName) {
     const health = this.healthChecks.get(serviceName);
     const circuitBreaker = this.circuitBreakers.get(serviceName);
-    
+
     return {
       health: health?.status || 'unknown',
       circuitBreaker: circuitBreaker?.state || 'UNKNOWN',
@@ -759,4 +759,3 @@ class APIGateway {
 }
 
 module.exports = APIGateway;
-

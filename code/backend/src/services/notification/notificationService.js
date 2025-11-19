@@ -15,7 +15,7 @@ class NotificationService {
     this.twilioClient = null;
     this.retryAttempts = 3;
     this.retryDelay = 2000;
-    
+
     // Notification templates
     this.templates = {
       email: {
@@ -624,7 +624,7 @@ class NotificationService {
    */
   _processTemplate(template, data) {
     let processed = template;
-    
+
     // Simple template variable replacement
     Object.keys(data || {}).forEach(key => {
       const regex = new RegExp(`\\$\\{${key}\\}`, 'g');
@@ -680,7 +680,7 @@ class NotificationService {
         return await operation();
       } catch (error) {
         lastError = error;
-        
+
         if (attempt < this.retryAttempts) {
           const delay = this.retryDelay * Math.pow(2, attempt - 1);
           logger.warn(`Notification attempt ${attempt} failed, retrying in ${delay}ms`, {
@@ -688,7 +688,7 @@ class NotificationService {
             attempt,
             maxAttempts: this.retryAttempts
           });
-          
+
           await new Promise(resolve => setTimeout(resolve, delay));
         }
       }
@@ -714,4 +714,3 @@ class NotificationService {
 }
 
 module.exports = new NotificationService();
-

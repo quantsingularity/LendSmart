@@ -533,7 +533,7 @@ describe('Loan Management System', () => {
         .expect(200);
 
       expect(response.body.success).toBe(true);
-      expect(response.body.loans.every(loan => 
+      expect(response.body.loans.every(loan =>
         loan.amount >= 7000 && loan.amount <= 12000
       )).toBe(true);
     });
@@ -546,7 +546,7 @@ describe('Loan Management System', () => {
 
       expect(response.body.success).toBe(true);
       expect(response.body.loans).toBeDefined();
-      expect(response.body.loans.every(loan => 
+      expect(response.body.loans.every(loan =>
         loan.status === 'approved' || loan.status === 'partially_funded'
       )).toBe(true);
     });
@@ -583,7 +583,7 @@ describe('Loan Management System', () => {
       const response = await request(app)
         .get('/api/loans/analytics/performance')
         .set('Authorization', `Bearer ${adminToken}`)
-        .query({ 
+        .query({
           startDate: '2024-01-01',
           endDate: '2024-12-31'
         })
@@ -666,4 +666,3 @@ const createTestLoan = async (borrowerId, loanData = {}) => {
 module.exports = {
   createTestLoan
 };
-

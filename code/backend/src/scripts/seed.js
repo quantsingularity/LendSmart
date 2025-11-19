@@ -87,8 +87,8 @@ const importData = async () => {
         // If not using insertMany or if hook doesn't run, hash here or save individually.
         // For insertMany, hooks are NOT executed by default. So we need to save them one by one or hash passwords before.
         return user; // For now, assuming we might need to adjust this if hooks don't run with insertMany
-    })); 
-    
+    }));
+
     // Let's save users one by one to ensure hooks run
     await User.deleteMany(); // Clear again before individual save
     const userRefs = {};
@@ -133,4 +133,3 @@ if (process.argv[2] === "-d") {
 } else {
   importData();
 }
-

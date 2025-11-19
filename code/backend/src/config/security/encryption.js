@@ -13,7 +13,7 @@ class EncryptionService {
     this.saltLength = 32; // 256 bits
     this.tagLength = 16; // 128 bits
     this.iterations = 100000; // PBKDF2 iterations
-    
+
     // Master key from environment (should be 64 hex characters)
     this.masterKey = process.env.ENCRYPTION_MASTER_KEY;
     if (!this.masterKey || this.masterKey.length !== 64) {
@@ -42,21 +42,21 @@ class EncryptionService {
       // Generate random salt and IV
       const salt = crypto.randomBytes(this.saltLength);
       const iv = crypto.randomBytes(this.ivLength);
-      
+
       // Derive encryption key
       const key = await this.deriveKey(salt);
-      
+
       // Create cipher
       const cipher = crypto.createCipher(this.algorithm, key);
       cipher.setAAD(Buffer.from(context, 'utf8'));
-      
+
       // Encrypt data
       let encrypted = cipher.update(plaintext, 'utf8');
       encrypted = Buffer.concat([encrypted, cipher.final()]);
-      
+
       // Get authentication tag
       const tag = cipher.getAuthTag();
-      
+
       // Combine all components
       const result = Buffer.concat([
         salt,
@@ -64,7 +64,7 @@ class EncryptionService {
         tag,
         encrypted
       ]);
-      
+
       return result.toString('base64');
     } catch (error) {
       throw new Error(`Encryption failed: ${error.message}`);
@@ -80,25 +80,25 @@ class EncryptionService {
   async decrypt(encryptedData, context = '') {
     try {
       const data = Buffer.from(encryptedData, 'base64');
-      
+
       // Extract components
       const salt = data.slice(0, this.saltLength);
       const iv = data.slice(this.saltLength, this.saltLength + this.ivLength);
       const tag = data.slice(this.saltLength + this.ivLength, this.saltLength + this.ivLength + this.tagLength);
       const encrypted = data.slice(this.saltLength + this.ivLength + this.tagLength);
-      
+
       // Derive decryption key
       const key = await this.deriveKey(salt);
-      
+
       // Create decipher
       const decipher = crypto.createDecipher(this.algorithm, key);
       decipher.setAuthTag(tag);
       decipher.setAAD(Buffer.from(context, 'utf8'));
-      
+
       // Decrypt data
       let decrypted = decipher.update(encrypted);
       decrypted = Buffer.concat([decrypted, decipher.final()]);
-      
+
       return decrypted.toString('utf8');
     } catch (error) {
       throw new Error(`Decryption failed: ${error.message}`);
@@ -115,7 +115,7 @@ class EncryptionService {
     try {
       const actualSalt = salt || crypto.randomBytes(this.saltLength).toString('hex');
       const hash = crypto.pbkdf2Sync(data, actualSalt, this.iterations, this.keyLength, 'sha512');
-      
+
       return {
         hash: hash.toString('hex'),
         salt: actualSalt
@@ -172,13 +172,13 @@ class EncryptionService {
    */
   async encryptFields(data, fieldsToEncrypt) {
     const result = { ...data };
-    
+
     for (const field of fieldsToEncrypt) {
       if (result[field] !== undefined && result[field] !== null) {
         result[field] = await this.encrypt(String(result[field]), field);
       }
     }
-    
+
     return result;
   }
 
@@ -190,7 +190,7 @@ class EncryptionService {
    */
   async decryptFields(data, fieldsToDecrypt) {
     const result = { ...data };
-    
+
     for (const field of fieldsToDecrypt) {
       if (result[field] !== undefined && result[field] !== null) {
         try {
@@ -202,7 +202,7 @@ class EncryptionService {
         }
       }
     }
-    
+
     return result;
   }
 }
@@ -225,4 +225,3 @@ module.exports = {
   EncryptionService,
   getEncryptionService
 };
-

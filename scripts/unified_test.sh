@@ -29,29 +29,29 @@ run_test() {
     component=$1
     command=$2
     echo -e "${BLUE}Testing $component...${NC}"
-    
+
     # Create component report file
     component_report="$REPORT_DIR/${component}_test_report_$TIMESTAMP.txt"
     echo "Test Report for $component - $(date)" > "$component_report"
     echo "----------------------------------------" >> "$component_report"
-    
+
     # Record start time
     start_time=$(date +%s)
-    
+
     # Run the test command and capture output and exit status
     echo "Running: $command" >> "$component_report"
     echo "" >> "$component_report"
     eval "$command" >> "$component_report" 2>&1
     exit_status=$?
-    
+
     # Record end time and calculate duration
     end_time=$(date +%s)
     duration=$((end_time - start_time))
-    
+
     # Append duration to report
     echo "" >> "$component_report"
     echo "Duration: ${duration} seconds" >> "$component_report"
-    
+
     # Determine status based on exit code
     if [ $exit_status -eq 0 ]; then
         status="${GREEN}PASSED${NC}"
@@ -60,14 +60,14 @@ run_test() {
         status="${RED}FAILED${NC}"
         status_summary="FAILED"
     fi
-    
+
     # Add to summary
     echo "$component: $status_summary (${duration}s)" >> "$SUMMARY_FILE"
-    
+
     # Print status to console
     echo -e "$component tests: $status (${duration}s)"
     echo ""
-    
+
     return $exit_status
 }
 
@@ -75,11 +75,11 @@ run_test() {
 main() {
     echo -e "${BLUE}Starting LendSmart Unified Testing...${NC}"
     echo ""
-    
+
     # Track overall success
     overall_success=true
     start_total=$(date +%s)
-    
+
     # Smart Contracts Tests
     if [ -d "$PROJECT_ROOT/smart-contracts" ]; then
         cd "$PROJECT_ROOT/smart-contracts"
@@ -90,7 +90,7 @@ main() {
         echo -e "${YELLOW}Smart Contracts directory not found, skipping tests${NC}"
         echo "Smart Contracts: SKIPPED (directory not found)" >> "$SUMMARY_FILE"
     fi
-    
+
     # Backend Tests
     if [ -d "$PROJECT_ROOT/backend" ]; then
         cd "$PROJECT_ROOT/backend"
@@ -101,7 +101,7 @@ main() {
         echo -e "${YELLOW}Backend directory not found, skipping tests${NC}"
         echo "Backend: SKIPPED (directory not found)" >> "$SUMMARY_FILE"
     fi
-    
+
     # Web Frontend Tests
     if [ -d "$PROJECT_ROOT/web-frontend" ]; then
         cd "$PROJECT_ROOT/web-frontend"
@@ -112,7 +112,7 @@ main() {
         echo -e "${YELLOW}Web Frontend directory not found, skipping tests${NC}"
         echo "Web Frontend: SKIPPED (directory not found)" >> "$SUMMARY_FILE"
     fi
-    
+
     # Mobile Frontend Tests
     if [ -d "$PROJECT_ROOT/mobile-frontend" ]; then
         cd "$PROJECT_ROOT/mobile-frontend"
@@ -123,7 +123,7 @@ main() {
         echo -e "${YELLOW}Mobile Frontend directory not found, skipping tests${NC}"
         echo "Mobile Frontend: SKIPPED (directory not found)" >> "$SUMMARY_FILE"
     fi
-    
+
     # ML Model Tests
     if [ -d "$PROJECT_ROOT/ml-model" ]; then
         cd "$PROJECT_ROOT/ml-model"
@@ -141,15 +141,15 @@ main() {
         echo -e "${YELLOW}ML Model directory not found, skipping tests${NC}"
         echo "ML Models: SKIPPED (directory not found)" >> "$SUMMARY_FILE"
     fi
-    
+
     # End timing
     end_total=$(date +%s)
     total_duration=$((end_total - start_total))
-    
+
     # Add total duration to summary
     echo "" >> "$SUMMARY_FILE"
     echo "Total test duration: ${total_duration} seconds" >> "$SUMMARY_FILE"
-    
+
     # Print final status
     echo -e "${BLUE}All tests completed in ${total_duration} seconds${NC}"
     if $overall_success; then
@@ -159,7 +159,7 @@ main() {
         echo -e "${RED}Some tests failed. Check the reports for details.${NC}"
         echo "OVERALL STATUS: FAILED" >> "$SUMMARY_FILE"
     fi
-    
+
     echo ""
     echo -e "${BLUE}Test reports saved to: $REPORT_DIR${NC}"
     echo -e "${BLUE}Summary report: $SUMMARY_FILE${NC}"

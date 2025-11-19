@@ -78,4 +78,3 @@ export const recordRepayment = (loanId, repaymentData) => apiService.post(`/loan
 export const getCreditPrediction = (applicantData) => apiService.post("/predict/credit-score", applicantData);
 
 export default apiService;
-

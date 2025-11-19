@@ -64,7 +64,7 @@ data:
       @type tail
       path /var/log/containers/*.log
       pos_file /var/log/fluentd-containers.log.pos
-      tag kubernetes.* 
+      tag kubernetes.*
       format json
       read_from_head true
     </source>
@@ -72,5 +72,3 @@ data:
     <match kubernetes.**>
       @type stdout
     </match>
-
-

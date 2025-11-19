@@ -16,11 +16,11 @@ class AuthMiddleware {
     this.jwtRefreshSecret = process.env.JWT_REFRESH_SECRET || this._generateSecureSecret();
     this.jwtExpiresIn = process.env.JWT_EXPIRES_IN || '15m';
     this.refreshTokenExpiresIn = process.env.REFRESH_TOKEN_EXPIRES_IN || '7d';
-    
+
     // Token blacklist (in production, use Redis or database)
     this.tokenBlacklist = new Set();
     this.refreshTokens = new Map(); // Store refresh tokens with metadata
-    
+
     // Rate limiting configurations
     this.authRateLimiter = rateLimit({
       windowMs: 15 * 60 * 1000, // 15 minutes
@@ -219,7 +219,7 @@ class AuthMiddleware {
         this.revokeRefreshToken(tokenId);
       }
     }
-    
+
     logger.info('All user tokens revoked', { userId });
   }
 
@@ -232,7 +232,7 @@ class AuthMiddleware {
   authenticate = async (req, res, next) => {
     try {
       const authHeader = req.headers.authorization;
-      
+
       if (!authHeader || !authHeader.startsWith('Bearer ')) {
         throw new AppError('Access token required', 401, 'MISSING_TOKEN');
       }
@@ -289,7 +289,7 @@ class AuthMiddleware {
   optionalAuthenticate = async (req, res, next) => {
     try {
       const authHeader = req.headers.authorization;
-      
+
       if (authHeader && authHeader.startsWith('Bearer ')) {
         const token = authHeader.substring(7);
         const decoded = this.verifyToken(token, 'access');
@@ -343,16 +343,16 @@ class AuthMiddleware {
             ip: req.ip,
             path: req.path
           });
-          
+
           throw new AppError('Insufficient permissions', 403, 'INSUFFICIENT_ROLE');
         }
 
         // Check permissions
         if (permissions.length > 0) {
-          const hasPermission = permissions.some(permission => 
+          const hasPermission = permissions.some(permission =>
             userPermissions.includes(permission)
           );
-          
+
           if (!hasPermission) {
             logger.warn('Authorization failed - insufficient permissions', {
               userId: req.user.id,
@@ -361,7 +361,7 @@ class AuthMiddleware {
               ip: req.ip,
               path: req.path
             });
-            
+
             throw new AppError('Insufficient permissions', 403, 'INSUFFICIENT_PERMISSIONS');
           }
         }
@@ -425,7 +425,7 @@ class AuthMiddleware {
             ip: req.ip,
             path: req.path
           });
-          
+
           throw new AppError('Access denied - resource not found', 404, 'RESOURCE_NOT_FOUND');
         }
 
@@ -456,13 +456,13 @@ class AuthMiddleware {
   refreshToken = async (req, res, next) => {
     try {
       const { refreshToken } = req.body;
-      
+
       if (!refreshToken) {
         throw new AppError('Refresh token required', 400, 'MISSING_REFRESH_TOKEN');
       }
 
       const decoded = this.verifyToken(refreshToken, 'refresh');
-      
+
       // Check if refresh token exists in our store
       const tokenMetadata = this.refreshTokens.get(decoded.jti);
       if (!tokenMetadata) {
@@ -485,7 +485,7 @@ class AuthMiddleware {
       if (process.env.ROTATE_REFRESH_TOKENS === 'true') {
         // Revoke old refresh token
         this.revokeRefreshToken(decoded.jti);
-        
+
         // Generate new refresh token
         newRefreshToken = this.generateRefreshToken({
           userId: decoded.userId,
@@ -535,7 +535,7 @@ class AuthMiddleware {
   logout = async (req, res, next) => {
     try {
       const { refreshToken } = req.body;
-      
+
       // Revoke access token if user is authenticated
       if (req.user && req.user.tokenId) {
         this.revokeToken(req.user.tokenId);
@@ -599,4 +599,3 @@ class AuthMiddleware {
 }
 
 module.exports = new AuthMiddleware();
-

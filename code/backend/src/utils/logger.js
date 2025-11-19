@@ -30,7 +30,7 @@ const logFormat = winston.format.combine(
       ...(requestId && { requestId }),
       ...meta
     };
-    
+
     return JSON.stringify(logEntry);
   })
 );
@@ -55,7 +55,7 @@ const securityFormat = winston.format.combine(
       resource: resource || 'unknown',
       ...meta
     };
-    
+
     return JSON.stringify(logEntry);
   })
 );
@@ -78,7 +78,7 @@ const performanceFormat = winston.format.combine(
       statusCode,
       ...meta
     };
-    
+
     return JSON.stringify(logEntry);
   })
 );
@@ -105,7 +105,7 @@ const logger = winston.createLogger({
       ),
       silent: process.env.NODE_ENV === 'test'
     }),
-    
+
     // File transport for all logs
     new winston.transports.File({
       filename: path.join(logsDir, 'application.log'),
@@ -113,7 +113,7 @@ const logger = winston.createLogger({
       maxFiles: 10,
       tailable: true
     }),
-    
+
     // Separate file for errors
     new winston.transports.File({
       filename: path.join(logsDir, 'error.log'),
@@ -122,7 +122,7 @@ const logger = winston.createLogger({
       maxFiles: 5,
       tailable: true
     }),
-    
+
     // Combined log file
     new winston.transports.File({
       filename: path.join(logsDir, 'combined.log'),
@@ -131,7 +131,7 @@ const logger = winston.createLogger({
       tailable: true
     })
   ],
-  
+
   // Handle uncaught exceptions
   exceptionHandlers: [
     new winston.transports.File({
@@ -140,7 +140,7 @@ const logger = winston.createLogger({
       maxFiles: 5
     })
   ],
-  
+
   // Handle unhandled promise rejections
   rejectionHandlers: [
     new winston.transports.File({
@@ -166,7 +166,7 @@ const securityLogger = winston.createLogger({
       maxFiles: 10,
       tailable: true
     }),
-    
+
     // Critical security events
     new winston.transports.File({
       filename: path.join(logsDir, 'security-critical.log'),
@@ -217,7 +217,7 @@ const auditLogger = winston.createLogger({
         ...(after && { after }),
         ...meta
       };
-      
+
       return JSON.stringify(logEntry);
     })
   ),
@@ -255,7 +255,7 @@ const businessLogger = winston.createLogger({
         ...(operation && { operation }),
         ...meta
       };
-      
+
       return JSON.stringify(logEntry);
     })
   ),
@@ -288,20 +288,20 @@ const createLogContext = (req) => {
 
 const sanitizeForLogging = (data) => {
   if (!data || typeof data !== 'object') return data;
-  
+
   const sensitiveFields = [
     'password', 'token', 'secret', 'key', 'authorization',
     'ssn', 'socialSecurityNumber', 'creditCard', 'bankAccount',
     'pin', 'otp', 'mfa', 'privateKey', 'apiKey'
   ];
-  
+
   const sanitized = { ...data };
-  
+
   const sanitizeObject = (obj) => {
     for (const key in obj) {
       if (obj.hasOwnProperty(key)) {
         const lowerKey = key.toLowerCase();
-        
+
         if (sensitiveFields.some(field => lowerKey.includes(field))) {
           obj[key] = '[REDACTED]';
         } else if (typeof obj[key] === 'object' && obj[key] !== null) {
@@ -310,7 +310,7 @@ const sanitizeForLogging = (data) => {
       }
     }
   };
-  
+
   sanitizeObject(sanitized);
   return sanitized;
 };
@@ -322,7 +322,7 @@ const enhancedLogger = {
   info: (message, meta = {}) => logger.info(message, sanitizeForLogging(meta)),
   warn: (message, meta = {}) => logger.warn(message, sanitizeForLogging(meta)),
   error: (message, meta = {}) => logger.error(message, sanitizeForLogging(meta)),
-  
+
   // Security logging
   security: {
     login: (userId, ipAddress, userAgent, success = true, reason = null) => {
@@ -336,7 +336,7 @@ const enhancedLogger = {
         reason
       });
     },
-    
+
     logout: (userId, ipAddress, userAgent) => {
       securityLogger.info('User logout', {
         userId,
@@ -346,7 +346,7 @@ const enhancedLogger = {
         resource: 'authentication'
       });
     },
-    
+
     accessDenied: (userId, resource, action, ipAddress, userAgent, reason) => {
       securityLogger.warn('Access denied', {
         userId,
@@ -357,7 +357,7 @@ const enhancedLogger = {
         reason
       });
     },
-    
+
     suspiciousActivity: (userId, activity, ipAddress, userAgent, details) => {
       securityLogger.error('Suspicious activity detected', {
         userId,
@@ -369,7 +369,7 @@ const enhancedLogger = {
         details
       });
     },
-    
+
     dataAccess: (userId, resource, action, ipAddress, userAgent) => {
       securityLogger.info('Data access', {
         userId,
@@ -380,7 +380,7 @@ const enhancedLogger = {
       });
     }
   },
-  
+
   // Performance logging
   performance: {
     apiRequest: (method, url, duration, statusCode, userId = null) => {
@@ -393,7 +393,7 @@ const enhancedLogger = {
         userId
       });
     },
-    
+
     databaseQuery: (operation, collection, duration, recordCount = null) => {
       const level = duration > 1000 ? 'warn' : 'debug';
       performanceLogger.log(level, 'Database query completed', {
@@ -403,7 +403,7 @@ const enhancedLogger = {
         recordCount
       });
     },
-    
+
     externalService: (service, operation, duration, success = true) => {
       const level = !success ? 'error' : duration > 3000 ? 'warn' : 'info';
       performanceLogger.log(level, 'External service call', {
@@ -414,7 +414,7 @@ const enhancedLogger = {
       });
     }
   },
-  
+
   // Audit logging
   audit: {
     userAction: (userId, action, resource, before = null, after = null, ipAddress = null) => {
@@ -427,7 +427,7 @@ const enhancedLogger = {
         ipAddress
       });
     },
-    
+
     systemAction: (action, resource, details = null) => {
       auditLogger.info('System action performed', {
         userId: 'system',
@@ -436,7 +436,7 @@ const enhancedLogger = {
         details: sanitizeForLogging(details)
       });
     },
-    
+
     dataChange: (userId, table, recordId, before, after, ipAddress = null) => {
       auditLogger.info('Data change recorded', {
         userId,
@@ -449,7 +449,7 @@ const enhancedLogger = {
       });
     }
   },
-  
+
   // Business logging
   business: {
     loanApplication: (userId, loanId, amount, purpose) => {
@@ -461,7 +461,7 @@ const enhancedLogger = {
         purpose
       });
     },
-    
+
     loanApproval: (userId, loanId, amount, approvedBy) => {
       businessLogger.info('Loan approved', {
         userId,
@@ -471,7 +471,7 @@ const enhancedLogger = {
         approvedBy
       });
     },
-    
+
     payment: (userId, loanId, amount, paymentMethod, transactionId) => {
       businessLogger.info('Payment processed', {
         userId,
@@ -482,7 +482,7 @@ const enhancedLogger = {
         transactionId
       });
     },
-    
+
     creditScoreUpdate: (userId, oldScore, newScore, reason) => {
       businessLogger.info('Credit score updated', {
         userId,
@@ -493,15 +493,15 @@ const enhancedLogger = {
       });
     }
   },
-  
+
   // Request logging middleware
   requestLogger: (req, res, next) => {
     const startTime = Date.now();
     const context = createLogContext(req);
-    
+
     // Add request ID to request object
     req.logContext = context;
-    
+
     // Log incoming request
     logger.info('Incoming request', {
       ...context,
@@ -509,12 +509,12 @@ const enhancedLogger = {
       query: sanitizeForLogging(req.query),
       params: sanitizeForLogging(req.params)
     });
-    
+
     // Override res.end to log response
     const originalEnd = res.end;
     res.end = function(...args) {
       const duration = Date.now() - startTime;
-      
+
       // Log response
       enhancedLogger.performance.apiRequest(
         req.method,
@@ -523,7 +523,7 @@ const enhancedLogger = {
         res.statusCode,
         context.userId
       );
-      
+
       // Log error responses
       if (res.statusCode >= 400) {
         logger.warn('Request completed with error', {
@@ -532,10 +532,10 @@ const enhancedLogger = {
           duration
         });
       }
-      
+
       originalEnd.apply(this, args);
     };
-    
+
     next();
   }
 };
@@ -551,4 +551,3 @@ module.exports = {
   createLogContext,
   sanitizeForLogging
 };
-

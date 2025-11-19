@@ -23,9 +23,9 @@ describe('API Integration Tests', () => {
       role: 'admin'
     }));
     await adminUser.save();
-    adminToken = testUtils.generateTestToken({ 
-      userId: adminUser._id, 
-      role: 'admin' 
+    adminToken = testUtils.generateTestToken({
+      userId: adminUser._id,
+      role: 'admin'
     });
   });
 
@@ -78,7 +78,7 @@ describe('API Integration Tests', () => {
 
       test('should enforce rate limiting on registration', async () => {
         const userData = testUtils.createTestUser();
-        
+
         // Make multiple registration attempts
         const promises = [];
         for (let i = 0; i < 10; i++) {
@@ -94,7 +94,7 @@ describe('API Integration Tests', () => {
 
         const responses = await Promise.all(promises);
         const rateLimitedResponses = responses.filter(res => res.status === 429);
-        
+
         expect(rateLimitedResponses.length).toBeGreaterThan(0);
       });
     });
@@ -153,7 +153,7 @@ describe('API Integration Tests', () => {
 
         const responses = await Promise.all(promises);
         const rateLimitedResponses = responses.filter(res => res.status === 429);
-        
+
         expect(rateLimitedResponses.length).toBeGreaterThan(0);
       });
     });
@@ -544,7 +544,7 @@ describe('API Integration Tests', () => {
       test('should get payment history', async () => {
         // Create some payment records
         const Payment = require('../../src/models/PaymentModel');
-        
+
         for (let i = 0; i < 3; i++) {
           const payment = new Payment({
             loan: userLoan._id,
@@ -569,7 +569,7 @@ describe('API Integration Tests', () => {
 
       test('should filter payments by loan', async () => {
         const Payment = require('../../src/models/PaymentModel');
-        
+
         // Create another loan and payment
         const anotherLoan = new Loan({
           borrower: testUser._id,
@@ -805,4 +805,3 @@ describe('API Integration Tests', () => {
     });
   });
 });
-

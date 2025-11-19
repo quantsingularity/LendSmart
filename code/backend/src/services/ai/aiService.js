@@ -14,7 +14,7 @@ class AIService {
       creditScoring: process.env.AI_CREDIT_MODEL_ENDPOINT || 'http://localhost:8002/predict/credit',
       fraudDetection: process.env.AI_FRAUD_MODEL_ENDPOINT || 'http://localhost:8003/predict/fraud'
     };
-    
+
     this.timeout = parseInt(process.env.AI_SERVICE_TIMEOUT) || 30000; // 30 seconds
     this.retryAttempts = parseInt(process.env.AI_RETRY_ATTEMPTS) || 3;
     this.retryDelay = parseInt(process.env.AI_RETRY_DELAY) || 1000; // 1 second
@@ -36,9 +36,9 @@ class AIService {
    */
   async assessRisk(borrowerData) {
     try {
-      logger.info('Starting risk assessment', { 
+      logger.info('Starting risk assessment', {
         borrowerId: borrowerData.borrowerId,
-        loanAmount: borrowerData.loanAmount 
+        loanAmount: borrowerData.loanAmount
       });
 
       // Validate input data
@@ -88,8 +88,8 @@ class AIService {
    */
   async calculateCreditScore(borrowerData) {
     try {
-      logger.info('Starting credit score calculation', { 
-        borrowerId: borrowerData.borrowerId 
+      logger.info('Starting credit score calculation', {
+        borrowerId: borrowerData.borrowerId
       });
 
       // Validate input data
@@ -139,7 +139,7 @@ class AIService {
    */
   async detectFraud(transactionData) {
     try {
-      logger.info('Starting fraud detection', { 
+      logger.info('Starting fraud detection', {
         transactionId: transactionData.transactionId,
         amount: transactionData.amount
       });
@@ -198,7 +198,7 @@ class AIService {
     const healthChecks = Object.entries(this.modelEndpoints).map(async ([modelName, endpoint]) => {
       try {
         const startTime = Date.now();
-        
+
         await axios.get(`${endpoint}/health`, {
           timeout: 5000,
           headers: {
@@ -234,7 +234,7 @@ class AIService {
   _validateBorrowerData(data) {
     const required = ['income', 'creditScore', 'loanAmount', 'employmentYears', 'age'];
     const missing = required.filter(field => data[field] === undefined || data[field] === null);
-    
+
     if (missing.length > 0) {
       throw new AppError(
         `Missing required borrower data fields: ${missing.join(', ')}`,
@@ -268,7 +268,7 @@ class AIService {
   _validateTransactionData(data) {
     const required = ['transactionId', 'amount', 'timestamp', 'userId'];
     const missing = required.filter(field => data[field] === undefined || data[field] === null);
-    
+
     if (missing.length > 0) {
       throw new AppError(
         `Missing required transaction data fields: ${missing.join(', ')}`,
@@ -341,7 +341,7 @@ class AIService {
 
       } catch (error) {
         lastError = error;
-        
+
         logger.warn(`AI model call attempt ${attempt} failed`, {
           endpoint,
           modelType,
@@ -439,4 +439,3 @@ class AIService {
 }
 
 module.exports = new AIService();
-

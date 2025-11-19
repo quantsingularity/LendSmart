@@ -103,5 +103,3 @@ resource "aws_network_acl" "public_nacl" {
     Name = "public_nacl"
   }
 }
-
-

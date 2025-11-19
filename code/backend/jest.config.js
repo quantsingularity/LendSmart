@@ -5,4 +5,3 @@ module.exports = {
   // setupFilesAfterEnv: ["./tests/setup.js"], // if you have a setup file for tests
   // verbose: true, // Optionally, for more detailed output
 };
-

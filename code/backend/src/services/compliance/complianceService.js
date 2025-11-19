@@ -374,7 +374,7 @@ class ComplianceService {
   _validateKYCData(data) {
     const required = ['userId', 'firstName', 'lastName', 'dateOfBirth', 'nationality', 'documentType', 'documentNumber'];
     const missing = required.filter(field => !data[field]);
-    
+
     if (missing.length > 0) {
       throw new AppError(
         `Missing required KYC fields: ${missing.join(', ')}`,
@@ -402,7 +402,7 @@ class ComplianceService {
   _validateSanctionsData(data) {
     const required = ['userId', 'fullName', 'nationality'];
     const missing = required.filter(field => !data[field]);
-    
+
     if (missing.length > 0) {
       throw new AppError(
         `Missing required sanctions screening fields: ${missing.join(', ')}`,
@@ -419,7 +419,7 @@ class ComplianceService {
   _validateTransactionData(data) {
     const required = ['transactionId', 'userId', 'amount', 'type'];
     const missing = required.filter(field => data[field] === undefined || data[field] === null);
-    
+
     if (missing.length > 0) {
       throw new AppError(
         `Missing required transaction fields: ${missing.join(', ')}`,
@@ -440,7 +440,7 @@ class ComplianceService {
   _validateReportParams(params) {
     const required = ['type', 'startDate', 'endDate'];
     const missing = required.filter(field => !params[field]);
-    
+
     if (missing.length > 0) {
       throw new AppError(
         `Missing required report parameters: ${missing.join(', ')}`,
@@ -636,7 +636,7 @@ class ComplianceService {
   _aggregateAMLResults(checks, transactionData) {
     const allAlerts = checks.flatMap(check => check.alerts);
     const highSeverityAlerts = allAlerts.filter(alert => alert.severity === 'HIGH');
-    
+
     let riskLevel = 'LOW';
     let flagged = false;
 
@@ -665,7 +665,7 @@ class ComplianceService {
    */
   async _generateSAR(transactionData, amlResult) {
     const sarId = `SAR_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
-    
+
     logger.info('Generating SAR', {
       sarId,
       transactionId: transactionData.transactionId,
@@ -777,4 +777,3 @@ class ComplianceService {
 }
 
 module.exports = new ComplianceService();
-

@@ -12,7 +12,7 @@ class ComplianceMonitor {
     this.violations = new Map();
     this.auditTrail = [];
     this.retentionPolicies = new Map();
-    
+
     // Compliance configuration
     this.config = {
       dataRetentionPeriod: parseInt(process.env.DATA_RETENTION_PERIOD) || 7 * 365 * 24 * 60 * 60 * 1000, // 7 years
@@ -26,7 +26,7 @@ class ComplianceMonitor {
 
     // Initialize compliance rules
     this.initializeComplianceRules();
-    
+
     // Start monitoring tasks
     this.startMonitoringTasks();
   }
@@ -97,10 +97,10 @@ class ComplianceMonitor {
     try {
       const timestamp = new Date().toISOString();
       const accessId = crypto.randomUUID();
-      
+
       // Check if access is authorized
       const authorizationResult = this._checkDataAccessAuthorization(userId, dataType, operation);
-      
+
       // Log the access event
       const accessEvent = {
         id: accessId,
@@ -415,7 +415,7 @@ class ComplianceMonitor {
   _checkDataAccessAuthorization(userId, dataType, operation) {
     // Implementation would check user roles and permissions
     // against data classification and access policies
-    
+
     const classification = this.dataClassification[dataType];
     if (!classification) {
       return { authorized: false, reason: 'Unknown data type' };
@@ -513,7 +513,7 @@ class ComplianceMonitor {
   _validateTransactionData(transaction) {
     const required = ['id', 'userId', 'amount', 'type'];
     const missing = required.filter(field => !transaction[field]);
-    
+
     if (missing.length > 0) {
       throw new Error(`Missing required transaction fields: ${missing.join(', ')}`);
     }
@@ -529,7 +529,7 @@ class ComplianceMonitor {
    */
   _checkAMLCompliance(transaction) {
     const flags = [];
-    
+
     // Check transaction amount thresholds
     if (transaction.amount >= 10000) {
       flags.push('large_transaction');
@@ -624,7 +624,7 @@ class ComplianceMonitor {
   _validateConsentData(consentData) {
     const required = ['type', 'granted', 'purpose'];
     const missing = required.filter(field => consentData[field] === undefined);
-    
+
     if (missing.length > 0) {
       throw new Error(`Missing required consent fields: ${missing.join(', ')}`);
     }
@@ -642,7 +642,7 @@ class ComplianceMonitor {
       'data_minimization'
     ];
 
-    const compliant = requirements.every(req => 
+    const compliant = requirements.every(req =>
       this._checkGDPRRequirement(req, consentData)
     );
 
@@ -660,7 +660,7 @@ class ComplianceMonitor {
       'non_discrimination'
     ];
 
-    const compliant = requirements.every(req => 
+    const compliant = requirements.every(req =>
       this._checkCCPARequirement(req, consentData)
     );
 
@@ -711,7 +711,7 @@ class ComplianceMonitor {
   _generateDailyMetrics() {
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
-    
+
     const startDate = yesterday.toISOString().split('T')[0];
     const endDate = new Date().toISOString().split('T')[0];
 
@@ -757,7 +757,7 @@ class ComplianceMonitor {
   _calculateComplianceScore(events) {
     if (events.length === 0) return 100;
 
-    const violations = events.filter(e => 
+    const violations = events.filter(e =>
       !e.authorized || e.complianceFlags?.length > 0
     ).length;
 
@@ -790,7 +790,7 @@ class ComplianceMonitor {
   getComplianceStats() {
     const now = new Date();
     const last24Hours = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-    
+
     const recentEvents = Array.from(this.complianceEvents.values())
       .filter(event => new Date(event.timestamp) > last24Hours);
 
@@ -806,4 +806,3 @@ class ComplianceMonitor {
 }
 
 module.exports = new ComplianceMonitor();
-

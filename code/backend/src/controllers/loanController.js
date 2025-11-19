@@ -197,7 +197,7 @@ class LoanController {
 
       // Build filter query
       const filter = { status: 'marketplace' };
-      
+
       if (minAmount) filter.amount = { ...filter.amount, $gte: parseFloat(minAmount) };
       if (maxAmount) filter.amount = { ...filter.amount, $lte: parseFloat(maxAmount) };
       if (maxInterestRate) filter.interestRate = { $lte: parseFloat(maxInterestRate) };
@@ -600,7 +600,7 @@ class LoanController {
 
       // Build filter
       let filter = {};
-      
+
       if (type === 'borrowed') {
         filter.borrower = userId;
       } else if (type === 'lent') {
@@ -690,7 +690,7 @@ class LoanController {
       }
 
       // Check if user has access to this loan
-      const hasAccess = loan.borrower._id.toString() === userId || 
+      const hasAccess = loan.borrower._id.toString() === userId ||
                        loan.lender?._id.toString() === userId ||
                        req.user.role === 'admin';
 
@@ -753,11 +753,11 @@ class LoanController {
    */
   async sanitizeLoanData(loan) {
     const sanitized = loan.toObject();
-    
+
     // Remove sensitive information
     delete sanitized.paymentDetails;
     delete sanitized.creditAssessment;
-    
+
     return sanitized;
   }
 
@@ -768,7 +768,7 @@ class LoanController {
    */
   async sanitizeLoanDataForMarketplace(loan) {
     const sanitized = await this.sanitizeLoanData(loan);
-    
+
     // Remove borrower personal information for marketplace
     if (sanitized.borrower) {
       sanitized.borrower = {
@@ -776,7 +776,7 @@ class LoanController {
         kycStatus: sanitized.borrower.kycStatus
       };
     }
-    
+
     return sanitized;
   }
 
@@ -821,14 +821,14 @@ class LoanController {
     const principal = loan.amount;
     const rate = loan.interestRate / 100;
     const timeInYears = loan.term / (loan.termUnit === 'months' ? 12 : 365);
-    
+
     const totalInterest = principal * rate * timeInYears;
     const totalAmountDue = principal + totalInterest;
-    
+
     const remainingBalance = totalAmountDue - (loan.amountRepaid || 0);
     const interestPortion = Math.min(paymentAmount, totalInterest * (remainingBalance / totalAmountDue));
     const principalPortion = paymentAmount - interestPortion;
-    
+
     return {
       totalAmountDue,
       remainingBalance,
@@ -864,14 +864,14 @@ class LoanController {
    */
   async getDetailedLoanInfo(loan, userId) {
     const details = await this.sanitizeLoanData(loan);
-    
+
     // Add additional details based on user role
     if (loan.borrower._id.toString() === userId || loan.lender?._id.toString() === userId) {
       // Add repayment schedule, payment history, etc.
       details.repaymentSchedule = await this.generateRepaymentSchedule(loan);
       details.paymentHistory = loan.repayments || [];
     }
-    
+
     return details;
   }
 

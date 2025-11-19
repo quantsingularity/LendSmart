@@ -73,8 +73,8 @@ contract LendSmartLoan is Ownable, ReentrancyGuard, Pausable {
         uint256 fundedTime
     );
     event LoanDisbursed(
-        uint256 indexed loanId, 
-        address indexed borrower, 
+        uint256 indexed loanId,
+        address indexed borrower,
         uint256 amount,
         uint256 disbursedTime
     );
@@ -125,14 +125,14 @@ contract LendSmartLoan is Ownable, ReentrancyGuard, Pausable {
      * @param _initialRiskAssessor The address authorized to set risk scores.
      */
     constructor(
-        address _initialOwner, 
-        uint256 _initialFeeRate, 
+        address _initialOwner,
+        uint256 _initialFeeRate,
         address _initialFeeRecipient,
         address _initialRiskAssessor
     ) Ownable(_initialOwner) {
         require(_initialFeeRecipient != address(0), "Fee recipient cannot be zero address");
         require(_initialRiskAssessor != address(0), "Risk assessor cannot be zero address");
-        
+
         platformFeeRate = _initialFeeRate;
         feeRecipient = _initialFeeRecipient;
         riskAssessor = _initialRiskAssessor;
@@ -165,7 +165,7 @@ contract LendSmartLoan is Ownable, ReentrancyGuard, Pausable {
         require(_token != address(0), "LendSmartLoan: Token address cannot be zero");
         require(_principal > 0, "LendSmartLoan: Principal must be greater than zero");
         require(_duration > 0, "LendSmartLoan: Duration must be greater than zero");
-        
+
         // If collateralized, validate collateral details
         if (_isCollateralized) {
             require(_collateralToken != address(0), "LendSmartLoan: Collateral token cannot be zero address");
@@ -206,16 +206,16 @@ contract LendSmartLoan is Ownable, ReentrancyGuard, Pausable {
         userLoanIds[msg.sender].push(loanId);
 
         emit LoanRequested(
-            loanId, 
-            msg.sender, 
-            _token, 
-            _principal, 
-            _interestRate, 
-            _duration, 
+            loanId,
+            msg.sender,
+            _token,
+            _principal,
+            _interestRate,
+            _duration,
             _purpose,
             _isCollateralized
         );
-        
+
         return loanId;
     }
 
@@ -226,18 +226,18 @@ contract LendSmartLoan is Ownable, ReentrancyGuard, Pausable {
      * @param _shouldReject Whether to reject the loan based on the risk score.
      */
     function setLoanRiskScore(
-        uint256 _loanId, 
-        uint256 _riskScore, 
+        uint256 _loanId,
+        uint256 _riskScore,
         bool _shouldReject
     ) external whenNotPaused nonReentrant loanExists(_loanId) onlyRiskAssessor {
         require(_riskScore <= 100, "LendSmartLoan: Risk score must be between 0 and 100");
-        
+
         Loan storage loan = loans[_loanId];
         require(loan.status == LoanStatus.Requested, "LendSmartLoan: Loan not in Requested state");
-        
+
         loan.riskScore = _riskScore;
         emit RiskScoreAssigned(_loanId, _riskScore);
-        
+
         if (_shouldReject) {
             loan.status = LoanStatus.Rejected;
             emit LoanRejected(_loanId, _riskScore);
@@ -252,21 +252,21 @@ contract LendSmartLoan is Ownable, ReentrancyGuard, Pausable {
         Loan storage loan = loans[_loanId];
         require(loan.isCollateralized, "LendSmartLoan: Loan is not collateralized");
         require(loan.status == LoanStatus.Requested, "LendSmartLoan: Loan not in Requested state");
-        
+
         IERC20 collateralToken = IERC20(loan.collateralToken);
         require(
-            collateralToken.balanceOf(msg.sender) >= loan.collateralAmount, 
+            collateralToken.balanceOf(msg.sender) >= loan.collateralAmount,
             "LendSmartLoan: Insufficient collateral token balance"
         );
         require(
-            collateralToken.allowance(msg.sender, address(this)) >= loan.collateralAmount, 
+            collateralToken.allowance(msg.sender, address(this)) >= loan.collateralAmount,
             "LendSmartLoan: Contract not approved to spend collateral tokens"
         );
-        
+
         // Transfer collateral from borrower to this contract
         bool success = collateralToken.transferFrom(msg.sender, address(this), loan.collateralAmount);
         require(success, "LendSmartLoan: Collateral token transferFrom failed");
-        
+
         emit CollateralDeposited(_loanId, loan.collateralToken, loan.collateralAmount);
     }
 
@@ -279,7 +279,7 @@ contract LendSmartLoan is Ownable, ReentrancyGuard, Pausable {
         Loan storage loan = loans[_loanId];
         require(loan.status == LoanStatus.Requested, "LendSmartLoan: Loan not in Requested state");
         require(msg.sender != loan.borrower, "LendSmartLoan: Borrower cannot fund their own loan");
-        
+
         // If loan is collateralized, ensure collateral has been deposited
         if (loan.isCollateralized) {
             IERC20 collateralToken = IERC20(loan.collateralToken);
@@ -292,7 +292,7 @@ contract LendSmartLoan is Ownable, ReentrancyGuard, Pausable {
         IERC20 token = IERC20(loan.token);
         require(token.balanceOf(msg.sender) >= loan.principal, "LendSmartLoan: Insufficient token balance");
         require(
-            token.allowance(msg.sender, address(this)) >= loan.principal, 
+            token.allowance(msg.sender, address(this)) >= loan.principal,
             "LendSmartLoan: Contract not approved to spend tokens"
         );
 
@@ -308,39 +308,39 @@ contract LendSmartLoan is Ownable, ReentrancyGuard, Pausable {
 
         emit LoanFunded(_loanId, msg.sender, loan.fundedTime);
     }
-    
+
     /**
      * @dev Creates a repayment schedule for a funded loan.
      * @param _loanId The ID of the loan to create a schedule for.
      * @param _numberOfPayments The number of repayments to schedule.
      */
     function createRepaymentSchedule(
-        uint256 _loanId, 
+        uint256 _loanId,
         uint256 _numberOfPayments
     ) external whenNotPaused nonReentrant loanExists(_loanId) {
         require(_numberOfPayments > 0, "LendSmartLoan: Number of payments must be greater than zero");
-        
+
         Loan storage loan = loans[_loanId];
         require(
-            msg.sender == loan.borrower || msg.sender == loan.lender || msg.sender == owner(), 
+            msg.sender == loan.borrower || msg.sender == loan.lender || msg.sender == owner(),
             "LendSmartLoan: Not authorized to create schedule"
         );
         require(loan.status == LoanStatus.Funded, "LendSmartLoan: Loan not in Funded state");
-        
+
         // Calculate payment interval and amount per payment
         uint256 paymentInterval = loan.duration / _numberOfPayments;
         require(paymentInterval >= minRepaymentInterval, "LendSmartLoan: Payment interval too short");
-        
+
         uint256 basePaymentAmount = loan.repaymentAmount / _numberOfPayments;
         uint256 remainder = loan.repaymentAmount % _numberOfPayments;
-        
+
         // Create arrays for schedule and amounts
         uint256[] memory schedule = new uint256[](_numberOfPayments);
         uint256[] memory amounts = new uint256[](_numberOfPayments);
-        
+
         for (uint256 i = 0; i < _numberOfPayments; i++) {
             schedule[i] = loan.fundedTime + ((i + 1) * paymentInterval);
-            
+
             // Add remainder to first payment
             if (i == 0) {
                 amounts[i] = basePaymentAmount + remainder;
@@ -348,13 +348,13 @@ contract LendSmartLoan is Ownable, ReentrancyGuard, Pausable {
                 amounts[i] = basePaymentAmount;
             }
         }
-        
+
         loan.repaymentSchedule = schedule;
         loan.repaymentAmounts = amounts;
-        
+
         emit RepaymentScheduleCreated(_loanId, schedule, amounts);
     }
-    
+
     /**
      * @dev Disburses funds to the borrower after loan funding.
      * @param _loanId The ID of the loan to disburse.
@@ -363,10 +363,10 @@ contract LendSmartLoan is Ownable, ReentrancyGuard, Pausable {
         Loan storage loan = loans[_loanId];
         require(loan.status == LoanStatus.Funded, "LendSmartLoan: Loan not in Funded state");
         require(
-            msg.sender == loan.borrower || msg.sender == loan.lender || msg.sender == owner(), 
+            msg.sender == loan.borrower || msg.sender == loan.lender || msg.sender == owner(),
             "LendSmartLoan: Not authorized to disburse"
         );
-        
+
         // Ensure repayment schedule is created if we want to enforce it
         // Uncomment the following line if repayment schedule is mandatory
         // require(loan.repaymentSchedule.length > 0, "LendSmartLoan: Repayment schedule not created");
@@ -377,9 +377,9 @@ contract LendSmartLoan is Ownable, ReentrancyGuard, Pausable {
 
         loan.status = LoanStatus.Active;
         loan.disbursedTime = block.timestamp;
-        
+
         emit LoanDisbursed(_loanId, loan.borrower, loan.principal, loan.disbursedTime);
-        
+
         // Update borrower reputation score positively for receiving a loan
         _updateReputationScore(loan.borrower, 1);
     }
@@ -391,7 +391,7 @@ contract LendSmartLoan is Ownable, ReentrancyGuard, Pausable {
      * @param _amount The amount of tokens to repay.
      */
     function repayLoan(
-        uint256 _loanId, 
+        uint256 _loanId,
         uint256 _amount
     ) external whenNotPaused nonReentrant loanExists(_loanId) onlyBorrower(_loanId) {
         Loan storage loan = loans[_loanId];
@@ -401,13 +401,13 @@ contract LendSmartLoan is Ownable, ReentrancyGuard, Pausable {
         IERC20 token = IERC20(loan.token);
         require(token.balanceOf(msg.sender) >= _amount, "LendSmartLoan: Insufficient token balance for repayment");
         require(
-            token.allowance(msg.sender, address(this)) >= _amount, 
+            token.allowance(msg.sender, address(this)) >= _amount,
             "LendSmartLoan: Contract not approved to spend tokens for repayment"
         );
 
         uint256 amountToRepayThisTime = _amount;
         uint256 remainingDue = loan.repaymentAmount - loan.amountRepaid;
-        
+
         if (loan.amountRepaid + _amount > loan.repaymentAmount) {
             amountToRepayThisTime = remainingDue; // Pay only remaining due
         }
@@ -427,13 +427,13 @@ contract LendSmartLoan is Ownable, ReentrancyGuard, Pausable {
             uint256 totalInterestPaidSoFar = loan.amountRepaid - loan.principal;
             uint256 totalInterestDue = loan.repaymentAmount - loan.principal;
             uint256 interestPaidThisTime = amountToRepayThisTime;
-            
+
             if (loan.amountRepaid - amountToRepayThisTime < loan.principal) { // If this payment crosses principal boundary
                 interestPaidThisTime = loan.amountRepaid - loan.principal;
             }
-            
+
             if (interestPaidThisTime > totalInterestDue) {
-                interestPaidThisTime = totalInterestDue; 
+                interestPaidThisTime = totalInterestDue;
             }
 
             interestPortion = interestPaidThisTime;
@@ -459,12 +459,12 @@ contract LendSmartLoan is Ownable, ReentrancyGuard, Pausable {
 
         if (loan.amountRepaid >= loan.repaymentAmount) {
             loan.status = LoanStatus.Repaid;
-            
+
             // Release collateral if loan was collateralized
             if (loan.isCollateralized) {
                 _releaseCollateral(_loanId);
             }
-            
+
             // Update borrower reputation score positively for repaying loan
             _updateReputationScore(loan.borrower, 2);
         }
@@ -477,14 +477,14 @@ contract LendSmartLoan is Ownable, ReentrancyGuard, Pausable {
     function _releaseCollateral(uint256 _loanId) internal {
         Loan storage loan = loans[_loanId];
         require(loan.isCollateralized, "LendSmartLoan: Loan is not collateralized");
-        
+
         if (loan.collateralAmount > 0 && loan.collateralToken != address(0)) {
             IERC20 collateralToken = IERC20(loan.collateralToken);
             bool success = collateralToken.transfer(loan.borrower, loan.collateralAmount);
             require(success, "LendSmartLoan: Collateral release failed");
-            
+
             emit CollateralReleased(_loanId, loan.collateralToken, loan.collateralAmount, loan.borrower);
-            
+
             // Reset collateral amount to prevent double-release
             loan.collateralAmount = 0;
         }
@@ -499,12 +499,12 @@ contract LendSmartLoan is Ownable, ReentrancyGuard, Pausable {
         require(loan.status == LoanStatus.Requested, "LendSmartLoan: Loan not in Requested state or already funded");
 
         loan.status = LoanStatus.Cancelled;
-        
+
         // Return collateral if it was deposited
         if (loan.isCollateralized && loan.collateralAmount > 0) {
             _releaseCollateral(_loanId);
         }
-        
+
         emit LoanCancelled(_loanId);
     }
 
@@ -516,33 +516,33 @@ contract LendSmartLoan is Ownable, ReentrancyGuard, Pausable {
         Loan storage loan = loans[_loanId];
         require(loan.status == LoanStatus.Active, "LendSmartLoan: Loan not in Active state");
         require(
-            msg.sender == loan.lender || msg.sender == owner(), 
+            msg.sender == loan.lender || msg.sender == owner(),
             "LendSmartLoan: Only lender or owner can mark as defaulted"
         );
-        
+
         // Check if loan is past due (end of duration + grace period)
         require(
             block.timestamp > loan.disbursedTime + loan.duration + gracePeriod,
             "LendSmartLoan: Loan not past due date with grace period"
         );
-        
+
         loan.status = LoanStatus.Defaulted;
-        
+
         // If loan was collateralized, transfer collateral to lender
         if (loan.isCollateralized && loan.collateralAmount > 0) {
             IERC20 collateralToken = IERC20(loan.collateralToken);
             bool success = collateralToken.transfer(loan.lender, loan.collateralAmount);
             require(success, "LendSmartLoan: Collateral transfer to lender failed");
-            
+
             emit CollateralReleased(_loanId, loan.collateralToken, loan.collateralAmount, loan.lender);
-            
+
             // Reset collateral amount to prevent double-release
             loan.collateralAmount = 0;
         }
-        
+
         // Update borrower reputation score negatively for defaulting
         _updateReputationScore(loan.borrower, -3);
-        
+
         emit LoanDefaulted(_loanId, block.timestamp);
     }
 
@@ -553,7 +553,7 @@ contract LendSmartLoan is Ownable, ReentrancyGuard, Pausable {
      */
     function _updateReputationScore(address _user, int8 _scoreDelta) internal {
         uint256 currentScore = userReputationScores[_user];
-        
+
         if (_scoreDelta > 0) {
             // Increase score with a cap at 100
             uint256 newScore = currentScore + uint8(_scoreDelta);
@@ -563,7 +563,7 @@ contract LendSmartLoan is Ownable, ReentrancyGuard, Pausable {
             uint256 delta = uint8(-_scoreDelta);
             userReputationScores[_user] = delta > currentScore ? 0 : currentScore - delta;
         }
-        
+
         emit ReputationScoreUpdated(_user, userReputationScores[_user]);
     }
 
@@ -679,8 +679,8 @@ contract LendSmartLoan is Ownable, ReentrancyGuard, Pausable {
      * @param _amount The amount of tokens to withdraw.
      */
     function withdrawStuckTokens(
-        address _tokenAddress, 
-        address _to, 
+        address _tokenAddress,
+        address _to,
         uint256 _amount
     ) external onlyOwner {
         require(_to != address(0), "LendSmartLoan: Cannot send to zero address");

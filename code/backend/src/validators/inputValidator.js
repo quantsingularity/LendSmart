@@ -11,7 +11,7 @@ const logger = require('../utils/logger');
 class InputValidator {
   constructor() {
     this.auditLogger = getAuditLogger();
-    
+
     // Common validation patterns
     this.patterns = {
       email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
@@ -21,7 +21,7 @@ class InputValidator {
       username: /^[a-zA-Z0-9_]{3,30}$/,
       strongPassword: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>])[A-Za-z\d!@#$%^&*(),.?":{}|<>]{8,}$/
     };
-    
+
     // Sanitization options
     this.sanitizeOptions = {
       allowedTags: [],
@@ -47,14 +47,14 @@ class InputValidator {
           'string.min': 'Username must be at least 3 characters',
           'string.max': 'Username cannot exceed 30 characters'
         }),
-      
+
       email: Joi.string()
         .email()
         .required()
         .messages({
           'string.email': 'Please provide a valid email address'
         }),
-      
+
       password: Joi.string()
         .pattern(this.patterns.strongPassword)
         .min(8)
@@ -64,7 +64,7 @@ class InputValidator {
           'string.pattern.base': 'Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character',
           'string.min': 'Password must be at least 8 characters long'
         }),
-      
+
       firstName: Joi.string()
         .trim()
         .min(1)
@@ -73,7 +73,7 @@ class InputValidator {
         .messages({
           'string.max': 'First name cannot exceed 50 characters'
         }),
-      
+
       lastName: Joi.string()
         .trim()
         .min(1)
@@ -82,21 +82,21 @@ class InputValidator {
         .messages({
           'string.max': 'Last name cannot exceed 50 characters'
         }),
-      
+
       phoneNumber: Joi.string()
         .pattern(this.patterns.phone)
         .required()
         .messages({
           'string.pattern.base': 'Please provide a valid phone number'
         }),
-      
+
       dateOfBirth: Joi.date()
         .max('now')
         .required()
         .messages({
           'date.max': 'Date of birth cannot be in the future'
         }),
-      
+
       consents: Joi.object({
         essential: Joi.boolean().valid(true).required(),
         financial_services: Joi.boolean().valid(true).required(),
@@ -120,21 +120,21 @@ class InputValidator {
         .messages({
           'any.required': 'Email or username is required'
         }),
-      
+
       password: Joi.string()
         .min(1)
         .required()
         .messages({
           'any.required': 'Password is required'
         }),
-      
+
       mfaToken: Joi.string()
         .pattern(/^\d{6}$/)
         .optional()
         .messages({
           'string.pattern.base': 'MFA token must be 6 digits'
         }),
-      
+
       rememberMe: Joi.boolean().optional()
     });
 
@@ -156,7 +156,7 @@ class InputValidator {
           'number.min': 'Minimum loan amount is $100',
           'number.max': 'Maximum loan amount is $1,000,000'
         }),
-      
+
       interestRate: Joi.number()
         .min(0.1)
         .max(50)
@@ -165,7 +165,7 @@ class InputValidator {
           'number.min': 'Interest rate must be at least 0.1%',
           'number.max': 'Interest rate cannot exceed 50%'
         }),
-      
+
       term: Joi.number()
         .min(1)
         .max(360)
@@ -174,14 +174,14 @@ class InputValidator {
           'number.min': 'Loan term must be at least 1',
           'number.max': 'Loan term cannot exceed 360'
         }),
-      
+
       termUnit: Joi.string()
         .valid('days', 'weeks', 'months', 'years')
         .required()
         .messages({
           'any.only': 'Term unit must be days, weeks, months, or years'
         }),
-      
+
       purpose: Joi.string()
         .valid(
           'debt_consolidation',
@@ -199,21 +199,21 @@ class InputValidator {
         .messages({
           'any.only': 'Please select a valid loan purpose'
         }),
-      
+
       income: Joi.number()
         .min(0)
         .required()
         .messages({
           'number.min': 'Income cannot be negative'
         }),
-      
+
       employmentStatus: Joi.string()
         .valid('full-time', 'part-time', 'contract', 'self-employed', 'unemployed', 'student', 'retired')
         .required()
         .messages({
           'any.only': 'Please select a valid employment status'
         }),
-      
+
       collateral: Joi.object({
         type: Joi.string()
           .valid('none', 'real_estate', 'vehicle', 'securities', 'crypto', 'other')
@@ -239,20 +239,20 @@ class InputValidator {
         .messages({
           'any.only': 'Please select a valid document type'
         }),
-      
+
       documentNumber: Joi.string()
         .trim()
         .min(1)
         .max(50)
         .optional(),
-      
+
       expiryDate: Joi.date()
         .min('now')
         .optional()
         .messages({
           'date.min': 'Document cannot be expired'
         }),
-      
+
       issuingCountry: Joi.string()
         .length(2)
         .uppercase()
@@ -280,14 +280,14 @@ class InputValidator {
           'number.min': 'Amount must be at least $0.01',
           'number.max': 'Amount cannot exceed $1,000,000'
         }),
-      
+
       paymentMethod: Joi.string()
         .valid('bank_transfer', 'credit_card', 'debit_card', 'crypto', 'check', 'cash')
         .required()
         .messages({
           'any.only': 'Please select a valid payment method'
         }),
-      
+
       currency: Joi.string()
         .length(3)
         .uppercase()
@@ -295,7 +295,7 @@ class InputValidator {
         .messages({
           'string.length': 'Currency code must be 3 characters'
         }),
-      
+
       walletAddress: Joi.when('paymentMethod', {
         is: 'crypto',
         then: Joi.string()
@@ -323,17 +323,17 @@ class InputValidator {
         .min(1)
         .max(50)
         .optional(),
-      
+
       lastName: Joi.string()
         .trim()
         .min(1)
         .max(50)
         .optional(),
-      
+
       phoneNumber: Joi.string()
         .pattern(this.patterns.phone)
         .optional(),
-      
+
       address: Joi.object({
         street: Joi.string().trim().max(100).optional(),
         city: Joi.string().trim().max(50).optional(),
@@ -341,20 +341,20 @@ class InputValidator {
         zipCode: Joi.string().trim().max(20).optional(),
         country: Joi.string().length(2).uppercase().optional()
       }).optional(),
-      
+
       income: Joi.number()
         .min(0)
         .optional(),
-      
+
       employmentStatus: Joi.string()
         .valid('full-time', 'part-time', 'contract', 'self-employed', 'unemployed', 'student', 'retired')
         .optional(),
-      
+
       employer: Joi.string()
         .trim()
         .max(100)
         .optional(),
-      
+
       walletAddress: Joi.string()
         .pattern(this.patterns.walletAddress)
         .optional()
@@ -376,14 +376,14 @@ class InputValidator {
       action: Joi.string()
         .valid('approve_loan', 'reject_loan', 'suspend_user', 'activate_user', 'update_kyc_status')
         .required(),
-      
+
       targetId: Joi.string()
         .pattern(/^[0-9a-fA-F]{24}$/)
         .required()
         .messages({
           'string.pattern.base': 'Invalid target ID format'
         }),
-      
+
       reason: Joi.string()
         .trim()
         .min(10)
@@ -393,7 +393,7 @@ class InputValidator {
           'string.min': 'Reason must be at least 10 characters',
           'string.max': 'Reason cannot exceed 500 characters'
         }),
-      
+
       notes: Joi.string()
         .trim()
         .max(1000)
@@ -414,7 +414,7 @@ class InputValidator {
     try {
       // Sanitize input data
       const sanitizedData = this.sanitizeInput(data);
-      
+
       // Validate with Joi schema
       const { error, value } = schema.validate(sanitizedData, {
         abortEarly: false,
@@ -493,12 +493,12 @@ class InputValidator {
     }
 
     const sanitized = {};
-    
+
     for (const [key, value] of Object.entries(data)) {
       if (typeof value === 'string') {
         // Remove HTML tags and normalize whitespace
         sanitized[key] = sanitizeHtml(value, this.sanitizeOptions).trim();
-        
+
         // Additional sanitization for specific fields
         if (key === 'email') {
           sanitized[key] = validator.normalizeEmail(sanitized[key]) || sanitized[key];
@@ -755,4 +755,3 @@ class InputValidator {
 
 // Export singleton instance
 module.exports = new InputValidator();
-

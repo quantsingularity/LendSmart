@@ -41,7 +41,7 @@ class HealthCheckService {
   async basicHealth(req, res) {
     try {
       const uptime = Date.now() - this.startTime;
-      
+
       res.status(200).json({
         status: 'healthy',
         timestamp: new Date().toISOString(),
@@ -50,10 +50,10 @@ class HealthCheckService {
         version: process.env.APP_VERSION || '1.0.0',
         environment: process.env.NODE_ENV || 'development'
       });
-      
+
     } catch (error) {
       logger.error('Basic health check failed', { error: error.message });
-      
+
       res.status(503).json({
         status: 'unhealthy',
         timestamp: new Date().toISOString(),
@@ -88,16 +88,16 @@ class HealthCheckService {
       try {
         const checkResult = await Promise.race([
           checkFn(),
-          new Promise((_, reject) => 
+          new Promise((_, reject) =>
             setTimeout(() => reject(new Error('Health check timeout')), 5000)
           )
         ]);
-        
+
         health.checks[name] = {
           status: checkResult.status || 'healthy',
           ...checkResult
         };
-        
+
       } catch (error) {
         health.checks[name] = {
           status: 'unhealthy',
@@ -140,7 +140,7 @@ class HealthCheckService {
     });
 
     // Return appropriate HTTP status
-    const statusCode = health.status === 'healthy' ? 200 : 
+    const statusCode = health.status === 'healthy' ? 200 :
                       health.status === 'degraded' ? 200 : 503;
 
     res.status(statusCode).json(health);
@@ -153,7 +153,7 @@ class HealthCheckService {
     try {
       // Check critical dependencies
       const dbHealth = await this.checkDatabase();
-      
+
       if (dbHealth.status !== 'healthy') {
         return res.status(503).json({
           status: 'not_ready',
@@ -170,7 +170,7 @@ class HealthCheckService {
 
     } catch (error) {
       logger.error('Readiness check failed', { error: error.message });
-      
+
       res.status(503).json({
         status: 'not_ready',
         timestamp: new Date().toISOString(),
@@ -186,7 +186,7 @@ class HealthCheckService {
     try {
       // Simple check to ensure the process is responsive
       const memUsage = process.memoryUsage();
-      
+
       // Check if memory usage is reasonable (less than 1GB)
       if (memUsage.heapUsed > 1024 * 1024 * 1024) {
         return res.status(503).json({
@@ -209,7 +209,7 @@ class HealthCheckService {
 
     } catch (error) {
       logger.error('Liveness check failed', { error: error.message });
-      
+
       res.status(503).json({
         status: 'dead',
         timestamp: new Date().toISOString(),
@@ -224,14 +224,14 @@ class HealthCheckService {
   async checkDatabase() {
     try {
       const dbHealth = await databaseManager.healthCheck();
-      
+
       return {
         status: dbHealth.overall,
         mongodb: dbHealth.mongodb,
         redis: dbHealth.redis,
         timestamp: new Date().toISOString()
       };
-      
+
     } catch (error) {
       return {
         status: 'unhealthy',
@@ -247,14 +247,14 @@ class HealthCheckService {
   async checkCache() {
     try {
       const redisStatus = databaseManager.getRedisStatus();
-      
+
       return {
         status: redisStatus.connected ? 'healthy' : 'unhealthy',
         connected: redisStatus.connected,
         redis_status: redisStatus.status,
         timestamp: new Date().toISOString()
       };
-      
+
     } catch (error) {
       return {
         status: 'unhealthy',
@@ -320,7 +320,7 @@ class HealthCheckService {
   async checkDisk() {
     try {
       const stats = await fs.stat(process.cwd());
-      
+
       // Simple disk check - in production, you'd want more sophisticated monitoring
       return {
         status: 'healthy',
@@ -345,7 +345,7 @@ class HealthCheckService {
     try {
       const cpus = os.cpus();
       const loadAvg = os.loadavg();
-      
+
       const cpuInfo = {
         cores: cpus.length,
         model: cpus[0]?.model || 'unknown',
@@ -359,7 +359,7 @@ class HealthCheckService {
       // Determine status based on load average
       let status = 'healthy';
       const loadPerCore = loadAvg[0] / cpus.length;
-      
+
       if (loadPerCore > 1.5) {
         status = 'unhealthy';
       } else if (loadPerCore > 1.0) {
@@ -388,7 +388,7 @@ class HealthCheckService {
     try {
       // In a real implementation, you'd check actual external services
       // For now, we'll simulate checks for common financial services
-      
+
       const services = {
         payment_processor: { status: 'healthy', latency: 150 },
         credit_bureau: { status: 'healthy', latency: 300 },
@@ -396,7 +396,7 @@ class HealthCheckService {
         notification_service: { status: 'healthy', latency: 100 }
       };
 
-      const overallStatus = Object.values(services).every(s => s.status === 'healthy') 
+      const overallStatus = Object.values(services).every(s => s.status === 'healthy')
         ? 'healthy' : 'degraded';
 
       return {
@@ -450,7 +450,7 @@ class HealthCheckService {
 
     } catch (error) {
       logger.error('Metrics collection failed', { error: error.message });
-      
+
       res.status(500).json({
         error: 'Failed to collect metrics',
         timestamp: new Date().toISOString()
@@ -475,4 +475,3 @@ module.exports = {
   healthCheckService,
   healthCheckMiddleware
 };
-

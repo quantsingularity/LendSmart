@@ -8,7 +8,7 @@ const User = require('../models/User');
 exports.getUsers = async (req, res, next) => {
   try {
     const users = await User.find();
-    
+
     res.status(200).json({
       success: true,
       count: users.length,
@@ -27,14 +27,14 @@ exports.getUsers = async (req, res, next) => {
 exports.getUser = async (req, res, next) => {
   try {
     const user = await User.findById(req.params.id);
-    
+
     if (!user) {
       return res.status(404).json({
         success: false,
         message: 'User not found'
       });
     }
-    
+
     res.status(200).json({
       success: true,
       data: user
@@ -52,7 +52,7 @@ exports.getUser = async (req, res, next) => {
 exports.createUser = async (req, res, next) => {
   try {
     const { name, email, password, walletAddress, role } = req.body;
-    
+
     // Validate required fields
     if (!name || !email || !password) {
       return res.status(400).json({
@@ -60,7 +60,7 @@ exports.createUser = async (req, res, next) => {
         message: 'Please provide name, email, and password'
       });
     }
-    
+
     // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -69,7 +69,7 @@ exports.createUser = async (req, res, next) => {
         message: 'Email already in use'
       });
     }
-    
+
     // Check if wallet address is already in use
     if (walletAddress) {
       const walletUser = await User.findOne({ walletAddress });
@@ -80,7 +80,7 @@ exports.createUser = async (req, res, next) => {
         });
       }
     }
-    
+
     // Create user
     const user = await User.create({
       name,
@@ -89,7 +89,7 @@ exports.createUser = async (req, res, next) => {
       walletAddress,
       role
     });
-    
+
     res.status(201).json({
       success: true,
       data: user
@@ -111,42 +111,42 @@ exports.updateUser = async (req, res, next) => {
       email: req.body.email,
       role: req.body.role
     };
-    
+
     // Only update wallet address if provided
     if (req.body.walletAddress) {
       // Check if wallet address is already in use by another user
-      const walletUser = await User.findOne({ 
+      const walletUser = await User.findOne({
         walletAddress: req.body.walletAddress,
         _id: { $ne: req.params.id }
       });
-      
+
       if (walletUser) {
         return res.status(400).json({
           success: false,
           message: 'Wallet address already in use'
         });
       }
-      
+
       fieldsToUpdate.walletAddress = req.body.walletAddress;
     }
-    
+
     // Only update password if provided
     if (req.body.password) {
       fieldsToUpdate.password = req.body.password;
     }
-    
+
     const user = await User.findByIdAndUpdate(req.params.id, fieldsToUpdate, {
       new: true,
       runValidators: true
     });
-    
+
     if (!user) {
       return res.status(404).json({
         success: false,
         message: 'User not found'
       });
     }
-    
+
     res.status(200).json({
       success: true,
       data: user
@@ -164,16 +164,16 @@ exports.updateUser = async (req, res, next) => {
 exports.deleteUser = async (req, res, next) => {
   try {
     const user = await User.findById(req.params.id);
-    
+
     if (!user) {
       return res.status(404).json({
         success: false,
         message: 'User not found'
       });
     }
-    
+
     await user.deleteOne();
-    
+
     res.status(200).json({
       success: true,
       data: {}
@@ -191,7 +191,7 @@ exports.deleteUser = async (req, res, next) => {
 exports.getUsersByRole = async (req, res, next) => {
   try {
     const { role } = req.params;
-    
+
     // Validate role
     const validRoles = ['user', 'borrower', 'lender', 'risk-assessor', 'admin'];
     if (!validRoles.includes(role)) {
@@ -200,9 +200,9 @@ exports.getUsersByRole = async (req, res, next) => {
         message: 'Invalid role'
       });
     }
-    
+
     const users = await User.find({ role });
-    
+
     res.status(200).json({
       success: true,
       count: users.length,
@@ -221,16 +221,16 @@ exports.getUsersByRole = async (req, res, next) => {
 exports.getUserByWalletAddress = async (req, res, next) => {
   try {
     const { address } = req.params;
-    
+
     const user = await User.findOne({ walletAddress: address });
-    
+
     if (!user) {
       return res.status(404).json({
         success: false,
         message: 'User not found'
       });
     }
-    
+
     res.status(200).json({
       success: true,
       data: user

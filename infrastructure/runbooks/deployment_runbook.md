@@ -94,5 +94,3 @@ In case of critical issues during or after deployment:
 ## 7. Review and Updates
 
 This runbook will be reviewed and updated periodically, especially after any changes to the deployment process, infrastructure, or tools.
-
-

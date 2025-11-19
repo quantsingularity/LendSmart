@@ -32,78 +32,78 @@ const auditLogSchema = new mongoose.Schema({
     unique: true,
     default: () => `audit_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
   },
-  
+
   category: {
     type: String,
     required: true,
     enum: ['authentication', 'authorization', 'data_access', 'data_modification', 'security', 'compliance', 'system', 'business', 'financial', 'loan_management', 'api_access'],
     index: true
   },
-  
+
   action: {
     type: String,
     required: true,
     index: true
   },
-  
+
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     index: true
   },
-  
+
   username: String,
-  
+
   ip: {
     type: String,
     required: true,
     index: true
   },
-  
+
   userAgent: String,
   method: String,
   url: String,
-  
+
   resource: String,
   resourceId: String,
-  
+
   oldValues: mongoose.Schema.Types.Mixed,
   newValues: mongoose.Schema.Types.Mixed,
-  
+
   success: {
     type: Boolean,
     required: true,
     index: true
   },
-  
+
   reason: String,
-  
+
   riskLevel: {
     type: String,
     enum: ['low', 'medium', 'high', 'critical'],
     default: 'low',
     index: true
   },
-  
+
   complianceFlags: [{
     type: String,
     enum: ['pci_dss', 'gdpr', 'ccpa', 'sox', 'kyc_aml', 'data_retention']
   }],
-  
+
   metadata: mongoose.Schema.Types.Mixed,
-  
+
   timestamp: {
     type: Date,
     required: true,
     default: Date.now,
     index: true
   },
-  
+
   retentionDate: {
     type: Date,
     index: true
   },
-  
+
   integrityHash: String,
   chainCounter: Number,
   previousHash: String
@@ -227,11 +227,11 @@ class AuditLogger {
       // Determine risk level and retention
       auditData.riskLevel = this.getRiskLevel(auditData.action);
       auditData.retentionDate = this.getRetentionDate(auditData.riskLevel);
-      
+
       // Create audit log in database
       const auditLog = new AuditLog(auditData);
       await auditLog.save();
-      
+
       return auditLog;
     } catch (error) {
       console.error('Failed to create database audit log:', error);
@@ -266,7 +266,7 @@ class AuditLogger {
       'system_compromise': 'critical',
       'compliance_violation': 'critical'
     };
-    
+
     return riskLevels[action] || 'low';
   }
 
@@ -282,7 +282,7 @@ class AuditLogger {
       'high': 7 * 365 * 24 * 60 * 60 * 1000, // 7 years
       'critical': 10 * 365 * 24 * 60 * 60 * 1000 // 10 years
     };
-    
+
     const period = retentionPeriods[riskLevel] || retentionPeriods['low'];
     return new Date(Date.now() + period);
   }
@@ -416,7 +416,7 @@ class AuditLogger {
       'kyc': ['kyc_aml'],
       'user_data': ['gdpr', 'ccpa', 'data_retention']
     };
-    
+
     return complianceMapping[dataType] || [];
   }
 
@@ -466,7 +466,7 @@ class AuditLogger {
 
     this.auditLogger.warn('Compliance Event', auditEntry);
     await this.storeAuditHash(auditEntry);
-    
+
     if (complianceEvent.risk_level === 'high') {
       await this.alertComplianceTeam(auditEntry);
     }
@@ -547,7 +547,7 @@ class AuditLogger {
   async createAuditEntry(eventType, eventData, options = {}) {
     const timestamp = new Date().toISOString();
     const eventId = crypto.randomUUID();
-    
+
     // Create base audit entry
     let auditEntry = {
       eventId,
@@ -585,7 +585,7 @@ class AuditLogger {
     ];
 
     const encrypted = { ...auditEntry };
-    
+
     for (const field of sensitiveFields) {
       if (encrypted[field] !== undefined && encrypted[field] !== null) {
         encrypted[field] = await this.encryptionService.encrypt(
@@ -607,7 +607,7 @@ class AuditLogger {
     // Create deterministic string from audit entry
     const { integrityHash, ...dataToHash } = auditEntry;
     const dataString = JSON.stringify(dataToHash, Object.keys(dataToHash).sort());
-    
+
     // Calculate HMAC-SHA256 hash
     const hmac = crypto.createHmac('sha256', process.env.AUDIT_INTEGRITY_KEY || 'default-key');
     hmac.update(dataString);
@@ -643,7 +643,7 @@ class AuditLogger {
     try {
       const hashKey = `audit_hash:${eventId}`;
       const storedHash = await redisClient.get(hashKey);
-      
+
       if (!storedHash) {
         return false;
       }
@@ -792,14 +792,14 @@ function getAuditLogger() {
  */
 function auditMiddleware(options = {}) {
   const logger = getAuditLogger();
-  
+
   return async (req, res, next) => {
     const startTime = Date.now();
-    
+
     // Capture original res.json to log response
     const originalJson = res.json;
     let responseBody = null;
-    
+
     res.json = function(body) {
       responseBody = body;
       return originalJson.call(this, body);
@@ -811,7 +811,7 @@ function auditMiddleware(options = {}) {
     // Log after response is sent
     res.on('finish', async () => {
       const duration = Date.now() - startTime;
-      
+
       const apiAccess = {
         method: req.method,
         path: req.path,
@@ -848,4 +848,3 @@ module.exports = {
   getAuditLogger,
   auditMiddleware
 };
-

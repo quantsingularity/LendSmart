@@ -333,7 +333,7 @@ class InputValidator {
     return (req, res, next) => {
       try {
         const dataToValidate = req[source];
-        
+
         if (!dataToValidate) {
           throw new AppError(`No ${source} data provided`, 400, 'MISSING_DATA');
         }
@@ -413,15 +413,15 @@ class InputValidator {
     }
 
     const sanitized = {};
-    
+
     for (const [key, value] of Object.entries(data)) {
       if (typeof value === 'string') {
         // Trim whitespace
         sanitized[key] = value.trim();
-        
+
         // Remove null bytes
         sanitized[key] = sanitized[key].replace(/\0/g, '');
-        
+
         // Limit string length to prevent DoS
         if (sanitized[key].length > 10000) {
           sanitized[key] = sanitized[key].substring(0, 10000);
@@ -562,4 +562,3 @@ class InputValidator {
 }
 
 module.exports = new InputValidator();
-

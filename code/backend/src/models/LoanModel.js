@@ -13,40 +13,40 @@ const loanSchema = new mongoose.Schema({
     required: [true, 'Borrower is required'],
     index: true
   },
-  
+
   lender: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     index: true
   },
-  
+
   amount: {
     type: Number,
     required: [true, 'Loan amount is required'],
     min: [100, 'Minimum loan amount is $100'],
     max: [1000000, 'Maximum loan amount is $1,000,000']
   },
-  
+
   interestRate: {
     type: Number,
     required: [true, 'Interest rate is required'],
     min: [0.1, 'Interest rate must be at least 0.1%'],
     max: [50, 'Interest rate cannot exceed 50%']
   },
-  
+
   term: {
     type: Number,
     required: [true, 'Loan term is required'],
     min: [1, 'Loan term must be at least 1']
   },
-  
+
   termUnit: {
     type: String,
     enum: ['days', 'weeks', 'months', 'years'],
     required: [true, 'Term unit is required'],
     default: 'months'
   },
-  
+
   purpose: {
     type: String,
     required: [true, 'Loan purpose is required'],
@@ -63,7 +63,7 @@ const loanSchema = new mongoose.Schema({
       'other'
     ]
   },
-  
+
   // Loan Status and Lifecycle
   status: {
     type: String,
@@ -81,14 +81,14 @@ const loanSchema = new mongoose.Schema({
     default: 'pending_approval',
     index: true
   },
-  
+
   // Important Dates
   applicationDate: {
     type: Date,
     default: Date.now,
     index: true
   },
-  
+
   approvedDate: Date,
   rejectedDate: Date,
   fundedDate: Date,
@@ -96,24 +96,24 @@ const loanSchema = new mongoose.Schema({
   maturityDate: Date,
   repaidDate: Date,
   defaultedDate: Date,
-  
+
   // Financial Details
   amountFunded: {
     type: Number,
     min: [0, 'Funded amount cannot be negative']
   },
-  
+
   amountRepaid: {
     type: Number,
     default: 0,
     min: [0, 'Repaid amount cannot be negative']
   },
-  
+
   totalAmountDue: {
     type: Number,
     min: [0, 'Total amount due cannot be negative']
   },
-  
+
   // Collateral Information
   collateral: {
     type: {
@@ -131,7 +131,7 @@ const loanSchema = new mongoose.Schema({
       }
     }]
   },
-  
+
   // Credit Assessment
   creditAssessment: {
     score: {
@@ -155,7 +155,7 @@ const loanSchema = new mongoose.Schema({
       accountAge: Number
     }
   },
-  
+
   // Repayment Information
   repaymentSchedule: {
     frequency: {
@@ -168,7 +168,7 @@ const loanSchema = new mongoose.Schema({
     nextPaymentDate: Date,
     lastPaymentDate: Date
   },
-  
+
   repayments: [{
     amount: {
       type: Number,
@@ -205,7 +205,7 @@ const loanSchema = new mongoose.Schema({
     processedAt: Date,
     notes: String
   }],
-  
+
   // Payment Processing
   paymentDetails: {
     processorType: {
@@ -220,7 +220,7 @@ const loanSchema = new mongoose.Schema({
     },
     exchangeRate: Number
   },
-  
+
   // Blockchain Integration
   blockchainContract: {
     contractAddress: String,
@@ -236,7 +236,7 @@ const loanSchema = new mongoose.Schema({
       default: true
     }
   },
-  
+
   // Legal and Compliance
   legalDocuments: [{
     documentType: {
@@ -252,7 +252,7 @@ const loanSchema = new mongoose.Schema({
     ipAddress: String,
     userAgent: String
   }],
-  
+
   // Risk Management
   riskMetrics: {
     probabilityOfDefault: Number,
@@ -261,7 +261,7 @@ const loanSchema = new mongoose.Schema({
     riskAdjustedReturn: Number,
     lastUpdated: Date
   },
-  
+
   // Fees and Charges
   fees: {
     originationFee: {
@@ -285,7 +285,7 @@ const loanSchema = new mongoose.Schema({
       min: [0, 'Prepayment penalty cannot be negative']
     }
   },
-  
+
   // Communication and Notes
   communications: [{
     type: {
@@ -312,7 +312,7 @@ const loanSchema = new mongoose.Schema({
       enum: ['sent', 'delivered', 'read', 'failed']
     }
   }],
-  
+
   internalNotes: [{
     note: String,
     createdAt: {
@@ -328,7 +328,7 @@ const loanSchema = new mongoose.Schema({
       default: true
     }
   }],
-  
+
   // Audit Trail
   auditLog: [{
     action: String,
@@ -344,7 +344,7 @@ const loanSchema = new mongoose.Schema({
     ipAddress: String,
     userAgent: String
   }],
-  
+
   // Metadata
   metadata: {
     source: {
@@ -429,18 +429,18 @@ loanSchema.pre('save', async function(next) {
     const termInDays = this.termInDays;
     this.maturityDate = new Date(fundedDate.getTime() + (termInDays * 24 * 60 * 60 * 1000));
   }
-  
+
   // Calculate total amount due if not set
   if (!this.totalAmountDue && this.amount && this.interestRate && this.term) {
     const principal = this.amount;
     const rate = this.interestRate / 100;
     const timeInYears = this.termInDays / 365;
-    
+
     // Simple interest calculation (can be enhanced for compound interest)
     const interest = principal * rate * timeInYears;
     this.totalAmountDue = principal + interest + (this.fees.originationFee || 0);
   }
-  
+
   // Update status based on repayment
   if (this.amountRepaid && this.totalAmountDue) {
     if (this.amountRepaid >= this.totalAmountDue && this.status === 'active') {
@@ -448,7 +448,7 @@ loanSchema.pre('save', async function(next) {
       this.repaidDate = new Date();
     }
   }
-  
+
   // Encrypt sensitive notes
   if (this.isModified('internalNotes')) {
     const encryptionService = getEncryptionService();
@@ -458,17 +458,17 @@ loanSchema.pre('save', async function(next) {
       }
     });
   }
-  
+
   next();
 });
 
 // Post-find middleware to decrypt sensitive fields
 loanSchema.post(['find', 'findOne', 'findOneAndUpdate'], async function(docs) {
   if (!docs) return;
-  
+
   const documents = Array.isArray(docs) ? docs : [docs];
   const encryptionService = getEncryptionService();
-  
+
   for (const doc of documents) {
     if (doc && doc.internalNotes) {
       doc.internalNotes.forEach(note => {
@@ -492,16 +492,16 @@ loanSchema.methods.addRepayment = function(repaymentData) {
     transactionId,
     dueDate
   } = repaymentData;
-  
+
   // Calculate principal and interest portions
   const remainingBalance = this.remainingBalance;
   const totalInterest = this.totalAmountDue - this.amount;
   const interestPortion = Math.min(amount, totalInterest * (remainingBalance / this.totalAmountDue));
   const principalPortion = amount - interestPortion;
-  
+
   // Check if payment is late
   const isLate = dueDate ? new Date() > new Date(dueDate) : false;
-  
+
   const repayment = {
     amount,
     principalAmount: principalPortion,
@@ -514,13 +514,13 @@ loanSchema.methods.addRepayment = function(repaymentData) {
     transactionId,
     processedAt: new Date()
   };
-  
+
   this.repayments.push(repayment);
   this.amountRepaid = (this.amountRepaid || 0) + amount;
-  
+
   // Update next payment date
   this.updateNextPaymentDate();
-  
+
   return this.save();
 };
 
@@ -529,15 +529,15 @@ loanSchema.methods.updateNextPaymentDate = function() {
     this.repaymentSchedule.nextPaymentDate = null;
     return;
   }
-  
-  const lastPayment = this.repayments.length > 0 
-    ? this.repayments[this.repayments.length - 1].paymentDate 
+
+  const lastPayment = this.repayments.length > 0
+    ? this.repayments[this.repayments.length - 1].paymentDate
     : this.disbursedDate || this.fundedDate;
-  
+
   if (!lastPayment) return;
-  
+
   const nextDate = new Date(lastPayment);
-  
+
   switch (this.repaymentSchedule.frequency) {
     case 'weekly':
       nextDate.setDate(nextDate.getDate() + 7);
@@ -552,26 +552,26 @@ loanSchema.methods.updateNextPaymentDate = function() {
       nextDate.setMonth(nextDate.getMonth() + 3);
       break;
   }
-  
+
   this.repaymentSchedule.nextPaymentDate = nextDate;
   this.repaymentSchedule.lastPaymentDate = lastPayment;
 };
 
 loanSchema.methods.calculateMonthlyPayment = function() {
   if (!this.amount || !this.interestRate || !this.term) return 0;
-  
+
   const principal = this.amount;
   const monthlyRate = (this.interestRate / 100) / 12;
   const termInMonths = this.termUnit === 'years' ? this.term * 12 : this.term;
-  
+
   if (monthlyRate === 0) {
     return principal / termInMonths;
   }
-  
-  const monthlyPayment = principal * 
+
+  const monthlyPayment = principal *
     (monthlyRate * Math.pow(1 + monthlyRate, termInMonths)) /
     (Math.pow(1 + monthlyRate, termInMonths) - 1);
-  
+
   return monthlyPayment;
 };
 
@@ -579,18 +579,18 @@ loanSchema.methods.generateAmortizationSchedule = function() {
   const monthlyPayment = this.calculateMonthlyPayment();
   const monthlyRate = (this.interestRate / 100) / 12;
   const termInMonths = this.termUnit === 'years' ? this.term * 12 : this.term;
-  
+
   const schedule = [];
   let remainingBalance = this.amount;
   let paymentDate = new Date(this.disbursedDate || this.fundedDate || new Date());
-  
+
   for (let i = 1; i <= termInMonths; i++) {
     const interestPayment = remainingBalance * monthlyRate;
     const principalPayment = monthlyPayment - interestPayment;
     remainingBalance -= principalPayment;
-    
+
     paymentDate.setMonth(paymentDate.getMonth() + 1);
-    
+
     schedule.push({
       paymentNumber: i,
       paymentDate: new Date(paymentDate),
@@ -599,10 +599,10 @@ loanSchema.methods.generateAmortizationSchedule = function() {
       interestAmount: interestPayment,
       remainingBalance: Math.max(0, remainingBalance)
     });
-    
+
     if (remainingBalance <= 0) break;
   }
-  
+
   return schedule;
 };
 
@@ -615,7 +615,7 @@ loanSchema.methods.addAuditEntry = function(action, performedBy, details, ipAddr
     ipAddress,
     userAgent
   });
-  
+
   return this.save();
 };
 
@@ -626,23 +626,23 @@ loanSchema.methods.addInternalNote = function(note, createdBy, isPrivate = true)
     isPrivate,
     createdAt: new Date()
   });
-  
+
   return this.save();
 };
 
 loanSchema.methods.toSafeObject = function() {
   const obj = this.toObject();
-  
+
   // Remove sensitive internal information
   delete obj.internalNotes;
   delete obj.auditLog;
   delete obj.riskMetrics;
-  
+
   // Remove sensitive payment details
   if (obj.paymentDetails) {
     delete obj.paymentDetails.processorTransactionId;
   }
-  
+
   return obj;
 };
 
@@ -677,7 +677,7 @@ loanSchema.statics.findOverdueLoans = function() {
 loanSchema.statics.findMaturingLoans = function(days = 30) {
   const futureDate = new Date();
   futureDate.setDate(futureDate.getDate() + days);
-  
+
   return this.find({
     status: 'active',
     maturityDate: { $lte: futureDate }
@@ -686,7 +686,7 @@ loanSchema.statics.findMaturingLoans = function(days = 30) {
 
 loanSchema.statics.getPortfolioStats = function(userId, role = 'borrower') {
   const matchField = role === 'borrower' ? 'borrower' : 'lender';
-  
+
   return this.aggregate([
     { $match: { [matchField]: mongoose.Types.ObjectId(userId) } },
     {
@@ -762,4 +762,3 @@ LoanSchema.pre("save", function (next) {
 });
 
 module.exports = mongoose.model("Loan", LoanSchema);
-

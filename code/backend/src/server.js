@@ -60,7 +60,7 @@ class LendSmartServer {
       this.setupErrorHandling();
 
       logger.info('Server initialization completed successfully');
-      
+
     } catch (error) {
       logger.error('Server initialization failed', { error: error.message });
       throw error;
@@ -107,7 +107,7 @@ class LendSmartServer {
 
     // CORS configuration
     const corsOptions = {
-      origin: process.env.NODE_ENV === 'production' 
+      origin: process.env.NODE_ENV === 'production'
         ? process.env.ALLOWED_ORIGINS?.split(',') || ['https://lendsmart.com']
         : true,
       credentials: true,
@@ -138,15 +138,15 @@ class LendSmartServer {
     }));
 
     // Body parsing middleware
-    this.app.use(express.json({ 
+    this.app.use(express.json({
       limit: '10mb',
       verify: (req, res, buf) => {
         req.rawBody = buf;
       }
     }));
-    this.app.use(express.urlencoded({ 
-      extended: true, 
-      limit: '10mb' 
+    this.app.use(express.urlencoded({
+      extended: true,
+      limit: '10mb'
     }));
 
     // Security sanitization
@@ -187,7 +187,7 @@ class LendSmartServer {
 
     // Request ID middleware
     this.app.use((req, res, next) => {
-      req.id = req.headers['x-request-id'] || 
+      req.id = req.headers['x-request-id'] ||
                `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       res.setHeader('X-Request-ID', req.id);
       next();
@@ -350,7 +350,7 @@ if (process.env.NODE_ENV !== 'test') {
   // Graceful shutdown handlers
   const gracefulShutdown = (signal) => {
     logger.info(`Received ${signal}, initiating graceful shutdown...`);
-    
+
     lendSmartServer.shutdown()
       .then(() => {
         logger.info('Graceful shutdown completed successfully');
@@ -369,4 +369,3 @@ if (process.env.NODE_ENV !== 'test') {
 
 // Export server instance for external use
 module.exports.server = lendSmartServer;
-

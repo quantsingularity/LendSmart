@@ -12,7 +12,7 @@ const HomePage = () => {
         <Link to="/register" className="button button-primary">Get Started as a Borrower</Link>
         <Link to="/loans" className="button button-secondary">Explore Loan Marketplace</Link>
       </div>
-      
+
       <section className="features">
         <h2>Platform Features</h2>
         <div className="feature-list">
@@ -91,4 +91,3 @@ const HomePage = () => {
 };
 
 export default HomePage;
-

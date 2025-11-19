@@ -15,35 +15,35 @@ class ErrorHandler {
       TOKEN_EXPIRED: { status: 401, message: 'Token has expired' },
       INVALID_TOKEN: { status: 401, message: 'Invalid token provided' },
       ACCOUNT_LOCKED: { status: 423, message: 'Account is temporarily locked' },
-      
+
       // Validation
       VALIDATION_ERROR: { status: 400, message: 'Validation failed' },
       INVALID_INPUT: { status: 400, message: 'Invalid input provided' },
       MISSING_REQUIRED_FIELD: { status: 400, message: 'Required field is missing' },
       INVALID_FORMAT: { status: 400, message: 'Invalid data format' },
-      
+
       // Business Logic
       INSUFFICIENT_FUNDS: { status: 400, message: 'Insufficient funds' },
       LOAN_NOT_FOUND: { status: 404, message: 'Loan not found' },
       USER_NOT_FOUND: { status: 404, message: 'User not found' },
       DUPLICATE_ENTRY: { status: 409, message: 'Resource already exists' },
       BUSINESS_RULE_VIOLATION: { status: 422, message: 'Business rule violation' },
-      
+
       // External Services
       PAYMENT_PROCESSOR_ERROR: { status: 502, message: 'Payment processing failed' },
       CREDIT_BUREAU_ERROR: { status: 502, message: 'Credit bureau service unavailable' },
       BLOCKCHAIN_ERROR: { status: 502, message: 'Blockchain service error' },
       EXTERNAL_SERVICE_TIMEOUT: { status: 504, message: 'External service timeout' },
-      
+
       // System Errors
       DATABASE_ERROR: { status: 500, message: 'Database operation failed' },
       CACHE_ERROR: { status: 500, message: 'Cache operation failed' },
       FILE_SYSTEM_ERROR: { status: 500, message: 'File system error' },
       CONFIGURATION_ERROR: { status: 500, message: 'System configuration error' },
-      
+
       // Rate Limiting
       RATE_LIMIT_EXCEEDED: { status: 429, message: 'Rate limit exceeded' },
-      
+
       // Generic
       INTERNAL_SERVER_ERROR: { status: 500, message: 'Internal server error' },
       NOT_FOUND: { status: 404, message: 'Resource not found' },
@@ -57,7 +57,7 @@ class ErrorHandler {
    */
   createError(code, details = null, cause = null) {
     const errorInfo = this.errorCodes[code] || this.errorCodes.INTERNAL_SERVER_ERROR;
-    
+
     const error = new Error(errorInfo.message);
     error.code = code;
     error.status = errorInfo.status;
@@ -65,7 +65,7 @@ class ErrorHandler {
     error.cause = cause;
     error.timestamp = new Date().toISOString();
     error.isOperational = true; // Mark as operational error
-    
+
     return error;
   }
 
@@ -75,7 +75,7 @@ class ErrorHandler {
   handleError(error, req, res, next) {
     // Generate unique error ID for tracking
     const errorId = this.generateErrorId();
-    
+
     // Extract request context
     const context = {
       errorId,
@@ -90,10 +90,10 @@ class ErrorHandler {
 
     // Determine error type and status
     const errorResponse = this.processError(error, context);
-    
+
     // Log the error
     this.logError(error, context, errorResponse);
-    
+
     // Send response
     res.status(errorResponse.status).json({
       error: {
@@ -102,9 +102,9 @@ class ErrorHandler {
         message: errorResponse.message,
         ...(errorResponse.details && { details: errorResponse.details }),
         timestamp: context.timestamp,
-        ...(process.env.NODE_ENV === 'development' && { 
+        ...(process.env.NODE_ENV === 'development' && {
           stack: error.stack,
-          cause: error.cause 
+          cause: error.cause
         })
       }
     });
@@ -209,8 +209,8 @@ class ErrorHandler {
     return {
       status: 500,
       code: 'INTERNAL_SERVER_ERROR',
-      message: process.env.NODE_ENV === 'production' 
-        ? 'An unexpected error occurred' 
+      message: process.env.NODE_ENV === 'production'
+        ? 'An unexpected error occurred'
         : error.message
     };
   }
@@ -220,7 +220,7 @@ class ErrorHandler {
    */
   formatValidationErrors(errors) {
     const formatted = {};
-    
+
     for (const field in errors) {
       const error = errors[field];
       formatted[field] = {
@@ -229,7 +229,7 @@ class ErrorHandler {
         kind: error.kind
       };
     }
-    
+
     return formatted;
   }
 
@@ -258,7 +258,7 @@ class ErrorHandler {
     // Determine log level based on error severity
     if (errorResponse.status >= 500) {
       logger.error('Server error occurred', logData);
-      
+
       // Log critical errors to audit log
       auditLogger.logSystemEvent('critical_error', {
         errorId: context.errorId,
@@ -267,10 +267,10 @@ class ErrorHandler {
         userId: context.userId,
         ipAddress: context.ipAddress
       });
-      
+
     } else if (errorResponse.status >= 400) {
       logger.warn('Client error occurred', logData);
-      
+
       // Log security-related errors
       if (['UNAUTHORIZED', 'FORBIDDEN', 'TOKEN_EXPIRED', 'INVALID_TOKEN'].includes(errorResponse.code)) {
         logger.security.accessDenied(
@@ -282,7 +282,7 @@ class ErrorHandler {
           errorResponse.code
         );
       }
-      
+
     } else {
       logger.info('Request completed with error', logData);
     }
@@ -305,7 +305,7 @@ class ErrorHandler {
       resource: req.originalUrl || req.url,
       method: req.method
     });
-    
+
     next(error);
   }
 
@@ -323,7 +323,7 @@ class ErrorHandler {
    */
   handleShutdown(signal) {
     logger.info(`Received ${signal}, starting graceful shutdown...`);
-    
+
     // Close server gracefully
     if (global.server) {
       global.server.close((err) => {
@@ -331,11 +331,11 @@ class ErrorHandler {
           logger.error('Error during server shutdown', { error: err.message });
           process.exit(1);
         }
-        
+
         logger.info('Server closed successfully');
         process.exit(0);
       });
-      
+
       // Force shutdown after timeout
       setTimeout(() => {
         logger.error('Forced shutdown due to timeout');
@@ -354,12 +354,12 @@ class ErrorHandler {
       error: error.message,
       stack: error.stack
     });
-    
+
     auditLogger.logSystemEvent('uncaught_exception', {
       error: error.message,
       stack: error.stack
     });
-    
+
     // Graceful shutdown
     process.exit(1);
   }
@@ -372,12 +372,12 @@ class ErrorHandler {
       reason: reason?.message || reason,
       stack: reason?.stack
     });
-    
+
     auditLogger.logSystemEvent('unhandled_rejection', {
       reason: reason?.message || reason,
       stack: reason?.stack
     });
-    
+
     // Graceful shutdown
     process.exit(1);
   }
@@ -388,14 +388,14 @@ class ErrorHandler {
   setupGlobalHandlers() {
     // Handle uncaught exceptions
     process.on('uncaughtException', this.handleUncaughtException.bind(this));
-    
+
     // Handle unhandled promise rejections
     process.on('unhandledRejection', this.handleUnhandledRejection.bind(this));
-    
+
     // Handle graceful shutdown signals
     process.on('SIGTERM', () => this.handleShutdown('SIGTERM'));
     process.on('SIGINT', () => this.handleShutdown('SIGINT'));
-    
+
     logger.info('Global error handlers registered');
   }
 }
@@ -412,4 +412,3 @@ module.exports = {
   createError: errorHandler.createError.bind(errorHandler),
   setupGlobalHandlers: errorHandler.setupGlobalHandlers.bind(errorHandler)
 };
-

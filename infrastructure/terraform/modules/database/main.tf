@@ -62,5 +62,3 @@ resource "aws_rds_cluster_instance" "lend_smart_aurora_instance" {
     Name = "lend-smart-aurora-instance-${count.index}"
   }
 }
-
-

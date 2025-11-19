@@ -35,7 +35,7 @@ describe('Security Tests', () => {
 
       it('should prevent SQL injection in user search', async () => {
         const token = testSetup.getTestToken('testadmin').token;
-        
+
         const response = await request(app)
           .get('/api/users/search')
           .set('Authorization', `Bearer ${token}`)
@@ -64,7 +64,7 @@ describe('Security Tests', () => {
 
       it('should prevent NoSQL injection in user queries', async () => {
         const token = testSetup.getTestToken('testadmin').token;
-        
+
         const maliciousPayload = {
           filter: { $where: "function() { return true; }" }
         };
@@ -103,7 +103,7 @@ describe('Security Tests', () => {
 
       it('should sanitize XSS in loan application', async () => {
         const token = testSetup.getTestToken('testuser').token;
-        
+
         const maliciousPayload = {
           amount: 10000,
           interestRate: 12.5,
@@ -126,7 +126,7 @@ describe('Security Tests', () => {
     describe('Command Injection Prevention', () => {
       it('should prevent command injection in file operations', async () => {
         const token = testSetup.getTestToken('testuser').token;
-        
+
         const maliciousPayload = {
           filename: 'document.pdf; rm -rf /'
         };
@@ -144,7 +144,7 @@ describe('Security Tests', () => {
     describe('Path Traversal Prevention', () => {
       it('should prevent directory traversal in file access', async () => {
         const token = testSetup.getTestToken('testuser').token;
-        
+
         const response = await request(app)
           .get('/api/documents/../../etc/passwd')
           .set('Authorization', `Bearer ${token}`)
@@ -156,7 +156,7 @@ describe('Security Tests', () => {
 
       it('should prevent path traversal in document download', async () => {
         const token = testSetup.getTestToken('testuser').token;
-        
+
         const response = await request(app)
           .get('/api/documents/download')
           .set('Authorization', `Bearer ${token}`)
@@ -212,7 +212,7 @@ describe('Security Tests', () => {
     describe('Session Security', () => {
       it('should invalidate sessions on password change', async () => {
         const token = testSetup.getTestToken('testuser').token;
-        
+
         // Change password
         await request(app)
           .put('/api/user/change-password')
@@ -246,7 +246,7 @@ describe('Security Tests', () => {
           const response = await request(app)
             .post('/api/auth/login')
             .send(loginData);
-          
+
           if (response.status === 200) {
             sessions.push(response.body.data.token);
           }
@@ -289,7 +289,7 @@ describe('Security Tests', () => {
         };
 
         const startTime = Date.now();
-        
+
         // Make multiple failed attempts
         for (let i = 0; i < 3; i++) {
           await request(app)
@@ -407,10 +407,10 @@ describe('Security Tests', () => {
       it('should encrypt sensitive data in database', async () => {
         const User = require('../../src/models/UserModel');
         const user = testSetup.getTestUser('testuser');
-        
+
         // Get raw data from database
         const rawUser = await User.findById(user._id).lean();
-        
+
         // Sensitive fields should be encrypted (not equal to original values)
         expect(rawUser.firstName).to.not.equal('Test');
         expect(rawUser.lastName).to.not.equal('User');
@@ -420,7 +420,7 @@ describe('Security Tests', () => {
       it('should decrypt sensitive data when retrieved', async () => {
         const User = require('../../src/models/UserModel');
         const user = await User.findById(testSetup.getTestUser('testuser')._id);
-        
+
         // Data should be decrypted when retrieved through model
         expect(user.firstName).to.equal('Test');
         expect(user.lastName).to.equal('User');
@@ -432,7 +432,7 @@ describe('Security Tests', () => {
   describe('Rate Limiting Security', () => {
     it('should rate limit API requests per user', async () => {
       const userToken = testSetup.getTestToken('testuser').token;
-      
+
       // Make many requests quickly
       const promises = [];
       for (let i = 0; i < 100; i++) {
@@ -445,7 +445,7 @@ describe('Security Tests', () => {
 
       const responses = await Promise.all(promises);
       const rateLimitedResponses = responses.filter(res => res.status === 429);
-      
+
       expect(rateLimitedResponses.length).to.be.greaterThan(0);
     });
 
@@ -461,7 +461,7 @@ describe('Security Tests', () => {
 
       const responses = await Promise.all(promises);
       const rateLimitedResponses = responses.filter(res => res.status === 429);
-      
+
       expect(rateLimitedResponses.length).to.be.greaterThan(0);
     });
   });
@@ -552,7 +552,7 @@ describe('Security Tests', () => {
 
     it('should scan uploaded files for malware', async () => {
       const userToken = testSetup.getTestToken('testuser').token;
-      
+
       // Mock malware signature
       const maliciousContent = Buffer.from('X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*');
 
@@ -606,7 +606,7 @@ describe('Security Tests', () => {
     it('should not log sensitive data', async () => {
       // This test would check log files in a real implementation
       // For now, we'll verify that sensitive data is sanitized in responses
-      
+
       const response = await request(app)
         .post('/api/auth/login')
         .send({
@@ -632,4 +632,3 @@ describe('Security Tests', () => {
     });
   });
 });
-

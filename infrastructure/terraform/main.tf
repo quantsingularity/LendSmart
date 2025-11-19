@@ -20,7 +20,7 @@ provider "aws" {
 
 module "network" {
   source = "./modules/network"
-  
+
   environment         = var.environment
   vpc_cidr            = var.vpc_cidr
   availability_zones  = var.availability_zones
@@ -30,7 +30,7 @@ module "network" {
 
 module "compute" {
   source = "./modules/compute"
-  
+
   environment       = var.environment
   vpc_id            = module.network.vpc_id
   private_subnet_ids = module.network.private_subnet_ids
@@ -42,7 +42,7 @@ module "compute" {
 
 module "database" {
   source = "./modules/database"
-  
+
   environment       = var.environment
   vpc_id            = module.network.vpc_id
   private_subnet_ids = module.network.private_subnet_ids
@@ -55,14 +55,14 @@ module "database" {
 
 module "storage" {
   source = "./modules/storage"
-  
+
   environment = var.environment
   app_name    = var.app_name
 }
 
 module "security" {
   source = "./modules/security"
-  
+
   environment = var.environment
   vpc_id      = module.network.vpc_id
   app_name    = var.app_name
@@ -77,5 +77,3 @@ module "cost_optimization" {
   project_name              = var.project_name
   s3_bucket_id              = module.storage.app_data_bucket_id
 }
-
-
