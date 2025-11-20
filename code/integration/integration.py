@@ -39,6 +39,7 @@ sys.path.append(
 )
 
 from compliance import ComplianceDocumentGenerator, ComplianceFramework
+
 # Import from new modules
 from data_sources import AlternativeDataManager
 from enhanced_models import ModelIntegrator
