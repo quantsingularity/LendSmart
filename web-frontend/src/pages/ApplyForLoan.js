@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Typography,
   Box,
@@ -10,29 +10,35 @@ import {
   CircularProgress,
   FormControlLabel,
   Checkbox,
-  InputAdornment
-} from '@mui/material';
-import { useNavigate } from 'react-router-dom';
-import { useApi } from '../contexts/ApiContext';
-import { useBlockchain } from '../contexts/BlockchainContext';
+  InputAdornment,
+} from "@mui/material";
+import { useNavigate } from "react-router-dom";
+import { useApi } from "../contexts/ApiContext";
+import { useBlockchain } from "../contexts/BlockchainContext";
 
 const ApplyForLoan = () => {
   const navigate = useNavigate();
   const { applyForLoan } = useApi();
-  const { requestLoan, isConnected, connectWallet, isLoading: blockchainLoading, error: blockchainError } = useBlockchain();
+  const {
+    requestLoan,
+    isConnected,
+    connectWallet,
+    isLoading: blockchainLoading,
+    error: blockchainError,
+  } = useBlockchain();
 
   const [formData, setFormData] = useState({
-    token: '0x0000000000000000000000000000000000000000', // Default to ETH
-    principal: '',
-    interestRate: '',
-    duration: '',
-    purpose: '',
+    token: "0x0000000000000000000000000000000000000000", // Default to ETH
+    principal: "",
+    interestRate: "",
+    duration: "",
+    purpose: "",
     isCollateralized: false,
-    collateralToken: '0x0000000000000000000000000000000000000000',
-    collateralAmount: '',
+    collateralToken: "0x0000000000000000000000000000000000000000",
+    collateralAmount: "",
     decimals: 18,
     collateralDecimals: 18,
-    privateKey: ''
+    privateKey: "",
   });
 
   const [loading, setLoading] = useState(false);
@@ -43,7 +49,7 @@ const ApplyForLoan = () => {
     const { name, value, type, checked } = e.target;
     setFormData({
       ...formData,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: type === "checkbox" ? checked : value,
     });
   };
 
@@ -54,7 +60,7 @@ const ApplyForLoan = () => {
       try {
         await connectWallet();
       } catch (err) {
-        setError('Please connect your wallet to apply for a loan');
+        setError("Please connect your wallet to apply for a loan");
         return;
       }
     }
@@ -67,14 +73,14 @@ const ApplyForLoan = () => {
       const blockchainResult = await requestLoan(formData);
 
       if (!blockchainResult) {
-        throw new Error('Failed to submit loan request to blockchain');
+        throw new Error("Failed to submit loan request to blockchain");
       }
 
       // Then submit to backend with blockchain data
       const backendData = {
         ...formData,
         blockchainId: blockchainResult.loanId,
-        transactionHash: blockchainResult.transactionHash
+        transactionHash: blockchainResult.transactionHash,
       };
 
       await applyForLoan(backendData);
@@ -87,8 +93,8 @@ const ApplyForLoan = () => {
         navigate(`/loans/${blockchainResult.loanId}`);
       }, 2000);
     } catch (err) {
-      console.error('Error applying for loan:', err);
-      setError(err.message || 'Failed to apply for loan');
+      console.error("Error applying for loan:", err);
+      setError(err.message || "Failed to apply for loan");
       setLoading(false);
     }
   };
@@ -102,7 +108,8 @@ const ApplyForLoan = () => {
       <Paper elevation={3} sx={{ p: 4, mt: 3 }}>
         {success ? (
           <Alert severity="success" sx={{ mb: 3 }}>
-            Loan application submitted successfully! Redirecting to loan details...
+            Loan application submitted successfully! Redirecting to loan
+            details...
           </Alert>
         ) : null}
 
@@ -142,7 +149,9 @@ const ApplyForLoan = () => {
                 fullWidth
                 required
                 InputProps={{
-                  endAdornment: <InputAdornment position="end">Tokens</InputAdornment>,
+                  endAdornment: (
+                    <InputAdornment position="end">Tokens</InputAdornment>
+                  ),
                 }}
               />
             </Grid>
@@ -170,7 +179,9 @@ const ApplyForLoan = () => {
                 fullWidth
                 required
                 InputProps={{
-                  endAdornment: <InputAdornment position="end">%</InputAdornment>,
+                  endAdornment: (
+                    <InputAdornment position="end">%</InputAdornment>
+                  ),
                 }}
                 helperText="Annual interest rate (e.g., 5 for 5%)"
               />
@@ -186,7 +197,9 @@ const ApplyForLoan = () => {
                 fullWidth
                 required
                 InputProps={{
-                  endAdornment: <InputAdornment position="end">Days</InputAdornment>,
+                  endAdornment: (
+                    <InputAdornment position="end">Days</InputAdornment>
+                  ),
                 }}
                 helperText="Loan duration in days"
               />
@@ -243,7 +256,9 @@ const ApplyForLoan = () => {
                     fullWidth
                     required
                     InputProps={{
-                      endAdornment: <InputAdornment position="end">Tokens</InputAdornment>,
+                      endAdornment: (
+                        <InputAdornment position="end">Tokens</InputAdornment>
+                      ),
                     }}
                   />
                 </Grid>
@@ -288,7 +303,7 @@ const ApplyForLoan = () => {
                 {loading || blockchainLoading ? (
                   <CircularProgress size={24} color="inherit" />
                 ) : (
-                  'Apply for Loan'
+                  "Apply for Loan"
                 )}
               </Button>
             </Grid>

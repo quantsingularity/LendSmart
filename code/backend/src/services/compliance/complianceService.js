@@ -1,7 +1,7 @@
-const axios = require('axios');
-const crypto = require('crypto');
-const { logger } = require('../../utils/logger');
-const { AppError } = require('../../middleware/monitoring/errorHandler');
+const axios = require("axios");
+const crypto = require("crypto");
+const { logger } = require("../../utils/logger");
+const { AppError } = require("../../middleware/monitoring/errorHandler");
 
 /**
  * Compliance Service for LendSmart
@@ -12,35 +12,36 @@ class ComplianceService {
   constructor() {
     this.kycProviders = {
       primary: {
-        name: 'Jumio',
-        baseUrl: process.env.JUMIO_BASE_URL || 'https://api.jumio.com',
+        name: "Jumio",
+        baseUrl: process.env.JUMIO_BASE_URL || "https://api.jumio.com",
         apiKey: process.env.JUMIO_API_KEY,
-        apiSecret: process.env.JUMIO_API_SECRET
+        apiSecret: process.env.JUMIO_API_SECRET,
       },
       secondary: {
-        name: 'Onfido',
-        baseUrl: process.env.ONFIDO_BASE_URL || 'https://api.onfido.com',
-        apiKey: process.env.ONFIDO_API_KEY
-      }
+        name: "Onfido",
+        baseUrl: process.env.ONFIDO_BASE_URL || "https://api.onfido.com",
+        apiKey: process.env.ONFIDO_API_KEY,
+      },
     };
 
     this.sanctionsProviders = {
       primary: {
-        name: 'Dow Jones',
-        baseUrl: process.env.DOWJONES_BASE_URL || 'https://api.dowjones.com',
-        apiKey: process.env.DOWJONES_API_KEY
+        name: "Dow Jones",
+        baseUrl: process.env.DOWJONES_BASE_URL || "https://api.dowjones.com",
+        apiKey: process.env.DOWJONES_API_KEY,
       },
       secondary: {
-        name: 'Refinitiv',
-        baseUrl: process.env.REFINITIV_BASE_URL || 'https://api.refinitiv.com',
-        apiKey: process.env.REFINITIV_API_KEY
-      }
+        name: "Refinitiv",
+        baseUrl: process.env.REFINITIV_BASE_URL || "https://api.refinitiv.com",
+        apiKey: process.env.REFINITIV_API_KEY,
+      },
     };
 
     this.amlThresholds = {
-      transactionAmount: parseFloat(process.env.AML_TRANSACTION_THRESHOLD) || 10000,
+      transactionAmount:
+        parseFloat(process.env.AML_TRANSACTION_THRESHOLD) || 10000,
       dailyAmount: parseFloat(process.env.AML_DAILY_THRESHOLD) || 50000,
-      monthlyAmount: parseFloat(process.env.AML_MONTHLY_THRESHOLD) || 200000
+      monthlyAmount: parseFloat(process.env.AML_MONTHLY_THRESHOLD) || 200000,
     };
 
     this.retryAttempts = 3;
@@ -62,18 +63,18 @@ class ComplianceService {
    */
   async performKYC(userData) {
     try {
-      logger.info('Starting KYC verification', {
+      logger.info("Starting KYC verification", {
         userId: userData.userId,
-        documentType: userData.documentType
+        documentType: userData.documentType,
       });
 
       // Validate input data
       this._validateKYCData(userData);
 
       // Create audit trail entry
-      await this._createAuditEntry('KYC_INITIATED', userData.userId, {
+      await this._createAuditEntry("KYC_INITIATED", userData.userId, {
         documentType: userData.documentType,
-        nationality: userData.nationality
+        nationality: userData.nationality,
       });
 
       // Attempt KYC with primary provider
@@ -81,9 +82,9 @@ class ComplianceService {
       try {
         kycResult = await this._performKYCWithJumio(userData);
       } catch (error) {
-        logger.warn('Primary KYC provider failed, trying secondary', {
+        logger.warn("Primary KYC provider failed, trying secondary", {
           userId: userData.userId,
-          error: error.message
+          error: error.message,
         });
 
         // Fallback to secondary provider
@@ -91,41 +92,41 @@ class ComplianceService {
       }
 
       // Process and validate result
-      const processedResult = this._processKYCResult(kycResult, userData.userId);
+      const processedResult = this._processKYCResult(
+        kycResult,
+        userData.userId,
+      );
 
       // Create audit trail entry for completion
-      await this._createAuditEntry('KYC_COMPLETED', userData.userId, {
+      await this._createAuditEntry("KYC_COMPLETED", userData.userId, {
         status: processedResult.status,
         verificationId: processedResult.verificationId,
-        provider: processedResult.provider
+        provider: processedResult.provider,
       });
 
-      logger.info('KYC verification completed', {
+      logger.info("KYC verification completed", {
         userId: userData.userId,
         status: processedResult.status,
-        provider: processedResult.provider
+        provider: processedResult.provider,
       });
 
       return processedResult;
-
     } catch (error) {
-      logger.error('KYC verification failed', {
+      logger.error("KYC verification failed", {
         userId: userData.userId,
         error: error.message,
-        stack: error.stack
+        stack: error.stack,
       });
 
       // Create audit trail entry for failure
-      await this._createAuditEntry('KYC_FAILED', userData.userId, {
-        error: error.message
+      await this._createAuditEntry("KYC_FAILED", userData.userId, {
+        error: error.message,
       });
 
-      throw new AppError(
-        'KYC verification failed',
-        500,
-        'KYC_ERROR',
-        { originalError: error.message, userId: userData.userId }
-      );
+      throw new AppError("KYC verification failed", 500, "KYC_ERROR", {
+        originalError: error.message,
+        userId: userData.userId,
+      });
     }
   }
 
@@ -141,70 +142,84 @@ class ComplianceService {
    */
   async performSanctionsScreening(screeningData) {
     try {
-      logger.info('Starting sanctions screening', {
+      logger.info("Starting sanctions screening", {
         userId: screeningData.userId,
-        fullName: screeningData.fullName
+        fullName: screeningData.fullName,
       });
 
       // Validate input data
       this._validateSanctionsData(screeningData);
 
       // Create audit trail entry
-      await this._createAuditEntry('SANCTIONS_SCREENING_INITIATED', screeningData.userId, {
-        fullName: screeningData.fullName,
-        nationality: screeningData.nationality
-      });
+      await this._createAuditEntry(
+        "SANCTIONS_SCREENING_INITIATED",
+        screeningData.userId,
+        {
+          fullName: screeningData.fullName,
+          nationality: screeningData.nationality,
+        },
+      );
 
       // Perform screening with primary provider
       let screeningResult;
       try {
-        screeningResult = await this._performSanctionsScreeningWithDowJones(screeningData);
+        screeningResult =
+          await this._performSanctionsScreeningWithDowJones(screeningData);
       } catch (error) {
-        logger.warn('Primary sanctions provider failed, trying secondary', {
+        logger.warn("Primary sanctions provider failed, trying secondary", {
           userId: screeningData.userId,
-          error: error.message
+          error: error.message,
         });
 
         // Fallback to secondary provider
-        screeningResult = await this._performSanctionsScreeningWithRefinitiv(screeningData);
+        screeningResult =
+          await this._performSanctionsScreeningWithRefinitiv(screeningData);
       }
 
       // Process and validate result
-      const processedResult = this._processSanctionsResult(screeningResult, screeningData.userId);
+      const processedResult = this._processSanctionsResult(
+        screeningResult,
+        screeningData.userId,
+      );
 
       // Create audit trail entry for completion
-      await this._createAuditEntry('SANCTIONS_SCREENING_COMPLETED', screeningData.userId, {
-        status: processedResult.status,
-        matchCount: processedResult.matches.length,
-        provider: processedResult.provider
-      });
+      await this._createAuditEntry(
+        "SANCTIONS_SCREENING_COMPLETED",
+        screeningData.userId,
+        {
+          status: processedResult.status,
+          matchCount: processedResult.matches.length,
+          provider: processedResult.provider,
+        },
+      );
 
-      logger.info('Sanctions screening completed', {
+      logger.info("Sanctions screening completed", {
         userId: screeningData.userId,
         status: processedResult.status,
-        matchCount: processedResult.matches.length
+        matchCount: processedResult.matches.length,
       });
 
       return processedResult;
-
     } catch (error) {
-      logger.error('Sanctions screening failed', {
+      logger.error("Sanctions screening failed", {
         userId: screeningData.userId,
         error: error.message,
-        stack: error.stack
+        stack: error.stack,
       });
 
       // Create audit trail entry for failure
-      await this._createAuditEntry('SANCTIONS_SCREENING_FAILED', screeningData.userId, {
-        error: error.message
-      });
-
-      throw new AppError(
-        'Sanctions screening failed',
-        500,
-        'SANCTIONS_ERROR',
-        { originalError: error.message, userId: screeningData.userId }
+      await this._createAuditEntry(
+        "SANCTIONS_SCREENING_FAILED",
+        screeningData.userId,
+        {
+          error: error.message,
+        },
       );
+
+      throw new AppError("Sanctions screening failed", 500, "SANCTIONS_ERROR", {
+        originalError: error.message,
+        userId: screeningData.userId,
+      });
     }
   }
 
@@ -220,72 +235,86 @@ class ComplianceService {
    */
   async monitorTransaction(transactionData) {
     try {
-      logger.info('Starting AML transaction monitoring', {
+      logger.info("Starting AML transaction monitoring", {
         transactionId: transactionData.transactionId,
         userId: transactionData.userId,
-        amount: transactionData.amount
+        amount: transactionData.amount,
       });
 
       // Validate input data
       this._validateTransactionData(transactionData);
 
       // Create audit trail entry
-      await this._createAuditEntry('AML_MONITORING_INITIATED', transactionData.userId, {
-        transactionId: transactionData.transactionId,
-        amount: transactionData.amount,
-        type: transactionData.type
-      });
+      await this._createAuditEntry(
+        "AML_MONITORING_INITIATED",
+        transactionData.userId,
+        {
+          transactionId: transactionData.transactionId,
+          amount: transactionData.amount,
+          type: transactionData.type,
+        },
+      );
 
       // Perform various AML checks
       const checks = await Promise.all([
         this._checkTransactionThresholds(transactionData),
         this._checkUserTransactionHistory(transactionData),
         this._checkCounterpartyRisk(transactionData),
-        this._checkSuspiciousPatterns(transactionData)
+        this._checkSuspiciousPatterns(transactionData),
       ]);
 
       // Aggregate results
       const amlResult = this._aggregateAMLResults(checks, transactionData);
 
       // Create audit trail entry for completion
-      await this._createAuditEntry('AML_MONITORING_COMPLETED', transactionData.userId, {
-        transactionId: transactionData.transactionId,
-        riskLevel: amlResult.riskLevel,
-        flagged: amlResult.flagged,
-        alerts: amlResult.alerts.length
-      });
+      await this._createAuditEntry(
+        "AML_MONITORING_COMPLETED",
+        transactionData.userId,
+        {
+          transactionId: transactionData.transactionId,
+          riskLevel: amlResult.riskLevel,
+          flagged: amlResult.flagged,
+          alerts: amlResult.alerts.length,
+        },
+      );
 
       // Generate SAR if necessary
-      if (amlResult.flagged && amlResult.riskLevel === 'HIGH') {
+      if (amlResult.flagged && amlResult.riskLevel === "HIGH") {
         await this._generateSAR(transactionData, amlResult);
       }
 
-      logger.info('AML transaction monitoring completed', {
+      logger.info("AML transaction monitoring completed", {
         transactionId: transactionData.transactionId,
         riskLevel: amlResult.riskLevel,
-        flagged: amlResult.flagged
+        flagged: amlResult.flagged,
       });
 
       return amlResult;
-
     } catch (error) {
-      logger.error('AML transaction monitoring failed', {
+      logger.error("AML transaction monitoring failed", {
         transactionId: transactionData.transactionId,
         error: error.message,
-        stack: error.stack
+        stack: error.stack,
       });
 
       // Create audit trail entry for failure
-      await this._createAuditEntry('AML_MONITORING_FAILED', transactionData.userId, {
-        transactionId: transactionData.transactionId,
-        error: error.message
-      });
+      await this._createAuditEntry(
+        "AML_MONITORING_FAILED",
+        transactionData.userId,
+        {
+          transactionId: transactionData.transactionId,
+          error: error.message,
+        },
+      );
 
       throw new AppError(
-        'AML transaction monitoring failed',
+        "AML transaction monitoring failed",
         500,
-        'AML_ERROR',
-        { originalError: error.message, transactionId: transactionData.transactionId }
+        "AML_ERROR",
+        {
+          originalError: error.message,
+          transactionId: transactionData.transactionId,
+        },
       );
     }
   }
@@ -301,68 +330,67 @@ class ComplianceService {
    */
   async generateComplianceReport(reportParams) {
     try {
-      logger.info('Generating compliance report', {
+      logger.info("Generating compliance report", {
         type: reportParams.type,
         startDate: reportParams.startDate,
-        endDate: reportParams.endDate
+        endDate: reportParams.endDate,
       });
 
       // Validate report parameters
       this._validateReportParams(reportParams);
 
       // Create audit trail entry
-      await this._createAuditEntry('COMPLIANCE_REPORT_INITIATED', 'SYSTEM', {
+      await this._createAuditEntry("COMPLIANCE_REPORT_INITIATED", "SYSTEM", {
         reportType: reportParams.type,
         startDate: reportParams.startDate,
-        endDate: reportParams.endDate
+        endDate: reportParams.endDate,
       });
 
       // Generate report based on type
       let reportData;
       switch (reportParams.type) {
-        case 'KYC':
+        case "KYC":
           reportData = await this._generateKYCReport(reportParams);
           break;
-        case 'AML':
+        case "AML":
           reportData = await this._generateAMLReport(reportParams);
           break;
-        case 'SANCTIONS':
+        case "SANCTIONS":
           reportData = await this._generateSanctionsReport(reportParams);
           break;
-        case 'COMPREHENSIVE':
+        case "COMPREHENSIVE":
           reportData = await this._generateComprehensiveReport(reportParams);
           break;
         default:
-          throw new AppError('Invalid report type', 400, 'VALIDATION_ERROR');
+          throw new AppError("Invalid report type", 400, "VALIDATION_ERROR");
       }
 
       // Create audit trail entry for completion
-      await this._createAuditEntry('COMPLIANCE_REPORT_COMPLETED', 'SYSTEM', {
+      await this._createAuditEntry("COMPLIANCE_REPORT_COMPLETED", "SYSTEM", {
         reportType: reportParams.type,
         recordCount: reportData.recordCount,
-        reportId: reportData.reportId
+        reportId: reportData.reportId,
       });
 
-      logger.info('Compliance report generated', {
+      logger.info("Compliance report generated", {
         type: reportParams.type,
         reportId: reportData.reportId,
-        recordCount: reportData.recordCount
+        recordCount: reportData.recordCount,
       });
 
       return reportData;
-
     } catch (error) {
-      logger.error('Compliance report generation failed', {
+      logger.error("Compliance report generation failed", {
         type: reportParams.type,
         error: error.message,
-        stack: error.stack
+        stack: error.stack,
       });
 
       throw new AppError(
-        'Compliance report generation failed',
+        "Compliance report generation failed",
         500,
-        'REPORT_ERROR',
-        { originalError: error.message, reportType: reportParams.type }
+        "REPORT_ERROR",
+        { originalError: error.message, reportType: reportParams.type },
       );
     }
   }
@@ -372,26 +400,43 @@ class ComplianceService {
    * @private
    */
   _validateKYCData(data) {
-    const required = ['userId', 'firstName', 'lastName', 'dateOfBirth', 'nationality', 'documentType', 'documentNumber'];
-    const missing = required.filter(field => !data[field]);
+    const required = [
+      "userId",
+      "firstName",
+      "lastName",
+      "dateOfBirth",
+      "nationality",
+      "documentType",
+      "documentNumber",
+    ];
+    const missing = required.filter((field) => !data[field]);
 
     if (missing.length > 0) {
       throw new AppError(
-        `Missing required KYC fields: ${missing.join(', ')}`,
+        `Missing required KYC fields: ${missing.join(", ")}`,
         400,
-        'VALIDATION_ERROR'
+        "VALIDATION_ERROR",
       );
     }
 
     // Validate date format
     if (!/^\d{4}-\d{2}-\d{2}$/.test(data.dateOfBirth)) {
-      throw new AppError('Invalid date of birth format (YYYY-MM-DD)', 400, 'VALIDATION_ERROR');
+      throw new AppError(
+        "Invalid date of birth format (YYYY-MM-DD)",
+        400,
+        "VALIDATION_ERROR",
+      );
     }
 
     // Validate document type
-    const validDocTypes = ['passport', 'drivers_license', 'national_id', 'residence_permit'];
+    const validDocTypes = [
+      "passport",
+      "drivers_license",
+      "national_id",
+      "residence_permit",
+    ];
     if (!validDocTypes.includes(data.documentType)) {
-      throw new AppError('Invalid document type', 400, 'VALIDATION_ERROR');
+      throw new AppError("Invalid document type", 400, "VALIDATION_ERROR");
     }
   }
 
@@ -400,14 +445,14 @@ class ComplianceService {
    * @private
    */
   _validateSanctionsData(data) {
-    const required = ['userId', 'fullName', 'nationality'];
-    const missing = required.filter(field => !data[field]);
+    const required = ["userId", "fullName", "nationality"];
+    const missing = required.filter((field) => !data[field]);
 
     if (missing.length > 0) {
       throw new AppError(
-        `Missing required sanctions screening fields: ${missing.join(', ')}`,
+        `Missing required sanctions screening fields: ${missing.join(", ")}`,
         400,
-        'VALIDATION_ERROR'
+        "VALIDATION_ERROR",
       );
     }
   }
@@ -417,19 +462,25 @@ class ComplianceService {
    * @private
    */
   _validateTransactionData(data) {
-    const required = ['transactionId', 'userId', 'amount', 'type'];
-    const missing = required.filter(field => data[field] === undefined || data[field] === null);
+    const required = ["transactionId", "userId", "amount", "type"];
+    const missing = required.filter(
+      (field) => data[field] === undefined || data[field] === null,
+    );
 
     if (missing.length > 0) {
       throw new AppError(
-        `Missing required transaction fields: ${missing.join(', ')}`,
+        `Missing required transaction fields: ${missing.join(", ")}`,
         400,
-        'VALIDATION_ERROR'
+        "VALIDATION_ERROR",
       );
     }
 
     if (data.amount <= 0) {
-      throw new AppError('Transaction amount must be greater than 0', 400, 'VALIDATION_ERROR');
+      throw new AppError(
+        "Transaction amount must be greater than 0",
+        400,
+        "VALIDATION_ERROR",
+      );
     }
   }
 
@@ -438,25 +489,36 @@ class ComplianceService {
    * @private
    */
   _validateReportParams(params) {
-    const required = ['type', 'startDate', 'endDate'];
-    const missing = required.filter(field => !params[field]);
+    const required = ["type", "startDate", "endDate"];
+    const missing = required.filter((field) => !params[field]);
 
     if (missing.length > 0) {
       throw new AppError(
-        `Missing required report parameters: ${missing.join(', ')}`,
+        `Missing required report parameters: ${missing.join(", ")}`,
         400,
-        'VALIDATION_ERROR'
+        "VALIDATION_ERROR",
       );
     }
 
     // Validate date formats
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(params.startDate) || !/^\d{4}-\d{2}-\d{2}$/.test(params.endDate)) {
-      throw new AppError('Invalid date format (YYYY-MM-DD)', 400, 'VALIDATION_ERROR');
+    if (
+      !/^\d{4}-\d{2}-\d{2}$/.test(params.startDate) ||
+      !/^\d{4}-\d{2}-\d{2}$/.test(params.endDate)
+    ) {
+      throw new AppError(
+        "Invalid date format (YYYY-MM-DD)",
+        400,
+        "VALIDATION_ERROR",
+      );
     }
 
     // Validate date range
     if (new Date(params.startDate) > new Date(params.endDate)) {
-      throw new AppError('Start date must be before end date', 400, 'VALIDATION_ERROR');
+      throw new AppError(
+        "Start date must be before end date",
+        400,
+        "VALIDATION_ERROR",
+      );
     }
   }
 
@@ -468,16 +530,16 @@ class ComplianceService {
     // Implementation would integrate with Jumio API
     // This is a placeholder for the actual implementation
     return {
-      provider: 'Jumio',
+      provider: "Jumio",
       verificationId: `jumio_${Date.now()}`,
-      status: 'APPROVED',
+      status: "APPROVED",
       confidence: 0.95,
       extractedData: {
         firstName: userData.firstName,
         lastName: userData.lastName,
         dateOfBirth: userData.dateOfBirth,
-        documentNumber: userData.documentNumber
-      }
+        documentNumber: userData.documentNumber,
+      },
     };
   }
 
@@ -489,16 +551,16 @@ class ComplianceService {
     // Implementation would integrate with Onfido API
     // This is a placeholder for the actual implementation
     return {
-      provider: 'Onfido',
+      provider: "Onfido",
       verificationId: `onfido_${Date.now()}`,
-      status: 'APPROVED',
+      status: "APPROVED",
       confidence: 0.92,
       extractedData: {
         firstName: userData.firstName,
         lastName: userData.lastName,
         dateOfBirth: userData.dateOfBirth,
-        documentNumber: userData.documentNumber
-      }
+        documentNumber: userData.documentNumber,
+      },
     };
   }
 
@@ -510,10 +572,10 @@ class ComplianceService {
     // Implementation would integrate with Dow Jones API
     // This is a placeholder for the actual implementation
     return {
-      provider: 'Dow Jones',
+      provider: "Dow Jones",
       screeningId: `dj_${Date.now()}`,
       matches: [],
-      status: 'CLEAR'
+      status: "CLEAR",
     };
   }
 
@@ -525,10 +587,10 @@ class ComplianceService {
     // Implementation would integrate with Refinitiv API
     // This is a placeholder for the actual implementation
     return {
-      provider: 'Refinitiv',
+      provider: "Refinitiv",
       screeningId: `ref_${Date.now()}`,
       matches: [],
-      status: 'CLEAR'
+      status: "CLEAR",
     };
   }
 
@@ -545,7 +607,9 @@ class ComplianceService {
       confidence: result.confidence,
       extractedData: result.extractedData,
       timestamp: new Date().toISOString(),
-      expiryDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString() // 1 year
+      expiryDate: new Date(
+        Date.now() + 365 * 24 * 60 * 60 * 1000,
+      ).toISOString(), // 1 year
     };
   }
 
@@ -561,7 +625,9 @@ class ComplianceService {
       status: result.status,
       matches: result.matches || [],
       timestamp: new Date().toISOString(),
-      nextScreeningDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days
+      nextScreeningDate: new Date(
+        Date.now() + 30 * 24 * 60 * 60 * 1000,
+      ).toISOString(), // 30 days
     };
   }
 
@@ -574,16 +640,16 @@ class ComplianceService {
 
     if (transactionData.amount >= this.amlThresholds.transactionAmount) {
       alerts.push({
-        type: 'THRESHOLD_EXCEEDED',
-        severity: 'HIGH',
-        message: `Transaction amount ${transactionData.amount} exceeds threshold ${this.amlThresholds.transactionAmount}`
+        type: "THRESHOLD_EXCEEDED",
+        severity: "HIGH",
+        message: `Transaction amount ${transactionData.amount} exceeds threshold ${this.amlThresholds.transactionAmount}`,
       });
     }
 
     return {
-      checkType: 'THRESHOLD_CHECK',
+      checkType: "THRESHOLD_CHECK",
       passed: alerts.length === 0,
-      alerts
+      alerts,
     };
   }
 
@@ -595,9 +661,9 @@ class ComplianceService {
     // Implementation would check user's transaction history
     // This is a placeholder for the actual implementation
     return {
-      checkType: 'HISTORY_CHECK',
+      checkType: "HISTORY_CHECK",
       passed: true,
-      alerts: []
+      alerts: [],
     };
   }
 
@@ -609,9 +675,9 @@ class ComplianceService {
     // Implementation would check counterparty risk
     // This is a placeholder for the actual implementation
     return {
-      checkType: 'COUNTERPARTY_CHECK',
+      checkType: "COUNTERPARTY_CHECK",
       passed: true,
-      alerts: []
+      alerts: [],
     };
   }
 
@@ -623,9 +689,9 @@ class ComplianceService {
     // Implementation would check for suspicious patterns
     // This is a placeholder for the actual implementation
     return {
-      checkType: 'PATTERN_CHECK',
+      checkType: "PATTERN_CHECK",
       passed: true,
-      alerts: []
+      alerts: [],
     };
   }
 
@@ -634,17 +700,19 @@ class ComplianceService {
    * @private
    */
   _aggregateAMLResults(checks, transactionData) {
-    const allAlerts = checks.flatMap(check => check.alerts);
-    const highSeverityAlerts = allAlerts.filter(alert => alert.severity === 'HIGH');
+    const allAlerts = checks.flatMap((check) => check.alerts);
+    const highSeverityAlerts = allAlerts.filter(
+      (alert) => alert.severity === "HIGH",
+    );
 
-    let riskLevel = 'LOW';
+    let riskLevel = "LOW";
     let flagged = false;
 
     if (highSeverityAlerts.length > 0) {
-      riskLevel = 'HIGH';
+      riskLevel = "HIGH";
       flagged = true;
     } else if (allAlerts.length > 0) {
-      riskLevel = 'MEDIUM';
+      riskLevel = "MEDIUM";
       flagged = true;
     }
 
@@ -655,7 +723,7 @@ class ComplianceService {
       flagged,
       alerts: allAlerts,
       checks,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
   }
 
@@ -664,20 +732,20 @@ class ComplianceService {
    * @private
    */
   async _generateSAR(transactionData, amlResult) {
-    const sarId = `SAR_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
+    const sarId = `SAR_${Date.now()}_${crypto.randomBytes(4).toString("hex")}`;
 
-    logger.info('Generating SAR', {
+    logger.info("Generating SAR", {
       sarId,
       transactionId: transactionData.transactionId,
-      userId: transactionData.userId
+      userId: transactionData.userId,
     });
 
     // Create audit trail entry
-    await this._createAuditEntry('SAR_GENERATED', transactionData.userId, {
+    await this._createAuditEntry("SAR_GENERATED", transactionData.userId, {
       sarId,
       transactionId: transactionData.transactionId,
       riskLevel: amlResult.riskLevel,
-      alertCount: amlResult.alerts.length
+      alertCount: amlResult.alerts.length,
     });
 
     // Implementation would submit SAR to regulatory authorities
@@ -693,12 +761,12 @@ class ComplianceService {
     // This is a placeholder for the actual implementation
     return {
       reportId: `KYC_REPORT_${Date.now()}`,
-      type: 'KYC',
+      type: "KYC",
       startDate: params.startDate,
       endDate: params.endDate,
       recordCount: 0,
       data: [],
-      generatedAt: new Date().toISOString()
+      generatedAt: new Date().toISOString(),
     };
   }
 
@@ -711,12 +779,12 @@ class ComplianceService {
     // This is a placeholder for the actual implementation
     return {
       reportId: `AML_REPORT_${Date.now()}`,
-      type: 'AML',
+      type: "AML",
       startDate: params.startDate,
       endDate: params.endDate,
       recordCount: 0,
       data: [],
-      generatedAt: new Date().toISOString()
+      generatedAt: new Date().toISOString(),
     };
   }
 
@@ -729,12 +797,12 @@ class ComplianceService {
     // This is a placeholder for the actual implementation
     return {
       reportId: `SANCTIONS_REPORT_${Date.now()}`,
-      type: 'SANCTIONS',
+      type: "SANCTIONS",
       startDate: params.startDate,
       endDate: params.endDate,
       recordCount: 0,
       data: [],
-      generatedAt: new Date().toISOString()
+      generatedAt: new Date().toISOString(),
     };
   }
 
@@ -747,12 +815,12 @@ class ComplianceService {
     // This is a placeholder for the actual implementation
     return {
       reportId: `COMPREHENSIVE_REPORT_${Date.now()}`,
-      type: 'COMPREHENSIVE',
+      type: "COMPREHENSIVE",
       startDate: params.startDate,
       endDate: params.endDate,
       recordCount: 0,
       data: [],
-      generatedAt: new Date().toISOString()
+      generatedAt: new Date().toISOString(),
     };
   }
 
@@ -767,12 +835,12 @@ class ComplianceService {
       userId,
       details,
       timestamp: new Date().toISOString(),
-      ipAddress: 'system', // Would be actual IP in real implementation
-      userAgent: 'LendSmart-Backend/1.0'
+      ipAddress: "system", // Would be actual IP in real implementation
+      userAgent: "LendSmart-Backend/1.0",
     };
 
     // Implementation would store audit entry in immutable storage
-    logger.info('Audit entry created', auditEntry);
+    logger.info("Audit entry created", auditEntry);
   }
 }
 

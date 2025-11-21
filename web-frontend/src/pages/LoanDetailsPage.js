@@ -33,7 +33,8 @@ const LoanDetailsPage = () => {
 
         // Fetch repayment schedule if loan is funded or active
         if (["funded", "active"].includes(response.data.status)) {
-          const scheduleResponse = await apiService.getLoanRepaymentSchedule(loanId);
+          const scheduleResponse =
+            await apiService.getLoanRepaymentSchedule(loanId);
           setRepaymentSchedule(scheduleResponse.data);
         }
 
@@ -41,7 +42,7 @@ const LoanDetailsPage = () => {
         if (response.data.smartContractAddress) {
           try {
             const txHistory = await blockchainService.getLoanTransactionHistory(
-              response.data.smartContractAddress
+              response.data.smartContractAddress,
             );
             setTransactionHistory(txHistory);
           } catch (txError) {
@@ -84,7 +85,9 @@ const LoanDetailsPage = () => {
     const remainingAmount = loan.amountRequested - (loan.amountFunded || 0);
 
     if (amountToFund > remainingAmount) {
-      toast.error(`Maximum funding amount is $${remainingAmount.toLocaleString()}`);
+      toast.error(
+        `Maximum funding amount is $${remainingAmount.toLocaleString()}`,
+      );
       return;
     }
 
@@ -93,7 +96,9 @@ const LoanDetailsPage = () => {
     try {
       // First check if user has connected wallet
       if (!user.walletAddress) {
-        toast.error("Please connect your wallet in your profile settings first");
+        toast.error(
+          "Please connect your wallet in your profile settings first",
+        );
         setProcessingAction(false);
         return;
       }
@@ -106,7 +111,7 @@ const LoanDetailsPage = () => {
             loan.smartContractAddress || null,
             loan.borrower.walletAddress,
             user.walletAddress,
-            amountToFund
+            amountToFund,
           );
         } catch (blockchainError) {
           console.error("Blockchain transaction failed:", blockchainError);
@@ -119,7 +124,7 @@ const LoanDetailsPage = () => {
       // Submit to API
       const response = await apiService.fundLoan(loanId, {
         amount: amountToFund,
-        transactionHash: txHash
+        transactionHash: txHash,
       });
 
       toast.success("Loan funded successfully!");
@@ -129,11 +134,14 @@ const LoanDetailsPage = () => {
 
       // Refresh repayment schedule
       if (["funded", "active"].includes(response.data.status)) {
-        const scheduleResponse = await apiService.getLoanRepaymentSchedule(loanId);
+        const scheduleResponse =
+          await apiService.getLoanRepaymentSchedule(loanId);
         setRepaymentSchedule(scheduleResponse.data);
       }
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to fund loan. Please try again.");
+      toast.error(
+        err.response?.data?.message || "Failed to fund loan. Please try again.",
+      );
       console.error("Fund loan error:", err);
     } finally {
       setProcessingAction(false);
@@ -159,16 +167,23 @@ const LoanDetailsPage = () => {
       return;
     }
 
-    if (!repaymentAmount || isNaN(repaymentAmount) || parseFloat(repaymentAmount) <= 0) {
+    if (
+      !repaymentAmount ||
+      isNaN(repaymentAmount) ||
+      parseFloat(repaymentAmount) <= 0
+    ) {
       toast.error("Please enter a valid repayment amount");
       return;
     }
 
     const amountToRepay = parseFloat(repaymentAmount);
-    const remainingDue = selectedInstallment.amountDue - (selectedInstallment.amountPaid || 0);
+    const remainingDue =
+      selectedInstallment.amountDue - (selectedInstallment.amountPaid || 0);
 
     if (amountToRepay > remainingDue) {
-      toast.error(`Maximum repayment amount is $${remainingDue.toLocaleString()}`);
+      toast.error(
+        `Maximum repayment amount is $${remainingDue.toLocaleString()}`,
+      );
       return;
     }
 
@@ -177,7 +192,9 @@ const LoanDetailsPage = () => {
     try {
       // First check if user has connected wallet
       if (!user.walletAddress) {
-        toast.error("Please connect your wallet in your profile settings first");
+        toast.error(
+          "Please connect your wallet in your profile settings first",
+        );
         setProcessingAction(false);
         return;
       }
@@ -191,7 +208,7 @@ const LoanDetailsPage = () => {
             user.walletAddress,
             loan.lender.walletAddress,
             amountToRepay,
-            selectedInstallment.installmentNumber
+            selectedInstallment.installmentNumber,
           );
         } catch (blockchainError) {
           console.error("Blockchain transaction failed:", blockchainError);
@@ -205,7 +222,7 @@ const LoanDetailsPage = () => {
       const response = await apiService.recordRepayment(loanId, {
         installmentNumber: selectedInstallment.installmentNumber,
         amount: amountToRepay,
-        transactionHash: txHash
+        transactionHash: txHash,
       });
 
       toast.success("Repayment recorded successfully!");
@@ -215,14 +232,15 @@ const LoanDetailsPage = () => {
       setSelectedInstallment(null);
 
       // Refresh repayment schedule
-      const scheduleResponse = await apiService.getLoanRepaymentSchedule(loanId);
+      const scheduleResponse =
+        await apiService.getLoanRepaymentSchedule(loanId);
       setRepaymentSchedule(scheduleResponse.data);
 
       // Refresh transaction history if available
       if (loan.smartContractAddress) {
         try {
           const txHistory = await blockchainService.getLoanTransactionHistory(
-            loan.smartContractAddress
+            loan.smartContractAddress,
           );
           setTransactionHistory(txHistory);
         } catch (txError) {
@@ -230,7 +248,10 @@ const LoanDetailsPage = () => {
         }
       }
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to record repayment. Please try again.");
+      toast.error(
+        err.response?.data?.message ||
+          "Failed to record repayment. Please try again.",
+      );
       console.error("Repayment error:", err);
     } finally {
       setProcessingAction(false);
@@ -249,19 +270,19 @@ const LoanDetailsPage = () => {
     let maturityDate;
 
     switch (loan.termUnit.toLowerCase()) {
-      case 'days':
+      case "days":
         maturityDate = new Date(fundingDate);
         maturityDate.setDate(maturityDate.getDate() + loan.term);
         break;
-      case 'weeks':
+      case "weeks":
         maturityDate = new Date(fundingDate);
-        maturityDate.setDate(maturityDate.getDate() + (loan.term * 7));
+        maturityDate.setDate(maturityDate.getDate() + loan.term * 7);
         break;
-      case 'months':
+      case "months":
         maturityDate = new Date(fundingDate);
         maturityDate.setMonth(maturityDate.getMonth() + loan.term);
         break;
-      case 'years':
+      case "years":
         maturityDate = new Date(fundingDate);
         maturityDate.setFullYear(maturityDate.getFullYear() + loan.term);
         break;
@@ -279,13 +300,13 @@ const LoanDetailsPage = () => {
     if (diffDays < 30) return `${diffDays} days`;
     if (diffDays < 365) {
       const months = Math.floor(diffDays / 30);
-      return `${months} month${months > 1 ? 's' : ''}`;
+      return `${months} month${months > 1 ? "s" : ""}`;
     }
 
     const years = Math.floor(diffDays / 365);
     const remainingMonths = Math.floor((diffDays % 365) / 30);
 
-    return `${years} year${years > 1 ? 's' : ''}${remainingMonths > 0 ? `, ${remainingMonths} month${remainingMonths > 1 ? 's' : ''}` : ''}`;
+    return `${years} year${years > 1 ? "s" : ""}${remainingMonths > 0 ? `, ${remainingMonths} month${remainingMonths > 1 ? "s" : ""}` : ""}`;
   };
 
   const renderFundingModal = () => {
@@ -345,7 +366,7 @@ const LoanDetailsPage = () => {
 
     // Filter only unpaid or partially paid installments
     const unpaidInstallments = repaymentSchedule.filter(
-      installment => installment.status !== "paid"
+      (installment) => installment.status !== "paid",
     );
 
     return (
@@ -361,13 +382,14 @@ const LoanDetailsPage = () => {
                 value={selectedInstallment?.installmentNumber || ""}
                 onChange={(e) => {
                   const selected = repaymentSchedule.find(
-                    i => i.installmentNumber === parseInt(e.target.value)
+                    (i) => i.installmentNumber === parseInt(e.target.value),
                   );
                   setSelectedInstallment(selected);
 
                   // Set default repayment amount to remaining due
                   if (selected) {
-                    const remainingDue = selected.amountDue - (selected.amountPaid || 0);
+                    const remainingDue =
+                      selected.amountDue - (selected.amountPaid || 0);
                     setRepaymentAmount(remainingDue.toString());
                   }
                 }}
@@ -375,12 +397,13 @@ const LoanDetailsPage = () => {
                 disabled={processingAction}
               >
                 <option value="">-- Select Installment --</option>
-                {unpaidInstallments.map(installment => (
+                {unpaidInstallments.map((installment) => (
                   <option
                     key={installment.installmentNumber}
                     value={installment.installmentNumber}
                   >
-                    #{installment.installmentNumber} - Due: {new Date(installment.dueDate).toLocaleDateString()}
+                    #{installment.installmentNumber} - Due:{" "}
+                    {new Date(installment.dueDate).toLocaleDateString()}
                     (${installment.amountDue.toLocaleString()})
                   </option>
                 ))}
@@ -390,10 +413,25 @@ const LoanDetailsPage = () => {
             {selectedInstallment && (
               <>
                 <div className="installment-details">
-                  <p>Due Date: {new Date(selectedInstallment.dueDate).toLocaleDateString()}</p>
-                  <p>Amount Due: ${selectedInstallment.amountDue.toLocaleString()}</p>
-                  <p>Already Paid: ${(selectedInstallment.amountPaid || 0).toLocaleString()}</p>
-                  <p>Remaining: ${(selectedInstallment.amountDue - (selectedInstallment.amountPaid || 0)).toLocaleString()}</p>
+                  <p>
+                    Due Date:{" "}
+                    {new Date(selectedInstallment.dueDate).toLocaleDateString()}
+                  </p>
+                  <p>
+                    Amount Due: $
+                    {selectedInstallment.amountDue.toLocaleString()}
+                  </p>
+                  <p>
+                    Already Paid: $
+                    {(selectedInstallment.amountPaid || 0).toLocaleString()}
+                  </p>
+                  <p>
+                    Remaining: $
+                    {(
+                      selectedInstallment.amountDue -
+                      (selectedInstallment.amountPaid || 0)
+                    ).toLocaleString()}
+                  </p>
                 </div>
 
                 <div className="form-group">
@@ -404,7 +442,10 @@ const LoanDetailsPage = () => {
                     value={repaymentAmount}
                     onChange={(e) => setRepaymentAmount(e.target.value)}
                     min="1"
-                    max={selectedInstallment.amountDue - (selectedInstallment.amountPaid || 0)}
+                    max={
+                      selectedInstallment.amountDue -
+                      (selectedInstallment.amountPaid || 0)
+                    }
                     step="0.01"
                     required
                     disabled={processingAction}
@@ -440,26 +481,33 @@ const LoanDetailsPage = () => {
     );
   };
 
-  if (loading) return (
-    <div className="page-container">
-      <div className="loading-spinner"></div>
-      <p className="loading-text">Loading loan details...</p>
-    </div>
-  );
+  if (loading)
+    return (
+      <div className="page-container">
+        <div className="loading-spinner"></div>
+        <p className="loading-text">Loading loan details...</p>
+      </div>
+    );
 
-  if (error) return (
-    <div className="page-container error-message">
-      <p>{error}</p>
-      <Link to="/loans" className="button button-secondary">Back to Marketplace</Link>
-    </div>
-  );
+  if (error)
+    return (
+      <div className="page-container error-message">
+        <p>{error}</p>
+        <Link to="/loans" className="button button-secondary">
+          Back to Marketplace
+        </Link>
+      </div>
+    );
 
-  if (!loan) return (
-    <div className="page-container">
-      <p>Loan details not available.</p>
-      <Link to="/loans" className="button button-secondary">Back to Marketplace</Link>
-    </div>
-  );
+  if (!loan)
+    return (
+      <div className="page-container">
+        <p>Loan details not available.</p>
+        <Link to="/loans" className="button button-secondary">
+          Back to Marketplace
+        </Link>
+      </div>
+    );
 
   return (
     <div className="page-container loan-details">
@@ -468,7 +516,9 @@ const LoanDetailsPage = () => {
       <div className="loan-header">
         <h3>{loan.purpose || "General Loan"}</h3>
         <div className="loan-status">
-          <span className={`status status-${loan.status.toLowerCase().replace("_", "-")}`}>
+          <span
+            className={`status status-${loan.status.toLowerCase().replace("_", "-")}`}
+          >
             {loan.status.replace("_", " ")}
           </span>
         </div>
@@ -477,7 +527,9 @@ const LoanDetailsPage = () => {
       <div className="loan-summary">
         <div className="summary-item">
           <span className="summary-label">Amount</span>
-          <span className="summary-value">${loan.amountRequested?.toLocaleString()}</span>
+          <span className="summary-value">
+            ${loan.amountRequested?.toLocaleString()}
+          </span>
         </div>
         <div className="summary-item">
           <span className="summary-label">Interest Rate</span>
@@ -485,7 +537,9 @@ const LoanDetailsPage = () => {
         </div>
         <div className="summary-item">
           <span className="summary-label">Term</span>
-          <span className="summary-value">{loan.term} {loan.termUnit}</span>
+          <span className="summary-value">
+            {loan.term} {loan.termUnit}
+          </span>
         </div>
         {loan.status === "marketplace" && (
           <div className="summary-item">
@@ -493,12 +547,18 @@ const LoanDetailsPage = () => {
             <div className="progress-bar">
               <div
                 className="progress-fill"
-                style={{ width: `${((loan.amountFunded || 0) / loan.amountRequested) * 100}%` }}
+                style={{
+                  width: `${((loan.amountFunded || 0) / loan.amountRequested) * 100}%`,
+                }}
               ></div>
             </div>
             <span className="progress-text">
-              ${(loan.amountFunded || 0).toLocaleString()} of ${loan.amountRequested.toLocaleString()}
-              ({Math.round(((loan.amountFunded || 0) / loan.amountRequested) * 100)}%)
+              ${(loan.amountFunded || 0).toLocaleString()} of $
+              {loan.amountRequested.toLocaleString()}(
+              {Math.round(
+                ((loan.amountFunded || 0) / loan.amountRequested) * 100,
+              )}
+              %)
             </span>
           </div>
         )}
@@ -513,22 +573,31 @@ const LoanDetailsPage = () => {
       <div className="details-grid">
         <div className="detail-section">
           <h4>Loan Information</h4>
-          <div className="detail-item"><strong>Loan ID:</strong> {loan._id}</div>
-          <div className="detail-item"><strong>Purpose:</strong> {loan.purpose}</div>
+          <div className="detail-item">
+            <strong>Loan ID:</strong> {loan._id}
+          </div>
+          <div className="detail-item">
+            <strong>Purpose:</strong> {loan.purpose}
+          </div>
           {loan.collateral && (
-            <div className="detail-item"><strong>Collateral:</strong> {loan.collateral}</div>
+            <div className="detail-item">
+              <strong>Collateral:</strong> {loan.collateral}
+            </div>
           )}
           <div className="detail-item">
-            <strong>Application Date:</strong> {new Date(loan.applicationDate).toLocaleDateString()}
+            <strong>Application Date:</strong>{" "}
+            {new Date(loan.applicationDate).toLocaleDateString()}
           </div>
           {loan.fundingDate && (
             <div className="detail-item">
-              <strong>Funded Date:</strong> {new Date(loan.fundingDate).toLocaleDateString()}
+              <strong>Funded Date:</strong>{" "}
+              {new Date(loan.fundingDate).toLocaleDateString()}
             </div>
           )}
           {loan.completionDate && (
             <div className="detail-item">
-              <strong>Completion Date:</strong> {new Date(loan.completionDate).toLocaleDateString()}
+              <strong>Completion Date:</strong>{" "}
+              {new Date(loan.completionDate).toLocaleDateString()}
             </div>
           )}
           {loan.smartContractAddress && (
@@ -540,7 +609,8 @@ const LoanDetailsPage = () => {
                 rel="noopener noreferrer"
                 className="contract-link"
               >
-                {loan.smartContractAddress.substring(0, 8)}...{loan.smartContractAddress.substring(36)}
+                {loan.smartContractAddress.substring(0, 8)}...
+                {loan.smartContractAddress.substring(36)}
               </a>
             </div>
           )}
@@ -571,7 +641,8 @@ const LoanDetailsPage = () => {
             <div className="detail-item">
               <strong>Risk Level:</strong>
               <span className={`risk-level risk-${loan.riskLevel}`}>
-                {loan.riskLevel.charAt(0).toUpperCase() + loan.riskLevel.slice(1)}
+                {loan.riskLevel.charAt(0).toUpperCase() +
+                  loan.riskLevel.slice(1)}
               </span>
             </div>
           )}
@@ -595,16 +666,20 @@ const LoanDetailsPage = () => {
                 </tr>
               </thead>
               <tbody>
-                {repaymentSchedule.map(installment => (
+                {repaymentSchedule.map((installment) => (
                   <tr key={installment.installmentNumber}>
                     <td>{installment.installmentNumber}</td>
-                    <td>{new Date(installment.dueDate).toLocaleDateString()}</td>
+                    <td>
+                      {new Date(installment.dueDate).toLocaleDateString()}
+                    </td>
                     <td>${installment.amountDue.toLocaleString()}</td>
                     <td>${installment.principalComponent.toLocaleString()}</td>
                     <td>${installment.interestComponent.toLocaleString()}</td>
                     <td>${(installment.amountPaid || 0).toLocaleString()}</td>
                     <td>
-                      <span className={`payment-status status-${installment.status}`}>
+                      <span
+                        className={`payment-status status-${installment.status}`}
+                      >
                         {installment.status}
                       </span>
                     </td>
@@ -665,15 +740,16 @@ const LoanDetailsPage = () => {
         )}
 
         {["funded", "active"].includes(loan.status) &&
-         user && user.id === loan.borrower._id && (
-          <button
-            className="button button-primary"
-            onClick={() => setShowRepaymentModal(true)}
-            disabled={processingAction}
-          >
-            Make a Repayment
-          </button>
-        )}
+          user &&
+          user.id === loan.borrower._id && (
+            <button
+              className="button button-primary"
+              onClick={() => setShowRepaymentModal(true)}
+              disabled={processingAction}
+            >
+              Make a Repayment
+            </button>
+          )}
 
         <Link to="/loans" className="button button-secondary">
           Back to Marketplace
@@ -717,7 +793,7 @@ const LoanDetailsPage = () => {
           padding: 20px;
           border-radius: 8px;
           margin-bottom: 30px;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
         }
 
         .summary-item {
@@ -766,7 +842,7 @@ const LoanDetailsPage = () => {
           background-color: #fff;
           padding: 20px;
           border-radius: 8px;
-          box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+          box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
 
         .detail-section h4 {
@@ -796,7 +872,7 @@ const LoanDetailsPage = () => {
           background-color: #fff;
           padding: 20px;
           border-radius: 8px;
-          box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+          box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
           margin-bottom: 30px;
         }
 
@@ -816,7 +892,8 @@ const LoanDetailsPage = () => {
           border-collapse: collapse;
         }
 
-        th, td {
+        th,
+        td {
           padding: 12px 15px;
           text-align: left;
           border-bottom: 1px solid #eee;
@@ -1063,8 +1140,12 @@ const LoanDetailsPage = () => {
         }
 
         @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
+          0% {
+            transform: rotate(0deg);
+          }
+          100% {
+            transform: rotate(360deg);
+          }
         }
 
         .error-message {

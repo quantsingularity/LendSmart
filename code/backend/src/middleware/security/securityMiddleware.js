@@ -1,9 +1,9 @@
-const helmet = require('helmet');
-const rateLimit = require('express-rate-limit');
-const slowDown = require('express-slow-down');
-const crypto = require('crypto');
-const { logger } = require('../../utils/logger');
-const { AppError } = require('../monitoring/errorHandler');
+const helmet = require("helmet");
+const rateLimit = require("express-rate-limit");
+const slowDown = require("express-slow-down");
+const crypto = require("crypto");
+const { logger } = require("../../utils/logger");
+const { AppError } = require("../monitoring/errorHandler");
 
 /**
  * Comprehensive Security Middleware for LendSmart
@@ -22,8 +22,9 @@ class SecurityMiddleware {
       blockDuration: parseInt(process.env.BLOCK_DURATION) || 15 * 60 * 1000, // 15 minutes
       suspiciousThreshold: parseInt(process.env.SUSPICIOUS_THRESHOLD) || 10,
       cleanupInterval: parseInt(process.env.CLEANUP_INTERVAL) || 5 * 60 * 1000, // 5 minutes
-      csrfTokenExpiry: parseInt(process.env.CSRF_TOKEN_EXPIRY) || 60 * 60 * 1000, // 1 hour
-      sessionTimeout: parseInt(process.env.SESSION_TIMEOUT) || 30 * 60 * 1000 // 30 minutes
+      csrfTokenExpiry:
+        parseInt(process.env.CSRF_TOKEN_EXPIRY) || 60 * 60 * 1000, // 1 hour
+      sessionTimeout: parseInt(process.env.SESSION_TIMEOUT) || 30 * 60 * 1000, // 30 minutes
     };
 
     // CSRF token storage (in production, use Redis)
@@ -42,7 +43,11 @@ class SecurityMiddleware {
       contentSecurityPolicy: {
         directives: {
           defaultSrc: ["'self'"],
-          styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+          styleSrc: [
+            "'self'",
+            "'unsafe-inline'",
+            "https://fonts.googleapis.com",
+          ],
           scriptSrc: ["'self'", "'strict-dynamic'"],
           imgSrc: ["'self'", "data:", "https:"],
           connectSrc: ["'self'", "https://api.lendsmart.com"],
@@ -53,21 +58,21 @@ class SecurityMiddleware {
           baseUri: ["'self'"],
           formAction: ["'self'"],
           frameAncestors: ["'none'"],
-          upgradeInsecureRequests: []
+          upgradeInsecureRequests: [],
         },
-        reportOnly: process.env.NODE_ENV === 'development'
+        reportOnly: process.env.NODE_ENV === "development",
       },
 
       // HTTP Strict Transport Security
       hsts: {
         maxAge: 31536000, // 1 year
         includeSubDomains: true,
-        preload: true
+        preload: true,
       },
 
       // X-Frame-Options
       frameguard: {
-        action: 'deny'
+        action: "deny",
       },
 
       // X-Content-Type-Options
@@ -78,7 +83,7 @@ class SecurityMiddleware {
 
       // Referrer Policy
       referrerPolicy: {
-        policy: 'strict-origin-when-cross-origin'
+        policy: "strict-origin-when-cross-origin",
       },
 
       // Permissions Policy
@@ -91,8 +96,8 @@ class SecurityMiddleware {
           usb: ["'none'"],
           magnetometer: ["'none'"],
           gyroscope: ["'none'"],
-          accelerometer: ["'none'"]
-        }
+          accelerometer: ["'none'"],
+        },
       },
 
       // Hide X-Powered-By header
@@ -100,14 +105,14 @@ class SecurityMiddleware {
 
       // DNS Prefetch Control
       dnsPrefetchControl: {
-        allow: false
+        allow: false,
       },
 
       // Expect-CT
       expectCt: {
         maxAge: 86400, // 24 hours
-        enforce: true
-      }
+        enforce: true,
+      },
     });
   }
 
@@ -121,14 +126,14 @@ class SecurityMiddleware {
         windowMs: 15 * 60 * 1000, // 15 minutes
         max: 1000, // 1000 requests per window
         message: {
-          error: 'Too many requests from this IP',
-          code: 'RATE_LIMIT_EXCEEDED',
-          retryAfter: 900 // 15 minutes
+          error: "Too many requests from this IP",
+          code: "RATE_LIMIT_EXCEEDED",
+          retryAfter: 900, // 15 minutes
         },
         standardHeaders: true,
         legacyHeaders: false,
         handler: this._rateLimitHandler.bind(this),
-        skip: (req) => this._shouldSkipRateLimit(req)
+        skip: (req) => this._shouldSkipRateLimit(req),
       }),
 
       // Authentication endpoints
@@ -136,12 +141,12 @@ class SecurityMiddleware {
         windowMs: 15 * 60 * 1000, // 15 minutes
         max: 5, // 5 attempts per window
         message: {
-          error: 'Too many authentication attempts',
-          code: 'AUTH_RATE_LIMIT_EXCEEDED',
-          retryAfter: 900
+          error: "Too many authentication attempts",
+          code: "AUTH_RATE_LIMIT_EXCEEDED",
+          retryAfter: 900,
         },
         skipSuccessfulRequests: true,
-        handler: this._authRateLimitHandler.bind(this)
+        handler: this._authRateLimitHandler.bind(this),
       }),
 
       // Password reset
@@ -149,10 +154,10 @@ class SecurityMiddleware {
         windowMs: 60 * 60 * 1000, // 1 hour
         max: 3, // 3 attempts per hour
         message: {
-          error: 'Too many password reset attempts',
-          code: 'PASSWORD_RESET_RATE_LIMIT_EXCEEDED',
-          retryAfter: 3600
-        }
+          error: "Too many password reset attempts",
+          code: "PASSWORD_RESET_RATE_LIMIT_EXCEEDED",
+          retryAfter: 3600,
+        },
       }),
 
       // API endpoints
@@ -160,10 +165,10 @@ class SecurityMiddleware {
         windowMs: 60 * 1000, // 1 minute
         max: 100, // 100 requests per minute
         message: {
-          error: 'API rate limit exceeded',
-          code: 'API_RATE_LIMIT_EXCEEDED',
-          retryAfter: 60
-        }
+          error: "API rate limit exceeded",
+          code: "API_RATE_LIMIT_EXCEEDED",
+          retryAfter: 60,
+        },
       }),
 
       // Payment endpoints (stricter)
@@ -171,10 +176,10 @@ class SecurityMiddleware {
         windowMs: 60 * 1000, // 1 minute
         max: 10, // 10 payment requests per minute
         message: {
-          error: 'Payment rate limit exceeded',
-          code: 'PAYMENT_RATE_LIMIT_EXCEEDED',
-          retryAfter: 60
-        }
+          error: "Payment rate limit exceeded",
+          code: "PAYMENT_RATE_LIMIT_EXCEEDED",
+          retryAfter: 60,
+        },
       }),
 
       // File upload
@@ -182,11 +187,11 @@ class SecurityMiddleware {
         windowMs: 15 * 60 * 1000, // 15 minutes
         max: 20, // 20 uploads per window
         message: {
-          error: 'Upload rate limit exceeded',
-          code: 'UPLOAD_RATE_LIMIT_EXCEEDED',
-          retryAfter: 900
-        }
-      })
+          error: "Upload rate limit exceeded",
+          code: "UPLOAD_RATE_LIMIT_EXCEEDED",
+          retryAfter: 900,
+        },
+      }),
     };
   }
 
@@ -201,7 +206,7 @@ class SecurityMiddleware {
         delayAfter: 100, // Allow 100 requests per window at full speed
         delayMs: 500, // Add 500ms delay per request after delayAfter
         maxDelayMs: 20000, // Maximum delay of 20 seconds
-        skipSuccessfulRequests: true
+        skipSuccessfulRequests: true,
       }),
 
       // Authentication slow down
@@ -210,8 +215,8 @@ class SecurityMiddleware {
         delayAfter: 2, // Start slowing down after 2 requests
         delayMs: 1000, // Add 1 second delay per request
         maxDelayMs: 30000, // Maximum delay of 30 seconds
-        skipSuccessfulRequests: false
-      })
+        skipSuccessfulRequests: false,
+      }),
     };
   }
 
@@ -226,9 +231,10 @@ class SecurityMiddleware {
       logger.security.blockedIPAccess(clientIP, req.path, req.method);
 
       return res.status(403).json({
-        error: 'Access denied',
-        code: 'IP_BLOCKED',
-        message: 'Your IP address has been temporarily blocked due to suspicious activity'
+        error: "Access denied",
+        code: "IP_BLOCKED",
+        message:
+          "Your IP address has been temporarily blocked due to suspicious activity",
       });
     }
 
@@ -241,12 +247,17 @@ class SecurityMiddleware {
         // Block the IP
         this.blockedIPs.add(clientIP);
 
-        logger.security.ipBlocked(clientIP, attempts.count, 'excessive_failed_attempts');
+        logger.security.ipBlocked(
+          clientIP,
+          attempts.count,
+          "excessive_failed_attempts",
+        );
 
         return res.status(403).json({
-          error: 'Access denied',
-          code: 'IP_BLOCKED',
-          message: 'Your IP address has been temporarily blocked due to excessive failed attempts'
+          error: "Access denied",
+          code: "IP_BLOCKED",
+          message:
+            "Your IP address has been temporarily blocked due to excessive failed attempts",
         });
       } else {
         // Reset failed attempts after block duration
@@ -262,7 +273,7 @@ class SecurityMiddleware {
    */
   suspiciousActivityMiddleware = (req, res, next) => {
     const clientIP = this._getClientIP(req);
-    const userAgent = req.get('User-Agent') || '';
+    const userAgent = req.get("User-Agent") || "";
     const path = req.path;
 
     // Check for suspicious patterns
@@ -272,8 +283,8 @@ class SecurityMiddleware {
       this._recordSuspiciousActivity(clientIP, suspiciousIndicators);
 
       logger.security.suspiciousActivity(
-        req.user?.id || 'anonymous',
-        'suspicious_request_pattern',
+        req.user?.id || "anonymous",
+        "suspicious_request_pattern",
         clientIP,
         userAgent,
         {
@@ -282,8 +293,8 @@ class SecurityMiddleware {
           indicators: suspiciousIndicators,
           headers: this._sanitizeHeaders(req.headers),
           query: req.query,
-          body: this._sanitizeBody(req.body)
-        }
+          body: this._sanitizeBody(req.body),
+        },
       );
 
       // If too many suspicious activities, block the IP
@@ -291,12 +302,16 @@ class SecurityMiddleware {
       if (suspiciousCount >= this.config.suspiciousThreshold) {
         this.blockedIPs.add(clientIP);
 
-        logger.security.ipBlocked(clientIP, suspiciousCount, 'suspicious_activity');
+        logger.security.ipBlocked(
+          clientIP,
+          suspiciousCount,
+          "suspicious_activity",
+        );
 
         return res.status(403).json({
-          error: 'Access denied',
-          code: 'SUSPICIOUS_ACTIVITY_DETECTED',
-          message: 'Suspicious activity detected'
+          error: "Access denied",
+          code: "SUSPICIOUS_ACTIVITY_DETECTED",
+          message: "Suspicious activity detected",
         });
       }
     }
@@ -309,29 +324,33 @@ class SecurityMiddleware {
    */
   csrfProtection = (req, res, next) => {
     // Skip CSRF for GET, HEAD, OPTIONS requests
-    if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) {
+    if (["GET", "HEAD", "OPTIONS"].includes(req.method)) {
       return next();
     }
 
     // Skip CSRF for API endpoints with valid JWT
-    if (req.path.startsWith('/api/') && req.user) {
+    if (req.path.startsWith("/api/") && req.user) {
       return next();
     }
 
-    const token = req.headers['x-csrf-token'] || req.body._csrf;
+    const token = req.headers["x-csrf-token"] || req.body._csrf;
     const sessionToken = req.session?.csrfToken;
 
-    if (!token || !sessionToken || !this._validateCSRFToken(token, sessionToken)) {
+    if (
+      !token ||
+      !sessionToken ||
+      !this._validateCSRFToken(token, sessionToken)
+    ) {
       logger.security.csrfViolation(
-        req.user?.id || 'anonymous',
+        req.user?.id || "anonymous",
         this._getClientIP(req),
         req.path,
-        req.method
+        req.method,
       );
 
       return res.status(403).json({
-        error: 'CSRF token validation failed',
-        code: 'CSRF_TOKEN_INVALID'
+        error: "CSRF token validation failed",
+        code: "CSRF_TOKEN_INVALID",
       });
     }
 
@@ -342,13 +361,13 @@ class SecurityMiddleware {
    * Generate CSRF token
    */
   generateCSRFToken(sessionId) {
-    const token = crypto.randomBytes(32).toString('hex');
+    const token = crypto.randomBytes(32).toString("hex");
     const timestamp = Date.now();
 
     this.csrfTokens.set(token, {
       sessionId,
       timestamp,
-      used: false
+      used: false,
     });
 
     return token;
@@ -376,15 +395,15 @@ class SecurityMiddleware {
 
       next();
     } catch (error) {
-      logger.error('Input sanitization failed', {
+      logger.error("Input sanitization failed", {
         error: error.message,
         path: req.path,
-        method: req.method
+        method: req.method,
       });
 
       return res.status(400).json({
-        error: 'Invalid input data',
-        code: 'INPUT_SANITIZATION_ERROR'
+        error: "Invalid input data",
+        code: "INPUT_SANITIZATION_ERROR",
       });
     }
   };
@@ -394,13 +413,13 @@ class SecurityMiddleware {
    */
   securityHeaders = (req, res, next) => {
     // Add custom security headers
-    res.setHeader('X-Request-ID', req.id || crypto.randomUUID());
-    res.setHeader('X-API-Version', process.env.API_VERSION || '1.0.0');
-    res.setHeader('X-Rate-Limit-Policy', 'strict');
+    res.setHeader("X-Request-ID", req.id || crypto.randomUUID());
+    res.setHeader("X-API-Version", process.env.API_VERSION || "1.0.0");
+    res.setHeader("X-Rate-Limit-Policy", "strict");
 
     // Remove sensitive headers
-    res.removeHeader('X-Powered-By');
-    res.removeHeader('Server');
+    res.removeHeader("X-Powered-By");
+    res.removeHeader("Server");
 
     next();
   };
@@ -419,13 +438,15 @@ class SecurityMiddleware {
         if (timeSinceLastActivity > this.config.sessionTimeout) {
           req.session.destroy((err) => {
             if (err) {
-              logger.error('Session destruction failed', { error: err.message });
+              logger.error("Session destruction failed", {
+                error: err.message,
+              });
             }
           });
 
           return res.status(401).json({
-            error: 'Session expired',
-            code: 'SESSION_EXPIRED'
+            error: "Session expired",
+            code: "SESSION_EXPIRED",
           });
         }
       }
@@ -434,12 +455,15 @@ class SecurityMiddleware {
       req.session.lastActivity = now;
 
       // Regenerate session ID periodically
-      if (!req.session.lastRegeneration ||
-          (now - req.session.lastRegeneration) > 15 * 60 * 1000) { // 15 minutes
+      if (
+        !req.session.lastRegeneration ||
+        now - req.session.lastRegeneration > 15 * 60 * 1000
+      ) {
+        // 15 minutes
 
         req.session.regenerate((err) => {
           if (err) {
-            logger.error('Session regeneration failed', { error: err.message });
+            logger.error("Session regeneration failed", { error: err.message });
           } else {
             req.session.lastRegeneration = now;
           }
@@ -453,8 +477,11 @@ class SecurityMiddleware {
   /**
    * Record failed authentication attempt
    */
-  recordFailedAttempt(ip, reason = 'authentication_failed') {
-    const attempts = this.failedAttempts.get(ip) || { count: 0, lastAttempt: 0 };
+  recordFailedAttempt(ip, reason = "authentication_failed") {
+    const attempts = this.failedAttempts.get(ip) || {
+      count: 0,
+      lastAttempt: 0,
+    };
     attempts.count++;
     attempts.lastAttempt = Date.now();
     attempts.reason = reason;
@@ -476,11 +503,13 @@ class SecurityMiddleware {
    * @private
    */
   _getClientIP(req) {
-    return req.ip ||
-           req.connection?.remoteAddress ||
-           req.socket?.remoteAddress ||
-           req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
-           'unknown';
+    return (
+      req.ip ||
+      req.connection?.remoteAddress ||
+      req.socket?.remoteAddress ||
+      req.headers["x-forwarded-for"]?.split(",")[0]?.trim() ||
+      "unknown"
+    );
   }
 
   /**
@@ -489,67 +518,86 @@ class SecurityMiddleware {
    */
   _detectSuspiciousActivity(req) {
     const indicators = [];
-    const userAgent = req.get('User-Agent') || '';
+    const userAgent = req.get("User-Agent") || "";
     const path = req.path;
     const method = req.method;
 
     // Check for bot-like user agents
     const botPatterns = [
-      /bot/i, /crawler/i, /spider/i, /scraper/i,
-      /curl/i, /wget/i, /python/i, /java/i
+      /bot/i,
+      /crawler/i,
+      /spider/i,
+      /scraper/i,
+      /curl/i,
+      /wget/i,
+      /python/i,
+      /java/i,
     ];
 
-    if (botPatterns.some(pattern => pattern.test(userAgent))) {
-      indicators.push('bot_user_agent');
+    if (botPatterns.some((pattern) => pattern.test(userAgent))) {
+      indicators.push("bot_user_agent");
     }
 
     // Check for suspicious paths
     const suspiciousPaths = [
-      /\/admin/i, /\/wp-admin/i, /\/phpmyadmin/i,
-      /\.php$/i, /\.asp$/i, /\.jsp$/i,
-      /\/etc\/passwd/i, /\/proc\//i
+      /\/admin/i,
+      /\/wp-admin/i,
+      /\/phpmyadmin/i,
+      /\.php$/i,
+      /\.asp$/i,
+      /\.jsp$/i,
+      /\/etc\/passwd/i,
+      /\/proc\//i,
     ];
 
-    if (suspiciousPaths.some(pattern => pattern.test(path))) {
-      indicators.push('suspicious_path');
+    if (suspiciousPaths.some((pattern) => pattern.test(path))) {
+      indicators.push("suspicious_path");
     }
 
     // Check for SQL injection patterns
     const sqlPatterns = [
-      /union.*select/i, /drop.*table/i, /insert.*into/i,
-      /delete.*from/i, /update.*set/i, /exec.*sp_/i
+      /union.*select/i,
+      /drop.*table/i,
+      /insert.*into/i,
+      /delete.*from/i,
+      /update.*set/i,
+      /exec.*sp_/i,
     ];
 
     const requestString = JSON.stringify({
       query: req.query,
       body: req.body,
-      params: req.params
+      params: req.params,
     });
 
-    if (sqlPatterns.some(pattern => pattern.test(requestString))) {
-      indicators.push('sql_injection_attempt');
+    if (sqlPatterns.some((pattern) => pattern.test(requestString))) {
+      indicators.push("sql_injection_attempt");
     }
 
     // Check for XSS patterns
     const xssPatterns = [
-      /<script/i, /javascript:/i, /on\w+\s*=/i,
-      /eval\s*\(/i, /expression\s*\(/i
+      /<script/i,
+      /javascript:/i,
+      /on\w+\s*=/i,
+      /eval\s*\(/i,
+      /expression\s*\(/i,
     ];
 
-    if (xssPatterns.some(pattern => pattern.test(requestString))) {
-      indicators.push('xss_attempt');
+    if (xssPatterns.some((pattern) => pattern.test(requestString))) {
+      indicators.push("xss_attempt");
     }
 
     // Check for directory traversal
     if (/\.\.\//.test(requestString) || /\.\.\\/.test(requestString)) {
-      indicators.push('directory_traversal_attempt');
+      indicators.push("directory_traversal_attempt");
     }
 
     // Check for unusual request frequency
     const clientIP = this._getClientIP(req);
     const recentRequests = this._getRecentRequestCount(clientIP);
-    if (recentRequests > 50) { // More than 50 requests in last minute
-      indicators.push('high_request_frequency');
+    if (recentRequests > 50) {
+      // More than 50 requests in last minute
+      indicators.push("high_request_frequency");
     }
 
     return indicators;
@@ -560,7 +608,11 @@ class SecurityMiddleware {
    * @private
    */
   _recordSuspiciousActivity(ip, indicators) {
-    const activity = this.suspiciousIPs.get(ip) || { count: 0, lastActivity: 0, indicators: [] };
+    const activity = this.suspiciousIPs.get(ip) || {
+      count: 0,
+      lastActivity: 0,
+      indicators: [],
+    };
     activity.count++;
     activity.lastActivity = Date.now();
     activity.indicators.push(...indicators);
@@ -606,12 +658,12 @@ class SecurityMiddleware {
    * @private
    */
   _sanitizeObject(obj) {
-    if (typeof obj !== 'object' || obj === null) {
+    if (typeof obj !== "object" || obj === null) {
       return this._sanitizeValue(obj);
     }
 
     if (Array.isArray(obj)) {
-      return obj.map(item => this._sanitizeObject(item));
+      return obj.map((item) => this._sanitizeObject(item));
     }
 
     const sanitized = {};
@@ -628,12 +680,12 @@ class SecurityMiddleware {
    * @private
    */
   _sanitizeValue(value) {
-    if (typeof value !== 'string') {
+    if (typeof value !== "string") {
       return value;
     }
 
     // Remove null bytes
-    value = value.replace(/\0/g, '');
+    value = value.replace(/\0/g, "");
 
     // Limit string length to prevent DoS
     if (value.length > 10000) {
@@ -641,7 +693,7 @@ class SecurityMiddleware {
     }
 
     // Remove potentially dangerous characters
-    value = value.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+    value = value.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "");
 
     return value;
   }
@@ -656,7 +708,7 @@ class SecurityMiddleware {
     // Remove sensitive headers
     delete sanitized.authorization;
     delete sanitized.cookie;
-    delete sanitized['x-api-key'];
+    delete sanitized["x-api-key"];
 
     return sanitized;
   }
@@ -666,7 +718,7 @@ class SecurityMiddleware {
    * @private
    */
   _sanitizeBody(body) {
-    if (!body || typeof body !== 'object') {
+    if (!body || typeof body !== "object") {
       return body;
     }
 
@@ -674,14 +726,22 @@ class SecurityMiddleware {
 
     // Remove sensitive fields
     const sensitiveFields = [
-      'password', 'confirmPassword', 'currentPassword', 'newPassword',
-      'ssn', 'socialSecurityNumber', 'creditCardNumber', 'cvv',
-      'accountNumber', 'routingNumber', 'pin'
+      "password",
+      "confirmPassword",
+      "currentPassword",
+      "newPassword",
+      "ssn",
+      "socialSecurityNumber",
+      "creditCardNumber",
+      "cvv",
+      "accountNumber",
+      "routingNumber",
+      "pin",
     ];
 
-    sensitiveFields.forEach(field => {
+    sensitiveFields.forEach((field) => {
       if (sanitized[field]) {
-        sanitized[field] = '[REDACTED]';
+        sanitized[field] = "[REDACTED]";
       }
     });
 
@@ -699,10 +759,10 @@ class SecurityMiddleware {
       clientIP,
       req.path,
       req.method,
-      req.user?.id || 'anonymous'
+      req.user?.id || "anonymous",
     );
 
-    this.recordFailedAttempt(clientIP, 'rate_limit_exceeded');
+    this.recordFailedAttempt(clientIP, "rate_limit_exceeded");
   }
 
   /**
@@ -714,11 +774,11 @@ class SecurityMiddleware {
 
     logger.security.authRateLimitExceeded(
       clientIP,
-      req.body?.email || 'unknown',
-      req.path
+      req.body?.email || "unknown",
+      req.path,
     );
 
-    this.recordFailedAttempt(clientIP, 'auth_rate_limit_exceeded');
+    this.recordFailedAttempt(clientIP, "auth_rate_limit_exceeded");
   }
 
   /**
@@ -727,12 +787,12 @@ class SecurityMiddleware {
    */
   _shouldSkipRateLimit(req) {
     // Skip rate limiting for health checks
-    if (req.path === '/health' || req.path === '/metrics') {
+    if (req.path === "/health" || req.path === "/metrics") {
       return true;
     }
 
     // Skip for trusted IPs (if configured)
-    const trustedIPs = process.env.TRUSTED_IPS?.split(',') || [];
+    const trustedIPs = process.env.TRUSTED_IPS?.split(",") || [];
     const clientIP = this._getClientIP(req);
 
     return trustedIPs.includes(clientIP);
@@ -772,15 +832,17 @@ class SecurityMiddleware {
       // Unblock IPs after block duration
       for (const ip of this.blockedIPs) {
         const attempts = this.failedAttempts.get(ip);
-        if (!attempts || (now - attempts.lastAttempt) > this.config.blockDuration) {
+        if (
+          !attempts ||
+          now - attempts.lastAttempt > this.config.blockDuration
+        ) {
           this.blockedIPs.delete(ip);
           logger.security.ipUnblocked(ip);
         }
       }
-
     }, this.config.cleanupInterval);
 
-    logger.info('Security cleanup tasks started');
+    logger.info("Security cleanup tasks started");
   }
 
   /**
@@ -792,7 +854,7 @@ class SecurityMiddleware {
       failedAttempts: this.failedAttempts.size,
       suspiciousIPs: this.suspiciousIPs.size,
       activeCSRFTokens: this.csrfTokens.size,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
   }
 }

@@ -15,6 +15,7 @@ The LendSmart backend is designed with enterprise-grade architecture principles:
 ## 🚀 Features
 
 ### Security & Authentication
+
 - **JWT-based Authentication** with refresh tokens
 - **Multi-Factor Authentication (MFA)** with TOTP and backup codes
 - **Role-Based Access Control (RBAC)** with granular permissions
@@ -24,6 +25,7 @@ The LendSmart backend is designed with enterprise-grade architecture principles:
 - **Account Security** with lockout protection and session management
 
 ### Business Logic
+
 - **Loan Management** with full lifecycle support
 - **Credit Scoring** with multi-factor assessment algorithms
 - **Payment Processing** with multiple payment methods
@@ -32,6 +34,7 @@ The LendSmart backend is designed with enterprise-grade architecture principles:
 - **Blockchain Integration** for smart contracts and transparency
 
 ### Compliance & Auditing
+
 - **GDPR Compliance** with consent management and data portability
 - **Audit Logging** with tamper-proof integrity chains
 - **Data Retention** policies with automated anonymization
@@ -39,6 +42,7 @@ The LendSmart backend is designed with enterprise-grade architecture principles:
 - **Regulatory Reporting** capabilities
 
 ### Monitoring & Operations
+
 - **Structured Logging** with Winston and multiple transports
 - **Health Check Endpoints** for Kubernetes/Docker deployments
 - **Metrics Collection** with Prometheus format support
@@ -56,22 +60,26 @@ The LendSmart backend is designed with enterprise-grade architecture principles:
 ## 🛠️ Installation
 
 1. **Clone the repository**
+
    ```bash
    git clone <repository-url>
    cd lendsmart_production_backend
    ```
 
 2. **Install dependencies**
+
    ```bash
    npm install
    ```
 
 3. **Environment Configuration**
+
    ```bash
    cp .env.example .env
    ```
 
    Configure the following environment variables:
+
    ```env
    # Server Configuration
    NODE_ENV=development
@@ -100,6 +108,7 @@ The LendSmart backend is designed with enterprise-grade architecture principles:
    ```
 
 4. **Start the server**
+
    ```bash
    # Development
    npm run dev
@@ -111,17 +120,20 @@ The LendSmart backend is designed with enterprise-grade architecture principles:
 ## 🏃‍♂️ Quick Start
 
 ### Development Mode
+
 ```bash
 npm run dev
 ```
 
 ### Production Mode
+
 ```bash
 npm run build
 npm start
 ```
 
 ### Testing
+
 ```bash
 # Run all tests
 npm test
@@ -139,19 +151,23 @@ npm run test:integration
 ## 📚 API Documentation
 
 ### Base URL
+
 - Development: `http://localhost:3000`
 - Production: `https://api.lendsmart.com`
 
 ### Health Checks
+
 - `GET /health` - Basic health check
 - `GET /health/detailed` - Comprehensive system health
 - `GET /health/ready` - Readiness probe for Kubernetes
 - `GET /health/live` - Liveness probe for Kubernetes
 
 ### Metrics
+
 - `GET /metrics` - Prometheus-compatible metrics
 
 ### Authentication Endpoints
+
 - `POST /api/auth/register` - User registration
 - `POST /api/auth/login` - User login
 - `POST /api/auth/verify-mfa` - MFA verification
@@ -161,6 +177,7 @@ npm run test:integration
 - `POST /api/auth/reset-password` - Password reset
 
 ### User Management
+
 - `GET /api/users/profile` - Get user profile
 - `PUT /api/users/profile` - Update user profile
 - `POST /api/users/verify-email` - Email verification
@@ -168,6 +185,7 @@ npm run test:integration
 - `PUT /api/users/change-password` - Change password
 
 ### Loan Management
+
 - `POST /api/loans/apply` - Submit loan application
 - `GET /api/loans` - Get user's loans
 - `GET /api/loans/:id` - Get specific loan
@@ -176,6 +194,7 @@ npm run test:integration
 - `POST /api/loans/:id/payment` - Make payment
 
 ### Admin Endpoints
+
 - `GET /api/admin/users` - List all users
 - `GET /api/admin/loans` - List all loans
 - `PUT /api/admin/users/:id/status` - Update user status
@@ -184,6 +203,7 @@ npm run test:integration
 ## 🔒 Security Features
 
 ### Authentication & Authorization
+
 - JWT tokens with configurable expiration
 - Refresh token rotation for enhanced security
 - Multi-factor authentication with TOTP
@@ -191,6 +211,7 @@ npm run test:integration
 - Session management with concurrent session limits
 
 ### Data Protection
+
 - Field-level encryption for sensitive data
 - Password hashing with bcrypt
 - Input validation and sanitization
@@ -198,12 +219,14 @@ npm run test:integration
 - XSS protection
 
 ### Rate Limiting
+
 - Global API rate limiting
 - Authentication endpoint protection
 - User-specific rate limiting
 - IP-based rate limiting
 
 ### Security Headers
+
 - Helmet.js for security headers
 - CORS configuration
 - Content Security Policy (CSP)
@@ -212,6 +235,7 @@ npm run test:integration
 ## 📊 Monitoring & Logging
 
 ### Logging
+
 - Structured logging with Winston
 - Multiple log levels and transports
 - Security event logging
@@ -219,6 +243,7 @@ npm run test:integration
 - Business event tracking
 
 ### Metrics
+
 - Prometheus-compatible metrics
 - HTTP request metrics
 - Database performance metrics
@@ -226,6 +251,7 @@ npm run test:integration
 - System resource monitoring
 
 ### Health Checks
+
 - Basic health endpoint
 - Detailed system health
 - Database connectivity checks
@@ -237,24 +263,28 @@ npm run test:integration
 The project includes comprehensive testing:
 
 ### Unit Tests
+
 - Model validation and methods
 - Service layer functionality
 - Utility functions
 - Security functions
 
 ### Integration Tests
+
 - API endpoint testing
 - Authentication workflows
 - Database operations
 - External service integration
 
 ### Security Tests
+
 - Vulnerability assessment
 - Penetration testing
 - Input validation testing
 - Authentication security
 
 ### Running Tests
+
 ```bash
 # All tests
 npm test
@@ -275,6 +305,7 @@ npm run test:coverage
 ## 🚀 Deployment
 
 ### Docker Deployment
+
 ```bash
 # Build image
 docker build -t lendsmart-backend .
@@ -284,6 +315,7 @@ docker run -p 3000:3000 --env-file .env lendsmart-backend
 ```
 
 ### Kubernetes Deployment
+
 ```yaml
 apiVersion: apps/v1
 kind: Deployment
@@ -300,42 +332,45 @@ spec:
         app: lendsmart-backend
     spec:
       containers:
-      - name: lendsmart-backend
-        image: lendsmart-backend:latest
-        ports:
-        - containerPort: 3000
-        env:
-        - name: NODE_ENV
-          value: "production"
-        livenessProbe:
-          httpGet:
-            path: /health/live
-            port: 3000
-          initialDelaySeconds: 30
-          periodSeconds: 10
-        readinessProbe:
-          httpGet:
-            path: /health/ready
-            port: 3000
-          initialDelaySeconds: 5
-          periodSeconds: 5
+        - name: lendsmart-backend
+          image: lendsmart-backend:latest
+          ports:
+            - containerPort: 3000
+          env:
+            - name: NODE_ENV
+              value: "production"
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: 3000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 5
 ```
 
 ### Environment-Specific Configuration
 
 #### Development
+
 - Detailed logging
 - Hot reloading
 - Debug mode enabled
 - Relaxed CORS policy
 
 #### Staging
+
 - Production-like configuration
 - Comprehensive logging
 - Performance monitoring
 - Restricted CORS
 
 #### Production
+
 - Optimized performance
 - Security hardening
 - Minimal logging
@@ -344,18 +379,21 @@ spec:
 ## 📈 Performance Optimization
 
 ### Database Optimization
+
 - Proper indexing strategy
 - Connection pooling
 - Query optimization
 - Caching with Redis
 
 ### Application Optimization
+
 - Compression middleware
 - Response caching
 - Lazy loading
 - Memory management
 
 ### Monitoring
+
 - Performance metrics collection
 - Slow query detection
 - Memory leak detection
@@ -364,14 +402,17 @@ spec:
 ## 🔧 Configuration
 
 ### Environment Variables
+
 See `.env.example` for all available configuration options.
 
 ### Database Configuration
+
 - MongoDB connection with replica set support
 - Redis configuration for caching and sessions
 - Connection pooling and retry logic
 
 ### Security Configuration
+
 - JWT token configuration
 - Encryption key management
 - Rate limiting settings
@@ -387,6 +428,7 @@ See `.env.example` for all available configuration options.
 6. Submit a pull request
 
 ### Code Style
+
 - ESLint configuration included
 - Prettier for code formatting
 - JSDoc for documentation
@@ -399,6 +441,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ## 🆘 Support
 
 For support and questions:
+
 - Create an issue in the repository
 - Contact the development team
 - Check the documentation
@@ -406,6 +449,7 @@ For support and questions:
 ## 🔄 Changelog
 
 ### Version 1.0.0
+
 - Initial production release
 - Complete authentication system
 - Loan management functionality

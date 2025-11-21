@@ -27,28 +27,37 @@ const DashboardPage = () => {
   return (
     <div className="page-container dashboard">
       <h2>Welcome to your Dashboard, {user?.username || "User"}!</h2>
-      <p>Here you can manage your loan applications, investments, and profile settings.</p>
+      <p>
+        Here you can manage your loan applications, investments, and profile
+        settings.
+      </p>
 
       <div className="dashboard-sections">
         <section className="dashboard-section">
           <h3>My Profile</h3>
           <p>Email: {user?.email}</p>
           {/* Link to profile edit page */}
-          <a href="/profile/edit" className="button">Edit Profile</a>
+          <a href="/profile/edit" className="button">
+            Edit Profile
+          </a>
         </section>
 
         <section className="dashboard-section">
           <h3>My Loans (as Borrower)</h3>
           {/* Placeholder for loans list - map through loans state */}
           <p>You have no active loan applications.</p>
-          <a href="/loans/apply" className="button">Apply for a New Loan</a>
+          <a href="/loans/apply" className="button">
+            Apply for a New Loan
+          </a>
         </section>
 
         <section className="dashboard-section">
           <h3>My Investments (as Lender)</h3>
           {/* Placeholder for investments list - map through loans state where user is lender */}
           <p>You have no active investments.</p>
-          <a href="/loans" className="button">Browse Marketplace</a>
+          <a href="/loans" className="button">
+            Browse Marketplace
+          </a>
         </section>
       </div>
 
@@ -70,7 +79,7 @@ const DashboardPage = () => {
           background-color: #fff;
           padding: 20px;
           border-radius: 8px;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
         .dashboard-section h3 {
           color: #007bff;
@@ -78,8 +87,8 @@ const DashboardPage = () => {
           margin-bottom: 15px;
         }
         .button {
-            display: inline-block;
-            margin-top: 10px;
+          display: inline-block;
+          margin-top: 10px;
         }
       `}</style>
     </div>

@@ -1,5 +1,5 @@
-const { logger } = require('./logger');
-const crypto = require('crypto');
+const { logger } = require("./logger");
+const crypto = require("crypto");
 
 /**
  * Comprehensive Compliance Monitoring System for LendSmart
@@ -15,13 +15,17 @@ class ComplianceMonitor {
 
     // Compliance configuration
     this.config = {
-      dataRetentionPeriod: parseInt(process.env.DATA_RETENTION_PERIOD) || 7 * 365 * 24 * 60 * 60 * 1000, // 7 years
-      auditLogRetention: parseInt(process.env.AUDIT_LOG_RETENTION) || 10 * 365 * 24 * 60 * 60 * 1000, // 10 years
-      piiEncryptionRequired: process.env.PII_ENCRYPTION_REQUIRED !== 'false',
-      gdprEnabled: process.env.GDPR_ENABLED !== 'false',
-      ccpaEnabled: process.env.CCPA_ENABLED !== 'false',
-      soxCompliance: process.env.SOX_COMPLIANCE !== 'false',
-      pciDssCompliance: process.env.PCI_DSS_COMPLIANCE !== 'false'
+      dataRetentionPeriod:
+        parseInt(process.env.DATA_RETENTION_PERIOD) ||
+        7 * 365 * 24 * 60 * 60 * 1000, // 7 years
+      auditLogRetention:
+        parseInt(process.env.AUDIT_LOG_RETENTION) ||
+        10 * 365 * 24 * 60 * 60 * 1000, // 10 years
+      piiEncryptionRequired: process.env.PII_ENCRYPTION_REQUIRED !== "false",
+      gdprEnabled: process.env.GDPR_ENABLED !== "false",
+      ccpaEnabled: process.env.CCPA_ENABLED !== "false",
+      soxCompliance: process.env.SOX_COMPLIANCE !== "false",
+      pciDssCompliance: process.env.PCI_DSS_COMPLIANCE !== "false",
     };
 
     // Initialize compliance rules
@@ -38,51 +42,80 @@ class ComplianceMonitor {
   initializeComplianceRules() {
     // Data classification rules
     this.dataClassification = {
-      'PUBLIC': { encryption: false, retention: 365, access: 'unrestricted' },
-      'INTERNAL': { encryption: true, retention: 1095, access: 'authenticated' },
-      'CONFIDENTIAL': { encryption: true, retention: 2555, access: 'authorized' },
-      'RESTRICTED': { encryption: true, retention: 3650, access: 'privileged' },
-      'PII': { encryption: true, retention: 2555, access: 'privileged', gdpr: true },
-      'FINANCIAL': { encryption: true, retention: 3650, access: 'privileged', sox: true },
-      'PAYMENT': { encryption: true, retention: 1095, access: 'privileged', pci: true }
+      PUBLIC: { encryption: false, retention: 365, access: "unrestricted" },
+      INTERNAL: { encryption: true, retention: 1095, access: "authenticated" },
+      CONFIDENTIAL: { encryption: true, retention: 2555, access: "authorized" },
+      RESTRICTED: { encryption: true, retention: 3650, access: "privileged" },
+      PII: {
+        encryption: true,
+        retention: 2555,
+        access: "privileged",
+        gdpr: true,
+      },
+      FINANCIAL: {
+        encryption: true,
+        retention: 3650,
+        access: "privileged",
+        sox: true,
+      },
+      PAYMENT: {
+        encryption: true,
+        retention: 1095,
+        access: "privileged",
+        pci: true,
+      },
     };
 
     // Access control policies
     this.accessPolicies = {
-      'financial_data': ['admin', 'finance', 'compliance'],
-      'customer_pii': ['admin', 'customer_service', 'compliance'],
-      'payment_data': ['admin', 'payment_processor', 'compliance'],
-      'audit_logs': ['admin', 'compliance', 'auditor'],
-      'system_config': ['admin', 'system_admin']
+      financial_data: ["admin", "finance", "compliance"],
+      customer_pii: ["admin", "customer_service", "compliance"],
+      payment_data: ["admin", "payment_processor", "compliance"],
+      audit_logs: ["admin", "compliance", "auditor"],
+      system_config: ["admin", "system_admin"],
     };
 
     // Compliance frameworks
     this.frameworks = {
       SOX: {
-        name: 'Sarbanes-Oxley Act',
-        requirements: ['financial_controls', 'audit_trail', 'segregation_of_duties'],
-        applicableData: ['FINANCIAL']
+        name: "Sarbanes-Oxley Act",
+        requirements: [
+          "financial_controls",
+          "audit_trail",
+          "segregation_of_duties",
+        ],
+        applicableData: ["FINANCIAL"],
       },
       PCI_DSS: {
-        name: 'Payment Card Industry Data Security Standard',
-        requirements: ['encryption', 'access_control', 'monitoring', 'testing'],
-        applicableData: ['PAYMENT']
+        name: "Payment Card Industry Data Security Standard",
+        requirements: ["encryption", "access_control", "monitoring", "testing"],
+        applicableData: ["PAYMENT"],
       },
       GDPR: {
-        name: 'General Data Protection Regulation',
-        requirements: ['consent', 'right_to_erasure', 'data_portability', 'breach_notification'],
-        applicableData: ['PII']
+        name: "General Data Protection Regulation",
+        requirements: [
+          "consent",
+          "right_to_erasure",
+          "data_portability",
+          "breach_notification",
+        ],
+        applicableData: ["PII"],
       },
       CCPA: {
-        name: 'California Consumer Privacy Act',
-        requirements: ['disclosure', 'opt_out', 'data_deletion', 'non_discrimination'],
-        applicableData: ['PII']
-      }
+        name: "California Consumer Privacy Act",
+        requirements: [
+          "disclosure",
+          "opt_out",
+          "data_deletion",
+          "non_discrimination",
+        ],
+        applicableData: ["PII"],
+      },
     };
 
-    logger.info('Compliance rules initialized', {
+    logger.info("Compliance rules initialized", {
       frameworks: Object.keys(this.frameworks),
-      dataClassifications: Object.keys(this.dataClassification)
+      dataClassifications: Object.keys(this.dataClassification),
     });
   }
 
@@ -99,7 +132,11 @@ class ComplianceMonitor {
       const accessId = crypto.randomUUID();
 
       // Check if access is authorized
-      const authorizationResult = this._checkDataAccessAuthorization(userId, dataType, operation);
+      const authorizationResult = this._checkDataAccessAuthorization(
+        userId,
+        dataType,
+        operation,
+      );
 
       // Log the access event
       const accessEvent = {
@@ -112,13 +149,19 @@ class ComplianceMonitor {
         reason: authorizationResult.reason,
         context,
         ipAddress: context.ipAddress,
-        userAgent: context.userAgent
+        userAgent: context.userAgent,
       };
 
       this.complianceEvents.set(accessId, accessEvent);
 
       // Log to audit trail
-      logger.audit.dataAccess(userId, dataType, operation, context.ipAddress, context.userAgent);
+      logger.audit.dataAccess(
+        userId,
+        dataType,
+        operation,
+        context.ipAddress,
+        context.userAgent,
+      );
 
       // Check for compliance violations
       this._checkComplianceViolations(accessEvent);
@@ -129,18 +172,17 @@ class ComplianceMonitor {
       return {
         accessId,
         authorized: authorizationResult.authorized,
-        complianceStatus: 'monitored'
+        complianceStatus: "monitored",
       };
-
     } catch (error) {
-      logger.error('Compliance monitoring failed', {
+      logger.error("Compliance monitoring failed", {
         error: error.message,
         userId,
         dataType,
-        operation
+        operation,
       });
 
-      throw new Error('Compliance monitoring failed');
+      throw new Error("Compliance monitoring failed");
     }
   }
 
@@ -173,7 +215,7 @@ class ComplianceMonitor {
         amlStatus: amlResult.status,
         soxStatus: soxResult.status,
         riskLevel: this._calculateTransactionRiskLevel(transaction),
-        complianceFlags: [...amlResult.flags, ...soxResult.flags]
+        complianceFlags: [...amlResult.flags, ...soxResult.flags],
       };
 
       this.complianceEvents.set(monitoringId, monitoringRecord);
@@ -184,27 +226,32 @@ class ComplianceMonitor {
         transaction.loanId,
         transaction.amount,
         transaction.paymentMethod,
-        transaction.id
+        transaction.id,
       );
 
       // Generate alerts if necessary
-      if (monitoringRecord.riskLevel === 'HIGH' || monitoringRecord.complianceFlags.length > 0) {
+      if (
+        monitoringRecord.riskLevel === "HIGH" ||
+        monitoringRecord.complianceFlags.length > 0
+      ) {
         this._generateComplianceAlert(monitoringRecord);
       }
 
       return {
         monitoringId,
-        complianceStatus: monitoringRecord.complianceFlags.length === 0 ? 'compliant' : 'flagged',
-        riskLevel: monitoringRecord.riskLevel
+        complianceStatus:
+          monitoringRecord.complianceFlags.length === 0
+            ? "compliant"
+            : "flagged",
+        riskLevel: monitoringRecord.riskLevel,
       };
-
     } catch (error) {
-      logger.error('Financial transaction monitoring failed', {
+      logger.error("Financial transaction monitoring failed", {
         error: error.message,
-        transactionId: transaction.id
+        transactionId: transaction.id,
       });
 
-      throw new Error('Financial transaction monitoring failed');
+      throw new Error("Financial transaction monitoring failed");
     }
   }
 
@@ -238,28 +285,33 @@ class ComplianceMonitor {
         gdprCompliant: gdprResult.compliant,
         ccpaCompliant: ccpaResult.compliant,
         expiryDate: consentData.expiryDate,
-        withdrawalMethod: consentData.withdrawalMethod
+        withdrawalMethod: consentData.withdrawalMethod,
       };
 
       this.complianceEvents.set(consentId, consentRecord);
 
       // Log audit event
-      logger.audit.userAction(userId, 'consent_update', 'privacy_preferences', null, consentData);
+      logger.audit.userAction(
+        userId,
+        "consent_update",
+        "privacy_preferences",
+        null,
+        consentData,
+      );
 
       return {
         consentId,
         gdprCompliant: gdprResult.compliant,
         ccpaCompliant: ccpaResult.compliant,
-        complianceStatus: 'recorded'
+        complianceStatus: "recorded",
       };
-
     } catch (error) {
-      logger.error('User consent monitoring failed', {
+      logger.error("User consent monitoring failed", {
         error: error.message,
-        userId
+        userId,
       });
 
-      throw new Error('User consent monitoring failed');
+      throw new Error("User consent monitoring failed");
     }
   }
 
@@ -275,7 +327,7 @@ class ComplianceMonitor {
         framework,
         dataTypes,
         includeViolations = true,
-        includeMetrics = true
+        includeMetrics = true,
       } = reportParams;
 
       const reportId = crypto.randomUUID();
@@ -285,13 +337,20 @@ class ComplianceMonitor {
       const filteredEvents = this._filterEventsByDateRange(startDate, endDate);
 
       // Generate framework-specific report
-      const frameworkReport = this._generateFrameworkReport(framework, filteredEvents);
+      const frameworkReport = this._generateFrameworkReport(
+        framework,
+        filteredEvents,
+      );
 
       // Generate metrics
-      const metrics = includeMetrics ? this._generateComplianceMetrics(filteredEvents) : null;
+      const metrics = includeMetrics
+        ? this._generateComplianceMetrics(filteredEvents)
+        : null;
 
       // Generate violations summary
-      const violations = includeViolations ? this._generateViolationsSummary(filteredEvents) : null;
+      const violations = includeViolations
+        ? this._generateViolationsSummary(filteredEvents)
+        : null;
 
       const report = {
         id: reportId,
@@ -302,30 +361,36 @@ class ComplianceMonitor {
         summary: {
           totalEvents: filteredEvents.length,
           complianceScore: this._calculateComplianceScore(filteredEvents),
-          violationCount: violations?.length || 0
+          violationCount: violations?.length || 0,
         },
         frameworkReport,
         metrics,
         violations,
-        recommendations: this._generateRecommendations(filteredEvents, framework)
+        recommendations: this._generateRecommendations(
+          filteredEvents,
+          framework,
+        ),
       };
 
       // Log report generation
-      logger.audit.systemAction('compliance_report_generated', 'compliance_system', {
-        reportId,
-        framework,
-        period: { startDate, endDate }
-      });
+      logger.audit.systemAction(
+        "compliance_report_generated",
+        "compliance_system",
+        {
+          reportId,
+          framework,
+          period: { startDate, endDate },
+        },
+      );
 
       return report;
-
     } catch (error) {
-      logger.error('Compliance report generation failed', {
+      logger.error("Compliance report generation failed", {
         error: error.message,
-        reportParams
+        reportParams,
       });
 
-      throw new Error('Compliance report generation failed');
+      throw new Error("Compliance report generation failed");
     }
   }
 
@@ -349,10 +414,13 @@ class ComplianceMonitor {
         timestamp,
         userId,
         type: requestType,
-        status: 'received',
+        status: "received",
         data: requestData,
-        framework: requestData.framework || 'GDPR',
-        deadline: this._calculateRequestDeadline(requestType, requestData.framework)
+        framework: requestData.framework || "GDPR",
+        deadline: this._calculateRequestDeadline(
+          requestType,
+          requestData.framework,
+        ),
       };
 
       this.complianceEvents.set(requestId, request);
@@ -360,19 +428,25 @@ class ComplianceMonitor {
       // Process request based on type
       let result;
       switch (requestType) {
-        case 'access':
+        case "access":
           result = await this._processDataAccessRequest(userId, requestData);
           break;
-        case 'portability':
-          result = await this._processDataPortabilityRequest(userId, requestData);
+        case "portability":
+          result = await this._processDataPortabilityRequest(
+            userId,
+            requestData,
+          );
           break;
-        case 'erasure':
+        case "erasure":
           result = await this._processDataErasureRequest(userId, requestData);
           break;
-        case 'rectification':
-          result = await this._processDataRectificationRequest(userId, requestData);
+        case "rectification":
+          result = await this._processDataRectificationRequest(
+            userId,
+            requestData,
+          );
           break;
-        case 'opt_out':
+        case "opt_out":
           result = await this._processOptOutRequest(userId, requestData);
           break;
         default:
@@ -380,31 +454,36 @@ class ComplianceMonitor {
       }
 
       // Update request status
-      request.status = 'processed';
+      request.status = "processed";
       request.result = result;
       request.completedAt = new Date().toISOString();
 
       // Log audit event
-      logger.audit.userAction(userId, `data_subject_${requestType}`, 'privacy_rights', null, {
-        requestId,
-        framework: requestData.framework
-      });
+      logger.audit.userAction(
+        userId,
+        `data_subject_${requestType}`,
+        "privacy_rights",
+        null,
+        {
+          requestId,
+          framework: requestData.framework,
+        },
+      );
 
       return {
         requestId,
-        status: 'processed',
+        status: "processed",
         result,
-        deadline: request.deadline
+        deadline: request.deadline,
       };
-
     } catch (error) {
-      logger.error('Data subject request processing failed', {
+      logger.error("Data subject request processing failed", {
         error: error.message,
         userId,
-        requestType
+        requestType,
       });
 
-      throw new Error('Data subject request processing failed');
+      throw new Error("Data subject request processing failed");
     }
   }
 
@@ -418,12 +497,12 @@ class ComplianceMonitor {
 
     const classification = this.dataClassification[dataType];
     if (!classification) {
-      return { authorized: false, reason: 'Unknown data type' };
+      return { authorized: false, reason: "Unknown data type" };
     }
 
     // Check if user has required access level
     // This is a simplified check - real implementation would be more complex
-    return { authorized: true, reason: 'Access granted' };
+    return { authorized: true, reason: "Access granted" };
   }
 
   /**
@@ -436,30 +515,30 @@ class ComplianceMonitor {
     // Check for unauthorized access
     if (!accessEvent.authorized) {
       violations.push({
-        type: 'unauthorized_access',
-        severity: 'high',
-        description: 'Unauthorized data access attempt',
-        event: accessEvent
+        type: "unauthorized_access",
+        severity: "high",
+        description: "Unauthorized data access attempt",
+        event: accessEvent,
       });
     }
 
     // Check for suspicious patterns
     if (this._detectSuspiciousAccessPattern(accessEvent)) {
       violations.push({
-        type: 'suspicious_pattern',
-        severity: 'medium',
-        description: 'Suspicious data access pattern detected',
-        event: accessEvent
+        type: "suspicious_pattern",
+        severity: "medium",
+        description: "Suspicious data access pattern detected",
+        event: accessEvent,
       });
     }
 
     // Record violations
-    violations.forEach(violation => {
+    violations.forEach((violation) => {
       const violationId = crypto.randomUUID();
       this.violations.set(violationId, {
         ...violation,
         id: violationId,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
 
       logger.security.suspiciousActivity(
@@ -467,7 +546,7 @@ class ComplianceMonitor {
         violation.type,
         accessEvent.ipAddress,
         accessEvent.userAgent,
-        violation
+        violation,
       );
     });
   }
@@ -482,10 +561,10 @@ class ComplianceMonitor {
 
     // Check encryption requirements
     if (classification.encryption && !accessEvent.context.encrypted) {
-      logger.warn('Unencrypted access to classified data', {
+      logger.warn("Unencrypted access to classified data", {
         dataType,
         classification: classification,
-        accessEvent: accessEvent.id
+        accessEvent: accessEvent.id,
       });
     }
 
@@ -511,15 +590,17 @@ class ComplianceMonitor {
    * @private
    */
   _validateTransactionData(transaction) {
-    const required = ['id', 'userId', 'amount', 'type'];
-    const missing = required.filter(field => !transaction[field]);
+    const required = ["id", "userId", "amount", "type"];
+    const missing = required.filter((field) => !transaction[field]);
 
     if (missing.length > 0) {
-      throw new Error(`Missing required transaction fields: ${missing.join(', ')}`);
+      throw new Error(
+        `Missing required transaction fields: ${missing.join(", ")}`,
+      );
     }
 
     if (transaction.amount <= 0) {
-      throw new Error('Transaction amount must be positive');
+      throw new Error("Transaction amount must be positive");
     }
   }
 
@@ -532,17 +613,17 @@ class ComplianceMonitor {
 
     // Check transaction amount thresholds
     if (transaction.amount >= 10000) {
-      flags.push('large_transaction');
+      flags.push("large_transaction");
     }
 
     // Check for suspicious patterns
     if (this._detectSuspiciousTransactionPattern(transaction)) {
-      flags.push('suspicious_pattern');
+      flags.push("suspicious_pattern");
     }
 
     return {
-      status: flags.length === 0 ? 'compliant' : 'flagged',
-      flags
+      status: flags.length === 0 ? "compliant" : "flagged",
+      flags,
     };
   }
 
@@ -555,17 +636,17 @@ class ComplianceMonitor {
 
     // Check for proper authorization
     if (!transaction.authorizedBy) {
-      flags.push('missing_authorization');
+      flags.push("missing_authorization");
     }
 
     // Check for segregation of duties
     if (transaction.userId === transaction.authorizedBy) {
-      flags.push('segregation_violation');
+      flags.push("segregation_violation");
     }
 
     return {
-      status: flags.length === 0 ? 'compliant' : 'flagged',
-      flags
+      status: flags.length === 0 ? "compliant" : "flagged",
+      flags,
     };
   }
 
@@ -582,13 +663,13 @@ class ComplianceMonitor {
     else if (transaction.amount > 1000) riskScore += 1;
 
     // Type-based risk
-    if (transaction.type === 'wire_transfer') riskScore += 2;
-    else if (transaction.type === 'international') riskScore += 3;
+    if (transaction.type === "wire_transfer") riskScore += 2;
+    else if (transaction.type === "international") riskScore += 3;
 
     // Return risk level
-    if (riskScore >= 5) return 'HIGH';
-    if (riskScore >= 3) return 'MEDIUM';
-    return 'LOW';
+    if (riskScore >= 5) return "HIGH";
+    if (riskScore >= 3) return "MEDIUM";
+    return "LOW";
   }
 
   /**
@@ -599,22 +680,22 @@ class ComplianceMonitor {
     const alert = {
       id: crypto.randomUUID(),
       timestamp: new Date().toISOString(),
-      type: 'compliance_violation',
+      type: "compliance_violation",
       severity: record.riskLevel,
       record,
-      requiresAction: true
+      requiresAction: true,
     };
 
     logger.security.suspiciousActivity(
       record.userId,
-      'compliance_violation',
-      'system',
-      'system',
-      alert
+      "compliance_violation",
+      "system",
+      "system",
+      alert,
     );
 
     // In production, this would trigger external alerting
-    console.warn('[COMPLIANCE ALERT]', alert);
+    console.warn("[COMPLIANCE ALERT]", alert);
   }
 
   /**
@@ -622,11 +703,13 @@ class ComplianceMonitor {
    * @private
    */
   _validateConsentData(consentData) {
-    const required = ['type', 'granted', 'purpose'];
-    const missing = required.filter(field => consentData[field] === undefined);
+    const required = ["type", "granted", "purpose"];
+    const missing = required.filter(
+      (field) => consentData[field] === undefined,
+    );
 
     if (missing.length > 0) {
-      throw new Error(`Missing required consent fields: ${missing.join(', ')}`);
+      throw new Error(`Missing required consent fields: ${missing.join(", ")}`);
     }
   }
 
@@ -636,14 +719,14 @@ class ComplianceMonitor {
    */
   _checkGDPRCompliance(consentData) {
     const requirements = [
-      'explicit_consent',
-      'specific_purpose',
-      'withdrawal_method',
-      'data_minimization'
+      "explicit_consent",
+      "specific_purpose",
+      "withdrawal_method",
+      "data_minimization",
     ];
 
-    const compliant = requirements.every(req =>
-      this._checkGDPRRequirement(req, consentData)
+    const compliant = requirements.every((req) =>
+      this._checkGDPRRequirement(req, consentData),
     );
 
     return { compliant };
@@ -655,13 +738,13 @@ class ComplianceMonitor {
    */
   _checkCCPACompliance(consentData) {
     const requirements = [
-      'opt_out_available',
-      'disclosure_provided',
-      'non_discrimination'
+      "opt_out_available",
+      "disclosure_provided",
+      "non_discrimination",
     ];
 
-    const compliant = requirements.every(req =>
-      this._checkCCPARequirement(req, consentData)
+    const compliant = requirements.every((req) =>
+      this._checkCCPARequirement(req, consentData),
     );
 
     return { compliant };
@@ -673,16 +756,22 @@ class ComplianceMonitor {
    */
   startMonitoringTasks() {
     // Clean up old events periodically
-    setInterval(() => {
-      this._cleanupOldEvents();
-    }, 24 * 60 * 60 * 1000); // Daily cleanup
+    setInterval(
+      () => {
+        this._cleanupOldEvents();
+      },
+      24 * 60 * 60 * 1000,
+    ); // Daily cleanup
 
     // Generate daily compliance metrics
-    setInterval(() => {
-      this._generateDailyMetrics();
-    }, 24 * 60 * 60 * 1000); // Daily metrics
+    setInterval(
+      () => {
+        this._generateDailyMetrics();
+      },
+      24 * 60 * 60 * 1000,
+    ); // Daily metrics
 
-    logger.info('Compliance monitoring tasks started');
+    logger.info("Compliance monitoring tasks started");
   }
 
   /**
@@ -699,8 +788,8 @@ class ComplianceMonitor {
       }
     }
 
-    logger.info('Compliance events cleanup completed', {
-      remainingEvents: this.complianceEvents.size
+    logger.info("Compliance events cleanup completed", {
+      remainingEvents: this.complianceEvents.size,
     });
   }
 
@@ -712,13 +801,17 @@ class ComplianceMonitor {
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
 
-    const startDate = yesterday.toISOString().split('T')[0];
-    const endDate = new Date().toISOString().split('T')[0];
+    const startDate = yesterday.toISOString().split("T")[0];
+    const endDate = new Date().toISOString().split("T")[0];
 
     const events = this._filterEventsByDateRange(startDate, endDate);
     const metrics = this._generateComplianceMetrics(events);
 
-    logger.audit.systemAction('daily_compliance_metrics', 'compliance_system', metrics);
+    logger.audit.systemAction(
+      "daily_compliance_metrics",
+      "compliance_system",
+      metrics,
+    );
   }
 
   /**
@@ -729,7 +822,7 @@ class ComplianceMonitor {
     const start = new Date(startDate).getTime();
     const end = new Date(endDate).getTime();
 
-    return Array.from(this.complianceEvents.values()).filter(event => {
+    return Array.from(this.complianceEvents.values()).filter((event) => {
       const eventTime = new Date(event.timestamp).getTime();
       return eventTime >= start && eventTime <= end;
     });
@@ -742,11 +835,13 @@ class ComplianceMonitor {
   _generateComplianceMetrics(events) {
     return {
       totalEvents: events.length,
-      dataAccessEvents: events.filter(e => e.dataType).length,
-      financialTransactions: events.filter(e => e.transactionId).length,
-      consentEvents: events.filter(e => e.consentType).length,
-      violations: events.filter(e => !e.authorized || e.complianceFlags?.length > 0).length,
-      complianceScore: this._calculateComplianceScore(events)
+      dataAccessEvents: events.filter((e) => e.dataType).length,
+      financialTransactions: events.filter((e) => e.transactionId).length,
+      consentEvents: events.filter((e) => e.consentType).length,
+      violations: events.filter(
+        (e) => !e.authorized || e.complianceFlags?.length > 0,
+      ).length,
+      complianceScore: this._calculateComplianceScore(events),
     };
   }
 
@@ -757,8 +852,8 @@ class ComplianceMonitor {
   _calculateComplianceScore(events) {
     if (events.length === 0) return 100;
 
-    const violations = events.filter(e =>
-      !e.authorized || e.complianceFlags?.length > 0
+    const violations = events.filter(
+      (e) => !e.authorized || e.complianceFlags?.length > 0,
     ).length;
 
     return Math.max(0, Math.round((1 - violations / events.length) * 100));
@@ -791,8 +886,9 @@ class ComplianceMonitor {
     const now = new Date();
     const last24Hours = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
-    const recentEvents = Array.from(this.complianceEvents.values())
-      .filter(event => new Date(event.timestamp) > last24Hours);
+    const recentEvents = Array.from(this.complianceEvents.values()).filter(
+      (event) => new Date(event.timestamp) > last24Hours,
+    );
 
     return {
       totalEvents: this.complianceEvents.size,
@@ -800,7 +896,7 @@ class ComplianceMonitor {
       violations: this.violations.size,
       complianceScore: this._calculateComplianceScore(recentEvents),
       frameworks: Object.keys(this.frameworks),
-      dataClassifications: Object.keys(this.dataClassification)
+      dataClassifications: Object.keys(this.dataClassification),
     };
   }
 }

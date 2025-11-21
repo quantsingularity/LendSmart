@@ -96,8 +96,8 @@ Manages user authentication state:
 
 ```javascript
 // AuthContext.js
-import React, { createContext, useState, useEffect } from 'react';
-import authService from '../services/authService';
+import React, { createContext, useState, useEffect } from "react";
+import authService from "../services/authService";
 
 export const AuthContext = createContext();
 
@@ -168,19 +168,19 @@ LendSmart uses React Router for navigation:
 
 ```javascript
 // App.js
-import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
-import { ThemeProvider } from './theme/ThemeContext';
-import Layout from './components/Layout';
-import ProtectedRoute from './components/ProtectedRoute';
-import Home from './pages/Home';
-import Dashboard from './pages/Dashboard';
-import LoanApplication from './pages/LoanApplication';
-import LoanMarketplace from './pages/LoanMarketplace';
-import Profile from './pages/Profile';
-import Notifications from './pages/Notifications';
-import Analytics from './pages/Analytics';
+import React from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider } from "./context/AuthContext";
+import { ThemeProvider } from "./theme/ThemeContext";
+import Layout from "./components/Layout";
+import ProtectedRoute from "./components/ProtectedRoute";
+import Home from "./pages/Home";
+import Dashboard from "./pages/Dashboard";
+import LoanApplication from "./pages/LoanApplication";
+import LoanMarketplace from "./pages/LoanMarketplace";
+import Profile from "./pages/Profile";
+import Notifications from "./pages/Notifications";
+import Analytics from "./pages/Analytics";
 
 const App = () => {
   return (
@@ -190,36 +190,54 @@ const App = () => {
           <Layout>
             <Routes>
               <Route path="/" element={<Home />} />
-              <Route path="/dashboard" element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              } />
-              <Route path="/apply" element={
-                <ProtectedRoute>
-                  <LoanApplication />
-                </ProtectedRoute>
-              } />
-              <Route path="/marketplace" element={
-                <ProtectedRoute>
-                  <LoanMarketplace />
-                </ProtectedRoute>
-              } />
-              <Route path="/profile" element={
-                <ProtectedRoute>
-                  <Profile />
-                </ProtectedRoute>
-              } />
-              <Route path="/notifications" element={
-                <ProtectedRoute>
-                  <Notifications />
-                </ProtectedRoute>
-              } />
-              <Route path="/analytics" element={
-                <ProtectedRoute>
-                  <Analytics />
-                </ProtectedRoute>
-              } />
+              <Route
+                path="/dashboard"
+                element={
+                  <ProtectedRoute>
+                    <Dashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/apply"
+                element={
+                  <ProtectedRoute>
+                    <LoanApplication />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/marketplace"
+                element={
+                  <ProtectedRoute>
+                    <LoanMarketplace />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/profile"
+                element={
+                  <ProtectedRoute>
+                    <Profile />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/notifications"
+                element={
+                  <ProtectedRoute>
+                    <Notifications />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/analytics"
+                element={
+                  <ProtectedRoute>
+                    <Analytics />
+                  </ProtectedRoute>
+                }
+              />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </Layout>
@@ -244,30 +262,30 @@ The application uses a theme system with support for light and dark modes:
 // theme.js
 export const lightTheme = {
   colors: {
-    primary: '#3a86ff',
-    secondary: '#ff006e',
-    success: '#38b000',
-    warning: '#ffbe0b',
-    error: '#ff5252',
-    background: '#f8f9fa',
-    surface: '#ffffff',
-    textPrimary: '#212529',
-    textSecondary: '#6c757d',
+    primary: "#3a86ff",
+    secondary: "#ff006e",
+    success: "#38b000",
+    warning: "#ffbe0b",
+    error: "#ff5252",
+    background: "#f8f9fa",
+    surface: "#ffffff",
+    textPrimary: "#212529",
+    textSecondary: "#6c757d",
   },
   // Other theme properties
 };
 
 export const darkTheme = {
   colors: {
-    primary: '#3a86ff',
-    secondary: '#ff006e',
-    success: '#38b000',
-    warning: '#ffbe0b',
-    error: '#ff5252',
-    background: '#121212',
-    surface: '#1e1e1e',
-    textPrimary: '#e9ecef',
-    textSecondary: '#adb5bd',
+    primary: "#3a86ff",
+    secondary: "#ff006e",
+    success: "#38b000",
+    warning: "#ffbe0b",
+    error: "#ff5252",
+    background: "#121212",
+    surface: "#1e1e1e",
+    textPrimary: "#e9ecef",
+    textSecondary: "#adb5bd",
   },
   // Other theme properties
 };
@@ -279,12 +297,13 @@ The UI is built using a component-based approach with styled-components:
 
 ```javascript
 // Button.js
-import styled from 'styled-components';
+import styled from "styled-components";
 
 const Button = styled.button`
-  background: ${props => props.primary ? props.theme.colors.primary : 'transparent'};
-  color: ${props => props.primary ? '#ffffff' : props.theme.colors.primary};
-  border: 2px solid ${props => props.theme.colors.primary};
+  background: ${(props) =>
+    props.primary ? props.theme.colors.primary : "transparent"};
+  color: ${(props) => (props.primary ? "#ffffff" : props.theme.colors.primary)};
+  border: 2px solid ${(props) => props.theme.colors.primary};
   border-radius: 8px;
   padding: 10px 20px;
   font-size: 16px;
@@ -293,7 +312,8 @@ const Button = styled.button`
   transition: all 0.2s ease-in-out;
 
   &:hover {
-    background: ${props => props.primary ? props.theme.colors.primary : 'rgba(58, 134, 255, 0.1)'};
+    background: ${(props) =>
+      props.primary ? props.theme.colors.primary : "rgba(58, 134, 255, 0.1)"};
     transform: translateY(-2px);
   }
 
@@ -334,27 +354,27 @@ The frontend communicates with the backend API using Axios:
 
 ```javascript
 // apiService.js
-import axios from 'axios';
+import axios from "axios";
 
 const API_URL = process.env.REACT_APP_API_URL;
 
 const apiClient = axios.create({
   baseURL: API_URL,
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
 });
 
 // Request interceptor for adding auth token
 apiClient.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => Promise.reject(error),
 );
 
 // Response interceptor for handling errors
@@ -367,25 +387,27 @@ apiClient.interceptors.response.use(
     if (error.response.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
       try {
-        const refreshToken = localStorage.getItem('refreshToken');
-        const response = await axios.post(`${API_URL}/auth/refresh`, { refreshToken });
+        const refreshToken = localStorage.getItem("refreshToken");
+        const response = await axios.post(`${API_URL}/auth/refresh`, {
+          refreshToken,
+        });
         const { token } = response.data;
 
-        localStorage.setItem('token', token);
+        localStorage.setItem("token", token);
         originalRequest.headers.Authorization = `Bearer ${token}`;
 
         return apiClient(originalRequest);
       } catch (refreshError) {
         // Redirect to login if refresh fails
-        localStorage.removeItem('token');
-        localStorage.removeItem('refreshToken');
-        window.location.href = '/login';
+        localStorage.removeItem("token");
+        localStorage.removeItem("refreshToken");
+        window.location.href = "/login";
         return Promise.reject(refreshError);
       }
     }
 
     return Promise.reject(error);
-  }
+  },
 );
 
 export default apiClient;
@@ -397,9 +419,9 @@ The frontend integrates with blockchain using Web3.js:
 
 ```javascript
 // web3Service.js
-import Web3 from 'web3';
-import LoanManagerABI from '../contracts/LoanManager.json';
-import BorrowerContractABI from '../contracts/BorrowerContract.json';
+import Web3 from "web3";
+import LoanManagerABI from "../contracts/LoanManager.json";
+import BorrowerContractABI from "../contracts/BorrowerContract.json";
 
 class Web3Service {
   constructor() {
@@ -413,17 +435,18 @@ class Web3Service {
     if (window.ethereum) {
       try {
         // Request account access
-        await window.ethereum.request({ method: 'eth_requestAccounts' });
+        await window.ethereum.request({ method: "eth_requestAccounts" });
 
         this.web3 = new Web3(window.ethereum);
         this.networkId = await this.web3.eth.net.getId();
         this.accounts = await this.web3.eth.getAccounts();
 
         // Initialize contracts
-        const loanManagerAddress = LoanManagerABI.networks[this.networkId].address;
+        const loanManagerAddress =
+          LoanManagerABI.networks[this.networkId].address;
         this.loanManagerContract = new this.web3.eth.Contract(
           LoanManagerABI.abi,
-          loanManagerAddress
+          loanManagerAddress,
         );
 
         return {
@@ -432,29 +455,25 @@ class Web3Service {
           networkId: this.networkId,
         };
       } catch (error) {
-        throw new Error('User denied account access');
+        throw new Error("User denied account access");
       }
     } else if (window.web3) {
       // Legacy dapp browsers
       this.web3 = new Web3(window.web3.currentProvider);
       // Similar initialization as above
     } else {
-      throw new Error('No Ethereum browser extension detected');
+      throw new Error("No Ethereum browser extension detected");
     }
   }
 
   async createLoan(loanData) {
     if (!this.loanManagerContract) {
-      throw new Error('Contract not initialized');
+      throw new Error("Contract not initialized");
     }
 
     try {
       const result = await this.loanManagerContract.methods
-        .createLoan(
-          loanData.amount,
-          loanData.term,
-          loanData.interestRate
-        )
+        .createLoan(loanData.amount, loanData.term, loanData.interestRate)
         .send({ from: this.accounts[0] });
 
       return result;

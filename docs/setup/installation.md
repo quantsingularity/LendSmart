@@ -167,6 +167,7 @@ GAS_LIMIT=6721975
 ### MongoDB Setup
 
 1. **Install MongoDB** (if not using Docker):
+
    ```bash
    # Ubuntu
    sudo apt-get install mongodb
@@ -176,6 +177,7 @@ GAS_LIMIT=6721975
    ```
 
 2. **Start MongoDB Service**:
+
    ```bash
    # Ubuntu
    sudo systemctl start mongodb
@@ -185,6 +187,7 @@ GAS_LIMIT=6721975
    ```
 
 3. **Create Database and User**:
+
    ```bash
    # Connect to MongoDB shell
    mongo
@@ -220,16 +223,19 @@ npm run db:init
 ### Local Blockchain Setup (for development)
 
 1. **Install Ganache** for local blockchain:
+
    ```bash
    npm install -g ganache-cli
    ```
 
 2. **Start Ganache**:
+
    ```bash
    ganache-cli -p 8545 -i 5777
    ```
 
 3. **Deploy Smart Contracts**:
+
    ```bash
    # Navigate to blockchain directory
    cd code/blockchain
@@ -244,20 +250,22 @@ npm run db:init
 ### Testnet Configuration (for testing)
 
 1. **Update Truffle Configuration** in `truffle-config.js`:
+
    ```javascript
    module.exports = {
      networks: {
        // ... other networks
        ropsten: {
-         provider: () => new HDWalletProvider(
-           process.env.WALLET_MNEMONIC,
-           `https://ropsten.infura.io/v3/${process.env.INFURA_PROJECT_ID}`
-         ),
+         provider: () =>
+           new HDWalletProvider(
+             process.env.WALLET_MNEMONIC,
+             `https://ropsten.infura.io/v3/${process.env.INFURA_PROJECT_ID}`,
+           ),
          network_id: 3,
          gas: 5500000,
          confirmations: 2,
          timeoutBlocks: 200,
-         skipDryRun: true
+         skipDryRun: true,
        },
      },
      // ... rest of config
@@ -265,6 +273,7 @@ npm run db:init
    ```
 
 2. **Deploy to Testnet**:
+
    ```bash
    truffle migrate --network ropsten
    ```
@@ -366,12 +375,14 @@ npm test
 ### Docker Deployment (Recommended)
 
 1. **Build Docker Images**:
+
    ```bash
    # Build all services
    docker-compose build
    ```
 
 2. **Start Services**:
+
    ```bash
    # Start all services
    docker-compose up -d
@@ -385,6 +396,7 @@ npm test
 ### Kubernetes Deployment
 
 1. **Apply Kubernetes Configurations**:
+
    ```bash
    # Navigate to Kubernetes directory
    cd infrastructure/kubernetes
@@ -405,6 +417,7 @@ npm test
 ### Terraform Deployment (Cloud Infrastructure)
 
 1. **Initialize Terraform**:
+
    ```bash
    # Navigate to Terraform directory
    cd infrastructure/terraform
@@ -414,6 +427,7 @@ npm test
    ```
 
 2. **Plan Deployment**:
+
    ```bash
    # For development environment
    terraform plan -var-file=environments/dev/terraform.tfvars
@@ -430,6 +444,7 @@ npm test
    Edit `infrastructure/ansible/inventory/hosts.yml` with your server details.
 
 2. **Run Ansible Playbook**:
+
    ```bash
    # Navigate to Ansible directory
    cd infrastructure/ansible
@@ -449,6 +464,7 @@ npm test
 ### Monitoring Tools
 
 1. **Set up Prometheus** for metrics collection:
+
    ```bash
    # Navigate to monitoring directory
    cd infrastructure/monitoring
@@ -462,6 +478,7 @@ npm test
 ### Backup Procedures
 
 1. **Database Backup**:
+
    ```bash
    # Create MongoDB backup
    mongodump --uri="mongodb://lendsmart_user:secure_password@localhost:27017/lendsmart" --out=./backup/$(date +%Y-%m-%d)

@@ -22,14 +22,15 @@ const LoginPage = () => {
     // } catch (err) {
     //   setError(err.response?.data?.message || "Failed to login. Please check your credentials.");
     // }
-    setTimeout(() => { // Simulate API call
-        if (email === "test@example.com" && password === "password") {
-            console.log("Login successful (simulated)");
-            // navigate("/dashboard");
-        } else {
-            setError("Invalid email or password (simulated).");
-        }
-        setLoading(false);
+    setTimeout(() => {
+      // Simulate API call
+      if (email === "test@example.com" && password === "password") {
+        console.log("Login successful (simulated)");
+        // navigate("/dashboard");
+      } else {
+        setError("Invalid email or password (simulated).");
+      }
+      setLoading(false);
     }, 1000);
   };
 
@@ -58,12 +59,17 @@ const LoginPage = () => {
             required
           />
         </div>
-        <button type="submit" className="button button-primary" disabled={loading}>
+        <button
+          type="submit"
+          className="button button-primary"
+          disabled={loading}
+        >
           {loading ? "Logging in..." : "Login"}
         </button>
       </form>
       <p className="auth-switch">
-        Don\'t have an account? <a href="/register">Register here</a> {/* Use Link from react-router-dom if SPA navigation is preferred */}
+        Don\'t have an account? <a href="/register">Register here</a>{" "}
+        {/* Use Link from react-router-dom if SPA navigation is preferred */}
       </p>
       <style jsx>{`
         .auth-form {
@@ -73,7 +79,7 @@ const LoginPage = () => {
           border: 1px solid #ddd;
           border-radius: 8px;
           background-color: #fff;
-          box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
         .auth-form h2 {
           text-align: center;
@@ -89,8 +95,8 @@ const LoginPage = () => {
           text-align: center;
         }
         .auth-switch {
-            text-align: center;
-            margin-top: 20px;
+          text-align: center;
+          margin-top: 20px;
         }
       `}</style>
     </div>

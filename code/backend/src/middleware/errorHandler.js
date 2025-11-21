@@ -1,5 +1,5 @@
-const { getAuditLogger } = require('../compliance/auditLogger');
-const logger = require('../utils/logger');
+const { getAuditLogger } = require("../compliance/auditLogger");
+const logger = require("../utils/logger");
 
 /**
  * Enhanced Error Handler Middleware
@@ -12,47 +12,74 @@ class ErrorHandler {
     // Error codes mapping
     this.errorCodes = {
       // Authentication & Authorization
-      'INVALID_CREDENTIALS': { status: 401, message: 'Invalid credentials provided' },
-      'TOKEN_EXPIRED': { status: 401, message: 'Authentication token has expired' },
-      'TOKEN_INVALID': { status: 401, message: 'Invalid authentication token' },
-      'ACCESS_DENIED': { status: 403, message: 'Access denied' },
-      'INSUFFICIENT_PERMISSIONS': { status: 403, message: 'Insufficient permissions' },
+      INVALID_CREDENTIALS: {
+        status: 401,
+        message: "Invalid credentials provided",
+      },
+      TOKEN_EXPIRED: {
+        status: 401,
+        message: "Authentication token has expired",
+      },
+      TOKEN_INVALID: { status: 401, message: "Invalid authentication token" },
+      ACCESS_DENIED: { status: 403, message: "Access denied" },
+      INSUFFICIENT_PERMISSIONS: {
+        status: 403,
+        message: "Insufficient permissions",
+      },
 
       // Validation
-      'VALIDATION_ERROR': { status: 400, message: 'Validation failed' },
-      'INVALID_INPUT': { status: 400, message: 'Invalid input provided' },
-      'MISSING_REQUIRED_FIELD': { status: 400, message: 'Required field is missing' },
+      VALIDATION_ERROR: { status: 400, message: "Validation failed" },
+      INVALID_INPUT: { status: 400, message: "Invalid input provided" },
+      MISSING_REQUIRED_FIELD: {
+        status: 400,
+        message: "Required field is missing",
+      },
 
       // Business Logic
-      'LOAN_NOT_FOUND': { status: 404, message: 'Loan not found' },
-      'USER_NOT_FOUND': { status: 404, message: 'User not found' },
-      'INSUFFICIENT_FUNDS': { status: 400, message: 'Insufficient funds' },
-      'LOAN_ALREADY_FUNDED': { status: 409, message: 'Loan is already funded' },
-      'KYC_NOT_VERIFIED': { status: 400, message: 'KYC verification required' },
+      LOAN_NOT_FOUND: { status: 404, message: "Loan not found" },
+      USER_NOT_FOUND: { status: 404, message: "User not found" },
+      INSUFFICIENT_FUNDS: { status: 400, message: "Insufficient funds" },
+      LOAN_ALREADY_FUNDED: { status: 409, message: "Loan is already funded" },
+      KYC_NOT_VERIFIED: { status: 400, message: "KYC verification required" },
 
       // Rate Limiting
-      'RATE_LIMIT_EXCEEDED': { status: 429, message: 'Rate limit exceeded' },
-      'TOO_MANY_REQUESTS': { status: 429, message: 'Too many requests' },
+      RATE_LIMIT_EXCEEDED: { status: 429, message: "Rate limit exceeded" },
+      TOO_MANY_REQUESTS: { status: 429, message: "Too many requests" },
 
       // System
-      'INTERNAL_ERROR': { status: 500, message: 'Internal server error' },
-      'SERVICE_UNAVAILABLE': { status: 503, message: 'Service temporarily unavailable' },
-      'DATABASE_ERROR': { status: 500, message: 'Database operation failed' },
-      'EXTERNAL_SERVICE_ERROR': { status: 502, message: 'External service error' },
+      INTERNAL_ERROR: { status: 500, message: "Internal server error" },
+      SERVICE_UNAVAILABLE: {
+        status: 503,
+        message: "Service temporarily unavailable",
+      },
+      DATABASE_ERROR: { status: 500, message: "Database operation failed" },
+      EXTERNAL_SERVICE_ERROR: {
+        status: 502,
+        message: "External service error",
+      },
 
       // Security
-      'SECURITY_VIOLATION': { status: 400, message: 'Security violation detected' },
-      'SUSPICIOUS_ACTIVITY': { status: 400, message: 'Suspicious activity detected' },
-      'ACCOUNT_LOCKED': { status: 423, message: 'Account is locked' },
+      SECURITY_VIOLATION: {
+        status: 400,
+        message: "Security violation detected",
+      },
+      SUSPICIOUS_ACTIVITY: {
+        status: 400,
+        message: "Suspicious activity detected",
+      },
+      ACCOUNT_LOCKED: { status: 423, message: "Account is locked" },
 
       // Compliance
-      'COMPLIANCE_VIOLATION': { status: 400, message: 'Compliance violation' },
-      'REGULATORY_RESTRICTION': { status: 403, message: 'Regulatory restriction applies' },
+      COMPLIANCE_VIOLATION: { status: 400, message: "Compliance violation" },
+      REGULATORY_RESTRICTION: {
+        status: 403,
+        message: "Regulatory restriction applies",
+      },
 
       // File Upload
-      'FILE_TOO_LARGE': { status: 413, message: 'File size exceeds limit' },
-      'INVALID_FILE_TYPE': { status: 400, message: 'Invalid file type' },
-      'FILE_UPLOAD_ERROR': { status: 500, message: 'File upload failed' }
+      FILE_TOO_LARGE: { status: 413, message: "File size exceeds limit" },
+      INVALID_FILE_TYPE: { status: 400, message: "Invalid file type" },
+      FILE_UPLOAD_ERROR: { status: 500, message: "File upload failed" },
     };
   }
 
@@ -91,9 +118,9 @@ class ErrorHandler {
    * @returns {Object} Error information
    */
   extractErrorInfo(err) {
-    let errorCode = 'INTERNAL_ERROR';
+    let errorCode = "INTERNAL_ERROR";
     let statusCode = 500;
-    let message = 'Internal server error';
+    let message = "Internal server error";
     let details = null;
     let stack = null;
 
@@ -106,79 +133,80 @@ class ErrorHandler {
       details = err.details;
     }
     // Handle Mongoose validation errors
-    else if (err.name === 'ValidationError') {
-      errorCode = 'VALIDATION_ERROR';
+    else if (err.name === "ValidationError") {
+      errorCode = "VALIDATION_ERROR";
       statusCode = 400;
-      message = 'Validation failed';
+      message = "Validation failed";
       details = this.extractMongooseValidationErrors(err);
     }
     // Handle Mongoose cast errors
-    else if (err.name === 'CastError') {
-      errorCode = 'INVALID_INPUT';
+    else if (err.name === "CastError") {
+      errorCode = "INVALID_INPUT";
       statusCode = 400;
       message = `Invalid ${err.path}: ${err.value}`;
     }
     // Handle Mongoose duplicate key errors
     else if (err.code === 11000) {
-      errorCode = 'VALIDATION_ERROR';
+      errorCode = "VALIDATION_ERROR";
       statusCode = 409;
-      message = 'Duplicate entry';
+      message = "Duplicate entry";
       details = this.extractDuplicateKeyError(err);
     }
     // Handle JWT errors
-    else if (err.name === 'JsonWebTokenError') {
-      errorCode = 'TOKEN_INVALID';
+    else if (err.name === "JsonWebTokenError") {
+      errorCode = "TOKEN_INVALID";
       statusCode = 401;
-      message = 'Invalid token';
-    }
-    else if (err.name === 'TokenExpiredError') {
-      errorCode = 'TOKEN_EXPIRED';
+      message = "Invalid token";
+    } else if (err.name === "TokenExpiredError") {
+      errorCode = "TOKEN_EXPIRED";
       statusCode = 401;
-      message = 'Token expired';
+      message = "Token expired";
     }
     // Handle Joi validation errors
     else if (err.isJoi) {
-      errorCode = 'VALIDATION_ERROR';
+      errorCode = "VALIDATION_ERROR";
       statusCode = 400;
-      message = 'Validation failed';
-      details = err.details.map(detail => ({
-        field: detail.path.join('.'),
-        message: detail.message
+      message = "Validation failed";
+      details = err.details.map((detail) => ({
+        field: detail.path.join("."),
+        message: detail.message,
       }));
     }
     // Handle Multer errors (file upload)
-    else if (err.code === 'LIMIT_FILE_SIZE') {
-      errorCode = 'FILE_TOO_LARGE';
+    else if (err.code === "LIMIT_FILE_SIZE") {
+      errorCode = "FILE_TOO_LARGE";
       statusCode = 413;
-      message = 'File size exceeds limit';
-    }
-    else if (err.code === 'LIMIT_UNEXPECTED_FILE') {
-      errorCode = 'INVALID_FILE_TYPE';
+      message = "File size exceeds limit";
+    } else if (err.code === "LIMIT_UNEXPECTED_FILE") {
+      errorCode = "INVALID_FILE_TYPE";
       statusCode = 400;
-      message = 'Unexpected file field';
+      message = "Unexpected file field";
     }
     // Handle rate limiting errors
     else if (err.status === 429) {
-      errorCode = 'RATE_LIMIT_EXCEEDED';
+      errorCode = "RATE_LIMIT_EXCEEDED";
       statusCode = 429;
-      message = 'Rate limit exceeded';
+      message = "Rate limit exceeded";
     }
     // Handle other HTTP errors
     else if (err.status || err.statusCode) {
       statusCode = err.status || err.statusCode;
-      message = err.message || 'HTTP error';
+      message = err.message || "HTTP error";
 
-      if (statusCode === 400) errorCode = 'INVALID_INPUT';
-      else if (statusCode === 401) errorCode = 'INVALID_CREDENTIALS';
-      else if (statusCode === 403) errorCode = 'ACCESS_DENIED';
-      else if (statusCode === 404) errorCode = 'USER_NOT_FOUND';
-      else if (statusCode === 409) errorCode = 'VALIDATION_ERROR';
-      else if (statusCode >= 500) errorCode = 'INTERNAL_ERROR';
+      if (statusCode === 400) errorCode = "INVALID_INPUT";
+      else if (statusCode === 401) errorCode = "INVALID_CREDENTIALS";
+      else if (statusCode === 403) errorCode = "ACCESS_DENIED";
+      else if (statusCode === 404) errorCode = "USER_NOT_FOUND";
+      else if (statusCode === 409) errorCode = "VALIDATION_ERROR";
+      else if (statusCode >= 500) errorCode = "INTERNAL_ERROR";
     }
     // Handle generic errors
     else {
-      message = process.env.NODE_ENV === 'production' ? 'Internal server error' : err.message;
-      stack = process.env.NODE_ENV !== 'production' ? err.stack : null;
+      message =
+        process.env.NODE_ENV === "production"
+          ? "Internal server error"
+          : err.message;
+      stack = process.env.NODE_ENV !== "production" ? err.stack : null;
     }
 
     return {
@@ -188,7 +216,7 @@ class ErrorHandler {
       details,
       stack,
       timestamp: new Date().toISOString(),
-      requestId: req.id || 'unknown'
+      requestId: req.id || "unknown",
     };
   }
 
@@ -206,7 +234,7 @@ class ErrorHandler {
         field,
         message: error.message,
         value: error.value,
-        kind: error.kind
+        kind: error.kind,
       });
     }
 
@@ -225,7 +253,7 @@ class ErrorHandler {
     return {
       field,
       message: `${field} '${value}' already exists`,
-      value
+      value,
     };
   }
 
@@ -243,24 +271,24 @@ class ErrorHandler {
       method: req.method,
       url: req.originalUrl,
       ip: req.ip,
-      userAgent: req.get('User-Agent'),
+      userAgent: req.get("User-Agent"),
       userId: req.user?.id,
-      timestamp: errorInfo.timestamp
+      timestamp: errorInfo.timestamp,
     };
 
     // Add details for non-production environments
-    if (process.env.NODE_ENV !== 'production') {
+    if (process.env.NODE_ENV !== "production") {
       logData.details = errorInfo.details;
       logData.stack = errorInfo.stack;
     }
 
     // Log based on severity
     if (errorInfo.statusCode >= 500) {
-      logger.error('Server error', logData);
+      logger.error("Server error", logData);
     } else if (errorInfo.statusCode >= 400) {
-      logger.warn('Client error', logData);
+      logger.warn("Client error", logData);
     } else {
-      logger.info('Request error', logData);
+      logger.info("Request error", logData);
     }
   }
 
@@ -271,19 +299,21 @@ class ErrorHandler {
    */
   isSecurityError(err) {
     const securityErrorCodes = [
-      'INVALID_CREDENTIALS',
-      'TOKEN_EXPIRED',
-      'TOKEN_INVALID',
-      'ACCESS_DENIED',
-      'SECURITY_VIOLATION',
-      'SUSPICIOUS_ACTIVITY',
-      'ACCOUNT_LOCKED'
+      "INVALID_CREDENTIALS",
+      "TOKEN_EXPIRED",
+      "TOKEN_INVALID",
+      "ACCESS_DENIED",
+      "SECURITY_VIOLATION",
+      "SUSPICIOUS_ACTIVITY",
+      "ACCOUNT_LOCKED",
     ];
 
-    return securityErrorCodes.includes(err.code) ||
-           err.name === 'JsonWebTokenError' ||
-           err.name === 'TokenExpiredError' ||
-           (err.status >= 401 && err.status <= 403);
+    return (
+      securityErrorCodes.includes(err.code) ||
+      err.name === "JsonWebTokenError" ||
+      err.name === "TokenExpiredError" ||
+      (err.status >= 401 && err.status <= 403)
+    );
   }
 
   /**
@@ -294,21 +324,21 @@ class ErrorHandler {
   async auditSecurityError(errorInfo, req) {
     try {
       await this.auditLogger.logSecurityEvent({
-        action: 'security_error',
+        action: "security_error",
         errorCode: errorInfo.errorCode,
         statusCode: errorInfo.statusCode,
         message: errorInfo.message,
         userId: req.user?.id,
         ip: req.ip,
-        userAgent: req.get('User-Agent'),
+        userAgent: req.get("User-Agent"),
         method: req.method,
         url: req.originalUrl,
-        timestamp: errorInfo.timestamp
+        timestamp: errorInfo.timestamp,
       });
     } catch (auditError) {
-      logger.error('Failed to audit security error', {
+      logger.error("Failed to audit security error", {
         error: auditError.message,
-        originalError: errorInfo
+        originalError: errorInfo,
       });
     }
   }
@@ -325,17 +355,17 @@ class ErrorHandler {
         code: errorInfo.errorCode,
         message: errorInfo.message,
         timestamp: errorInfo.timestamp,
-        requestId: errorInfo.requestId
-      }
+        requestId: errorInfo.requestId,
+      },
     };
 
     // Add details for development environment
-    if (process.env.NODE_ENV !== 'production' && errorInfo.details) {
+    if (process.env.NODE_ENV !== "production" && errorInfo.details) {
       response.error.details = errorInfo.details;
     }
 
     // Add stack trace for development environment
-    if (process.env.NODE_ENV !== 'production' && errorInfo.stack) {
+    if (process.env.NODE_ENV !== "production" && errorInfo.stack) {
       response.error.stack = errorInfo.stack;
     }
 
@@ -350,7 +380,7 @@ class ErrorHandler {
    */
   handleNotFound(req, res, next) {
     const error = new Error(`Route ${req.originalUrl} not found`);
-    error.code = 'USER_NOT_FOUND';
+    error.code = "USER_NOT_FOUND";
     error.status = 404;
     next(error);
   }
@@ -389,5 +419,5 @@ module.exports = {
   handleError: errorHandler.handleError.bind(errorHandler),
   handleNotFound: errorHandler.handleNotFound.bind(errorHandler),
   createError: errorHandler.createError.bind(errorHandler),
-  asyncHandler: errorHandler.asyncHandler.bind(errorHandler)
+  asyncHandler: errorHandler.asyncHandler.bind(errorHandler),
 };

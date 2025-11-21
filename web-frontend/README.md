@@ -5,6 +5,7 @@ This directory contains the source code for the LendSmart web application, built
 ## Overview
 
 The web frontend provides a comprehensive interface for users (borrowers, lenders, and administrators) to interact with the LendSmart platform. Key features include:
+
 - User registration, login, and profile management.
 - A marketplace for browsing and filtering available loans.
 - Loan application process for borrowers.
@@ -61,17 +62,19 @@ web-frontend/
 
 ## Prerequisites
 
--   Node.js (LTS version recommended, e.g., v18.x or v20.x)
--   npm or Yarn
+- Node.js (LTS version recommended, e.g., v18.x or v20.x)
+- npm or Yarn
 
 ## Setup and Installation
 
 1.  **Navigate to the `web-frontend` directory:**
+
     ```bash
     cd LendSmart/web-frontend
     ```
 
 2.  **Install dependencies:**
+
     ```bash
     npm install
     # or
@@ -93,59 +96,65 @@ web-frontend/
 
 ## Running the Application
 
--   **Development mode:**
-    ```bash
-    npm start
-    # or
-    # yarn start
-    ```
-    This will start the development server, usually on `http://localhost:3000`, and open the application in your default web browser. The page will automatically reload if you make changes to the code.
+- **Development mode:**
 
--   **Production build:**
-    ```bash
-    npm run build
-    # or
-    # yarn build
-    ```
-    This command builds the app for production to the `build` folder. It correctly bundles React in production mode and optimizes the build for the best performance.
+  ```bash
+  npm start
+  # or
+  # yarn start
+  ```
+
+  This will start the development server, usually on `http://localhost:3000`, and open the application in your default web browser. The page will automatically reload if you make changes to the code.
+
+- **Production build:**
+  ```bash
+  npm run build
+  # or
+  # yarn build
+  ```
+  This command builds the app for production to the `build` folder. It correctly bundles React in production mode and optimizes the build for the best performance.
 
 ## Key Libraries Used
 
--   **React:** Core JavaScript library for building user interfaces.
--   **React Router DOM:** For declarative routing in the application.
--   **Axios (or Fetch API):** For making HTTP requests to the backend API (`src/services/apiService.js`).
--   **Ethers.js / Web3.js:** For interacting with Ethereum smart contracts, typically through browser wallet extensions like MetaMask (`src/services/blockchainService.js`).
--   **React Context API / Redux / Zustand:** For global state management (e.g., `src/contexts/AuthContext.js`).
--   **Styled Components / Material-UI / Tailwind CSS / CSS Modules:** For styling components.
--   **Jest / React Testing Library:** For writing unit and integration tests.
+- **React:** Core JavaScript library for building user interfaces.
+- **React Router DOM:** For declarative routing in the application.
+- **Axios (or Fetch API):** For making HTTP requests to the backend API (`src/services/apiService.js`).
+- **Ethers.js / Web3.js:** For interacting with Ethereum smart contracts, typically through browser wallet extensions like MetaMask (`src/services/blockchainService.js`).
+- **React Context API / Redux / Zustand:** For global state management (e.g., `src/contexts/AuthContext.js`).
+- **Styled Components / Material-UI / Tailwind CSS / CSS Modules:** For styling components.
+- **Jest / React Testing Library:** For writing unit and integration tests.
 
 ## Development Notes
 
--   **API Integration:** Backend API calls are managed via `src/services/apiService.js`. Ensure `REACT_APP_API_BASE_URL` is correctly configured in your `.env` file.
--   **Blockchain Integration:** Interactions with smart contracts (e.g., loan funding, repayments) will be handled by `src/services/blockchainService.js`. This service will need to connect to the user's wallet (e.g., MetaMask) and use the configured contract addresses and ABIs.
--   **Routing:** Application navigation is handled by React Router. Define routes in `src/App.js` or a dedicated routing configuration file (e.g., `src/routes/index.js`).
--   **State Management:** Global application state like user authentication is managed using React Context in `src/contexts/`. For more complex state, consider Redux or Zustand.
--   **Styling:** Choose a consistent styling approach (CSS-in-JS, utility classes, or plain CSS/Sass).
--   **Error Handling:** Implement robust error handling for API requests, blockchain transactions, and user inputs.
+- **API Integration:** Backend API calls are managed via `src/services/apiService.js`. Ensure `REACT_APP_API_BASE_URL` is correctly configured in your `.env` file.
+- **Blockchain Integration:** Interactions with smart contracts (e.g., loan funding, repayments) will be handled by `src/services/blockchainService.js`. This service will need to connect to the user's wallet (e.g., MetaMask) and use the configured contract addresses and ABIs.
+- **Routing:** Application navigation is handled by React Router. Define routes in `src/App.js` or a dedicated routing configuration file (e.g., `src/routes/index.js`).
+- **State Management:** Global application state like user authentication is managed using React Context in `src/contexts/`. For more complex state, consider Redux or Zustand.
+- **Styling:** Choose a consistent styling approach (CSS-in-JS, utility classes, or plain CSS/Sass).
+- **Error Handling:** Implement robust error handling for API requests, blockchain transactions, and user inputs.
 
 ## Testing
 
 Run tests using:
+
 ```bash
 npm test
 # or
 # yarn test
 ```
+
 This will launch the test runner in interactive watch mode. Test files are typically located in `src/__tests__/` or a top-level `tests/` directory.
 
 ## Linting
 
 Run the linter using:
+
 ```bash
 npm run lint
 # or
 # yarn lint
 ```
+
 (Ensure ESLint is configured, typically in `.eslintrc.js`.)
 
 ## License

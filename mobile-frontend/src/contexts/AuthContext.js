@@ -1,9 +1,15 @@
-import React, { createContext, useState, useEffect, useMemo, useCallback } from 'react';
+import React, {
+  createContext,
+  useState,
+  useEffect,
+  useMemo,
+  useCallback,
+} from 'react';
 import PropTypes from 'prop-types';
 import * as Keychain from 'react-native-keychain';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import apiService from '../services/apiService';
-import { Alert } from 'react-native';
+import {Alert} from 'react-native';
 import NetInfo from '@react-native-community/netinfo';
 
 export const AuthContext = createContext({
@@ -12,12 +18,12 @@ export const AuthContext = createContext({
   isAuthenticated: false,
   isLoading: true,
   error: null,
-  login: async (credentials) => {},
+  login: async credentials => {},
   logout: async () => {},
-  register: async (userData) => {},
-  updateProfile: async (userData) => {},
-  resetPassword: async (email) => {},
-  verifyEmail: async (code) => {},
+  register: async userData => {},
+  updateProfile: async userData => {},
+  resetPassword: async email => {},
+  verifyEmail: async code => {},
   refreshToken: async () => {},
   clearError: () => {},
   checkAuthStatus: async () => {},
@@ -28,7 +34,7 @@ const TOKEN_EXPIRY_KEY = 'tokenExpiry';
 const REFRESH_TOKEN_KEY = 'refreshToken';
 const BIOMETRIC_ENABLED_KEY = 'biometricEnabled';
 
-export const AuthProvider = ({ children }) => {
+export const AuthProvider = ({children}) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
   const [refreshToken, setRefreshToken] = useState(null);
@@ -60,19 +66,24 @@ export const AuthProvider = ({ children }) => {
         setIsLoading(true);
 
         // Check if biometric auth is enabled
-        const biometricEnabledStr = await AsyncStorage.getItem(BIOMETRIC_ENABLED_KEY);
+        const biometricEnabledStr = await AsyncStorage.getItem(
+          BIOMETRIC_ENABLED_KEY,
+        );
         const isBiometricEnabled = biometricEnabledStr === 'true';
         setBiometricEnabled(isBiometricEnabled);
 
         // Get credentials from secure storage
-        const credentials = await Keychain.getGenericPassword({ service: AUTH_KEY });
+        const credentials = await Keychain.getGenericPassword({
+          service: AUTH_KEY,
+        });
 
         if (credentials) {
           const storedData = JSON.parse(credentials.password);
 
           // Get token expiry and refresh token
           const expiryTimestamp = await AsyncStorage.getItem(TOKEN_EXPIRY_KEY);
-          const storedRefreshToken = await AsyncStorage.getItem(REFRESH_TOKEN_KEY);
+          const storedRefreshToken =
+            await AsyncStorage.getItem(REFRESH_TOKEN_KEY);
 
           setRefreshToken(storedRefreshToken);
 
@@ -135,7 +146,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   // Verify token with backend
-  const verifyToken = async (authToken) => {
+  const verifyToken = async authToken => {
     if (!authToken || !isConnected) return false;
 
     try {
@@ -150,7 +161,10 @@ export const AuthProvider = ({ children }) => {
           await refreshTokenHandler(refreshToken);
           return true;
         } catch (refreshError) {
-          console.error('Failed to refresh token during verification:', refreshError);
+          console.error(
+            'Failed to refresh token during verification:',
+            refreshError,
+          );
           await clearAuthData();
           setUser(null);
           setToken(null);
@@ -166,13 +180,20 @@ export const AuthProvider = ({ children }) => {
   };
 
   // Store auth data securely
-  const storeAuthData = async (newToken, userData, newRefreshToken, expiresIn) => {
+  const storeAuthData = async (
+    newToken,
+    userData,
+    newRefreshToken,
+    expiresIn,
+  ) => {
     try {
-      const dataToStore = JSON.stringify({ token: newToken, user: userData });
-      await Keychain.setGenericPassword('user', dataToStore, { service: AUTH_KEY });
+      const dataToStore = JSON.stringify({token: newToken, user: userData});
+      await Keychain.setGenericPassword('user', dataToStore, {
+        service: AUTH_KEY,
+      });
 
       // Calculate and store token expiry
-      const expiryTime = Date.now() + (expiresIn * 1000);
+      const expiryTime = Date.now() + expiresIn * 1000;
       await AsyncStorage.setItem(TOKEN_EXPIRY_KEY, expiryTime.toString());
       setTokenExpiry(expiryTime);
 
@@ -187,7 +208,7 @@ export const AuthProvider = ({ children }) => {
 
       // Schedule token refresh before expiry
       if (expiresIn) {
-        const timeToRefresh = (expiresIn * 1000) - 60000; // Refresh 1 minute before expiry
+        const timeToRefresh = expiresIn * 1000 - 60000; // Refresh 1 minute before expiry
         if (timeToRefresh > 0) {
           setTimeout(() => {
             refreshTokenHandler(newRefreshToken);
@@ -203,7 +224,7 @@ export const AuthProvider = ({ children }) => {
   // Clear all auth data
   const clearAuthData = async () => {
     try {
-      await Keychain.resetGenericPassword({ service: AUTH_KEY });
+      await Keychain.resetGenericPassword({service: AUTH_KEY});
       await AsyncStorage.removeItem(TOKEN_EXPIRY_KEY);
       await AsyncStorage.removeItem(REFRESH_TOKEN_KEY);
       apiService.clearAuthToken();
@@ -213,14 +234,21 @@ export const AuthProvider = ({ children }) => {
   };
 
   // Refresh token handler
-  const refreshTokenHandler = async (currentRefreshToken) => {
+  const refreshTokenHandler = async currentRefreshToken => {
     if (!currentRefreshToken || !isConnected) {
       throw new Error('No refresh token available or no network connection');
     }
 
     try {
-      const response = await apiService.post('/auth/refresh', { refreshToken: currentRefreshToken });
-      const { token: newToken, refreshToken: newRefreshToken, expiresIn, user: userData } = response.data;
+      const response = await apiService.post('/auth/refresh', {
+        refreshToken: currentRefreshToken,
+      });
+      const {
+        token: newToken,
+        refreshToken: newRefreshToken,
+        expiresIn,
+        user: userData,
+      } = response.data;
 
       if (newToken) {
         setToken(newToken);
@@ -229,7 +257,12 @@ export const AuthProvider = ({ children }) => {
           setUser(userData);
         }
 
-        await storeAuthData(newToken, userData || user, newRefreshToken, expiresIn);
+        await storeAuthData(
+          newToken,
+          userData || user,
+          newRefreshToken,
+          expiresIn,
+        );
         return newToken;
       } else {
         throw new Error('Invalid refresh response');
@@ -245,44 +278,60 @@ export const AuthProvider = ({ children }) => {
   };
 
   // Login handler
-  const login = useCallback(async (credentials, useBiometric = false) => {
-    if (!isConnected) {
-      setError('No internet connection. Please check your network and try again.');
-      throw new Error('No internet connection');
-    }
-
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const response = await apiService.post('/auth/login', credentials);
-      const { token: newToken, refreshToken: newRefreshToken, expiresIn, user: userData } = response.data;
-
-      if (newToken && userData) {
-        setToken(newToken);
-        setUser(userData);
-
-        // Store biometric preference if provided
-        if (useBiometric !== undefined) {
-          await AsyncStorage.setItem(BIOMETRIC_ENABLED_KEY, useBiometric.toString());
-          setBiometricEnabled(useBiometric);
-        }
-
-        await storeAuthData(newToken, userData, newRefreshToken, expiresIn);
-        return userData;
-      } else {
-        throw new Error('Invalid login response from server');
+  const login = useCallback(
+    async (credentials, useBiometric = false) => {
+      if (!isConnected) {
+        setError(
+          'No internet connection. Please check your network and try again.',
+        );
+        throw new Error('No internet connection');
       }
-    } catch (err) {
-      console.error('Login failed:', err);
-      const message = err.response?.data?.message || err.message || 'Login failed. Please check your credentials.';
-      setError(message);
-      await clearAuthData();
-      throw new Error(message);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [isConnected]);
+
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const response = await apiService.post('/auth/login', credentials);
+        const {
+          token: newToken,
+          refreshToken: newRefreshToken,
+          expiresIn,
+          user: userData,
+        } = response.data;
+
+        if (newToken && userData) {
+          setToken(newToken);
+          setUser(userData);
+
+          // Store biometric preference if provided
+          if (useBiometric !== undefined) {
+            await AsyncStorage.setItem(
+              BIOMETRIC_ENABLED_KEY,
+              useBiometric.toString(),
+            );
+            setBiometricEnabled(useBiometric);
+          }
+
+          await storeAuthData(newToken, userData, newRefreshToken, expiresIn);
+          return userData;
+        } else {
+          throw new Error('Invalid login response from server');
+        }
+      } catch (err) {
+        console.error('Login failed:', err);
+        const message =
+          err.response?.data?.message ||
+          err.message ||
+          'Login failed. Please check your credentials.';
+        setError(message);
+        await clearAuthData();
+        throw new Error(message);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [isConnected],
+  );
 
   // Logout handler
   const logout = useCallback(async () => {
@@ -306,124 +355,168 @@ export const AuthProvider = ({ children }) => {
   }, [token, isConnected]);
 
   // Register handler
-  const register = useCallback(async (userData) => {
-    if (!isConnected) {
-      setError('No internet connection. Please check your network and try again.');
-      throw new Error('No internet connection');
-    }
-
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const response = await apiService.post('/auth/register', userData);
-      return response.data;
-    } catch (err) {
-      console.error('Registration failed:', err);
-      const message = err.response?.data?.message || err.message || 'Registration failed. Please try again.';
-      setError(message);
-      throw new Error(message);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [isConnected]);
-
-  // Update profile handler
-  const updateProfile = useCallback(async (userData) => {
-    if (!isConnected) {
-      setError('No internet connection. Please check your network and try again.');
-      throw new Error('No internet connection');
-    }
-
-    if (!token) {
-      setError('You must be logged in to update your profile.');
-      throw new Error('Authentication required');
-    }
-
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const response = await apiService.put('/users/profile', userData);
-      const updatedUser = response.data;
-
-      // Update local user data
-      setUser(prevUser => ({ ...prevUser, ...updatedUser }));
-
-      // Update stored user data
-      if (user && token) {
-        await storeAuthData(token, { ...user, ...updatedUser }, refreshToken,
-          tokenExpiry ? Math.floor((tokenExpiry - Date.now()) / 1000) : undefined);
+  const register = useCallback(
+    async userData => {
+      if (!isConnected) {
+        setError(
+          'No internet connection. Please check your network and try again.',
+        );
+        throw new Error('No internet connection');
       }
 
-      return updatedUser;
-    } catch (err) {
-      console.error('Profile update failed:', err);
-      const message = err.response?.data?.message || err.message || 'Failed to update profile. Please try again.';
-      setError(message);
-      throw new Error(message);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [token, user, refreshToken, tokenExpiry, isConnected]);
+      setIsLoading(true);
+      setError(null);
 
-  // Reset password handler
-  const resetPassword = useCallback(async (email) => {
-    if (!isConnected) {
-      setError('No internet connection. Please check your network and try again.');
-      throw new Error('No internet connection');
-    }
+      try {
+        const response = await apiService.post('/auth/register', userData);
+        return response.data;
+      } catch (err) {
+        console.error('Registration failed:', err);
+        const message =
+          err.response?.data?.message ||
+          err.message ||
+          'Registration failed. Please try again.';
+        setError(message);
+        throw new Error(message);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [isConnected],
+  );
 
-    setIsLoading(true);
-    setError(null);
+  // Update profile handler
+  const updateProfile = useCallback(
+    async userData => {
+      if (!isConnected) {
+        setError(
+          'No internet connection. Please check your network and try again.',
+        );
+        throw new Error('No internet connection');
+      }
 
-    try {
-      const response = await apiService.post('/auth/reset-password', { email });
-      return response.data;
-    } catch (err) {
-      console.error('Password reset request failed:', err);
-      const message = err.response?.data?.message || err.message || 'Failed to request password reset. Please try again.';
-      setError(message);
-      throw new Error(message);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [isConnected]);
+      if (!token) {
+        setError('You must be logged in to update your profile.');
+        throw new Error('Authentication required');
+      }
 
-  // Verify email handler
-  const verifyEmail = useCallback(async (code) => {
-    if (!isConnected) {
-      setError('No internet connection. Please check your network and try again.');
-      throw new Error('No internet connection');
-    }
+      setIsLoading(true);
+      setError(null);
 
-    setIsLoading(true);
-    setError(null);
+      try {
+        const response = await apiService.put('/users/profile', userData);
+        const updatedUser = response.data;
 
-    try {
-      const response = await apiService.post('/auth/verify-email', { code });
-
-      // If verification updates user data, update local state
-      if (response.data.user) {
-        setUser(prevUser => ({ ...prevUser, ...response.data.user }));
+        // Update local user data
+        setUser(prevUser => ({...prevUser, ...updatedUser}));
 
         // Update stored user data
         if (user && token) {
-          await storeAuthData(token, { ...user, ...response.data.user }, refreshToken,
-            tokenExpiry ? Math.floor((tokenExpiry - Date.now()) / 1000) : undefined);
+          await storeAuthData(
+            token,
+            {...user, ...updatedUser},
+            refreshToken,
+            tokenExpiry
+              ? Math.floor((tokenExpiry - Date.now()) / 1000)
+              : undefined,
+          );
         }
+
+        return updatedUser;
+      } catch (err) {
+        console.error('Profile update failed:', err);
+        const message =
+          err.response?.data?.message ||
+          err.message ||
+          'Failed to update profile. Please try again.';
+        setError(message);
+        throw new Error(message);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [token, user, refreshToken, tokenExpiry, isConnected],
+  );
+
+  // Reset password handler
+  const resetPassword = useCallback(
+    async email => {
+      if (!isConnected) {
+        setError(
+          'No internet connection. Please check your network and try again.',
+        );
+        throw new Error('No internet connection');
       }
 
-      return response.data;
-    } catch (err) {
-      console.error('Email verification failed:', err);
-      const message = err.response?.data?.message || err.message || 'Failed to verify email. Please try again.';
-      setError(message);
-      throw new Error(message);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [token, user, refreshToken, tokenExpiry, isConnected]);
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const response = await apiService.post('/auth/reset-password', {email});
+        return response.data;
+      } catch (err) {
+        console.error('Password reset request failed:', err);
+        const message =
+          err.response?.data?.message ||
+          err.message ||
+          'Failed to request password reset. Please try again.';
+        setError(message);
+        throw new Error(message);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [isConnected],
+  );
+
+  // Verify email handler
+  const verifyEmail = useCallback(
+    async code => {
+      if (!isConnected) {
+        setError(
+          'No internet connection. Please check your network and try again.',
+        );
+        throw new Error('No internet connection');
+      }
+
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const response = await apiService.post('/auth/verify-email', {code});
+
+        // If verification updates user data, update local state
+        if (response.data.user) {
+          setUser(prevUser => ({...prevUser, ...response.data.user}));
+
+          // Update stored user data
+          if (user && token) {
+            await storeAuthData(
+              token,
+              {...user, ...response.data.user},
+              refreshToken,
+              tokenExpiry
+                ? Math.floor((tokenExpiry - Date.now()) / 1000)
+                : undefined,
+            );
+          }
+        }
+
+        return response.data;
+      } catch (err) {
+        console.error('Email verification failed:', err);
+        const message =
+          err.response?.data?.message ||
+          err.message ||
+          'Failed to verify email. Please try again.';
+        setError(message);
+        throw new Error(message);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [token, user, refreshToken, tokenExpiry, isConnected],
+  );
 
   // Refresh token (exposed for manual refresh)
   const refreshTokenManual = useCallback(async () => {
@@ -469,7 +562,7 @@ export const AuthProvider = ({ children }) => {
   }, [token, isConnected]);
 
   // Toggle biometric authentication
-  const toggleBiometric = useCallback(async (enabled) => {
+  const toggleBiometric = useCallback(async enabled => {
     try {
       await AsyncStorage.setItem(BIOMETRIC_ENABLED_KEY, enabled.toString());
       setBiometricEnabled(enabled);
@@ -481,29 +574,45 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   // Context value with memoization for performance
-  const authContextValue = useMemo(() => ({
-    user,
-    token,
-    isAuthenticated: !!token && !!user,
-    isLoading,
-    error,
-    biometricEnabled,
-    isConnected,
-    login,
-    logout,
-    register,
-    updateProfile,
-    resetPassword,
-    verifyEmail,
-    refreshToken: refreshTokenManual,
-    clearError,
-    checkAuthStatus,
-    toggleBiometric,
-  }), [
-    user, token, isLoading, error, biometricEnabled, isConnected,
-    login, logout, register, updateProfile, resetPassword, verifyEmail,
-    refreshTokenManual, clearError, checkAuthStatus, toggleBiometric
-  ]);
+  const authContextValue = useMemo(
+    () => ({
+      user,
+      token,
+      isAuthenticated: !!token && !!user,
+      isLoading,
+      error,
+      biometricEnabled,
+      isConnected,
+      login,
+      logout,
+      register,
+      updateProfile,
+      resetPassword,
+      verifyEmail,
+      refreshToken: refreshTokenManual,
+      clearError,
+      checkAuthStatus,
+      toggleBiometric,
+    }),
+    [
+      user,
+      token,
+      isLoading,
+      error,
+      biometricEnabled,
+      isConnected,
+      login,
+      logout,
+      register,
+      updateProfile,
+      resetPassword,
+      verifyEmail,
+      refreshTokenManual,
+      clearError,
+      checkAuthStatus,
+      toggleBiometric,
+    ],
+  );
 
   return (
     <AuthContext.Provider value={authContextValue}>

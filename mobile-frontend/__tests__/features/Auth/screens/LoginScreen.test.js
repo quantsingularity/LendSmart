@@ -1,12 +1,12 @@
 import React from 'react';
-import { render, fireEvent, waitFor } from '@testing-library/react-native';
-import { PaperProvider } from 'react-native-paper'; // Assuming react-native-paper is used for UI components
-import { AuthContext } from '../../../../../contexts/AuthContext';
+import {render, fireEvent, waitFor} from '@testing-library/react-native';
+import {PaperProvider} from 'react-native-paper'; // Assuming react-native-paper is used for UI components
+import {AuthContext} from '../../../../../contexts/AuthContext';
 import LoginScreen from '../LoginScreen';
 
 // Mock navigation
 const mockNavigate = jest.fn();
-const mockNavigation = { navigate: mockNavigate };
+const mockNavigation = {navigate: mockNavigate};
 
 // Mock AuthContext
 const mockLogin = jest.fn();
@@ -25,7 +25,7 @@ const mockAuthContextValue = {
 };
 
 // Custom wrapper to provide necessary contexts and theme
-const AllTheProviders = ({ children }) => (
+const AllTheProviders = ({children}) => (
   <AuthContext.Provider value={mockAuthContextValue}>
     <PaperProvider>{children}</PaperProvider>
   </AuthContext.Provider>
@@ -44,9 +44,9 @@ describe('LoginScreen', () => {
   });
 
   it('renders correctly with all form elements', () => {
-    const { getByText, getByLabelText } = render(
+    const {getByText, getByLabelText} = render(
       <LoginScreen navigation={mockNavigation} />,
-      { wrapper: AllTheProviders }
+      {wrapper: AllTheProviders},
     );
 
     expect(getByText('Welcome Back')).toBeTruthy();
@@ -58,9 +58,9 @@ describe('LoginScreen', () => {
   });
 
   it('allows typing in email and password fields', () => {
-    const { getByLabelText } = render(
+    const {getByLabelText} = render(
       <LoginScreen navigation={mockNavigation} />,
-      { wrapper: AllTheProviders }
+      {wrapper: AllTheProviders},
     );
 
     const emailInput = getByLabelText('Email');
@@ -74,9 +74,9 @@ describe('LoginScreen', () => {
   });
 
   it('shows validation errors for invalid input', async () => {
-    const { getByText, getByLabelText } = render(
+    const {getByText, getByLabelText} = render(
       <LoginScreen navigation={mockNavigation} />,
-      { wrapper: AllTheProviders }
+      {wrapper: AllTheProviders},
     );
 
     const loginButton = getByText('Login');
@@ -106,10 +106,10 @@ describe('LoginScreen', () => {
   });
 
   it('calls login function from AuthContext on valid submission', async () => {
-    mockLogin.mockResolvedValueOnce({ success: true }); // Assume login resolves successfully
-    const { getByText, getByLabelText } = render(
+    mockLogin.mockResolvedValueOnce({success: true}); // Assume login resolves successfully
+    const {getByText, getByLabelText} = render(
       <LoginScreen navigation={mockNavigation} />,
-      { wrapper: AllTheProviders }
+      {wrapper: AllTheProviders},
     );
 
     const emailInput = getByLabelText('Email');
@@ -122,15 +122,18 @@ describe('LoginScreen', () => {
 
     await waitFor(() => {
       expect(mockLogin).toHaveBeenCalledTimes(1);
-      expect(mockLogin).toHaveBeenCalledWith({ email: 'test@example.com', password: 'password123' });
+      expect(mockLogin).toHaveBeenCalledWith({
+        email: 'test@example.com',
+        password: 'password123',
+      });
     });
   });
 
   it('displays loading indicator when auth is loading', () => {
     mockAuthContextValue.loading = true;
-    const { getByText, getByTestId } = render(
+    const {getByText, getByTestId} = render(
       <LoginScreen navigation={mockNavigation} />,
-      { wrapper: AllTheProviders }
+      {wrapper: AllTheProviders},
     );
     // react-native-paper Button's loading prop shows an ActivityIndicator
     // We check if the button is disabled and shows loading state
@@ -144,9 +147,9 @@ describe('LoginScreen', () => {
     mockAuthContextValue.error = errorMessage;
     mockLogin.mockRejectedValueOnce(new Error('Login failed')); // Simulate login failure
 
-    const { getByText, getByLabelText } = render(
+    const {getByText, getByLabelText} = render(
       <LoginScreen navigation={mockNavigation} />,
-      { wrapper: AllTheProviders }
+      {wrapper: AllTheProviders},
     );
 
     // Even if login is not pressed, if error is in context, it should display
@@ -159,9 +162,9 @@ describe('LoginScreen', () => {
     fireEvent.press(getByText('Login'));
 
     await waitFor(() => {
-        // Simulate error being set in context after API call
-        mockAuthContextValue.error = errorMessage;
-        // Re-render or update state to show error (RTL handles this)
+      // Simulate error being set in context after API call
+      mockAuthContextValue.error = errorMessage;
+      // Re-render or update state to show error (RTL handles this)
     });
     // This assertion might need adjustment based on how error is set and re-rendered
     // For now, we assume if error is in context, it's displayed.
@@ -169,10 +172,9 @@ describe('LoginScreen', () => {
   });
 
   it('navigates to Register screen when "Register" button is pressed', () => {
-    const { getByText } = render(
-      <LoginScreen navigation={mockNavigation} />,
-      { wrapper: AllTheProviders }
-    );
+    const {getByText} = render(<LoginScreen navigation={mockNavigation} />, {
+      wrapper: AllTheProviders,
+    });
 
     const registerButton = getByText("Don't have an account? Register");
     fireEvent.press(registerButton);

@@ -33,16 +33,22 @@ const RegisterPage = () => {
     // } catch (err) {
     //   setError(err.response?.data?.message || "Failed to register. Please try again.");
     // }
-    setTimeout(() => { // Simulate API call
-        console.log("Registration submitted (simulated):", { username, email, password, role });
-        if (email === "existing@example.com") {
-            setError("Email already registered (simulated).")
-        } else {
-            // alert("Registration successful! Please login. (Simulated)");
-            // navigate("/login");
-            console.log("Simulated registration success")
-        }
-        setLoading(false);
+    setTimeout(() => {
+      // Simulate API call
+      console.log("Registration submitted (simulated):", {
+        username,
+        email,
+        password,
+        role,
+      });
+      if (email === "existing@example.com") {
+        setError("Email already registered (simulated).");
+      } else {
+        // alert("Registration successful! Please login. (Simulated)");
+        // navigate("/login");
+        console.log("Simulated registration success");
+      }
+      setLoading(false);
     }, 1000);
   };
 
@@ -94,17 +100,27 @@ const RegisterPage = () => {
         </div>
         <div>
           <label htmlFor="role">I am a:</label>
-          <select id="role" value={role} onChange={(e) => setRole(e.target.value)} required>
+          <select
+            id="role"
+            value={role}
+            onChange={(e) => setRole(e.target.value)}
+            required
+          >
             <option value="borrower">Borrower</option>
             <option value="lender">Lender</option>
           </select>
         </div>
-        <button type="submit" className="button button-primary" disabled={loading}>
+        <button
+          type="submit"
+          className="button button-primary"
+          disabled={loading}
+        >
           {loading ? "Registering..." : "Register"}
         </button>
       </form>
       <p className="auth-switch">
-        Already have an account? <a href="/login">Login here</a> {/* Use Link from react-router-dom if SPA navigation is preferred */}
+        Already have an account? <a href="/login">Login here</a>{" "}
+        {/* Use Link from react-router-dom if SPA navigation is preferred */}
       </p>
       <style jsx>{`
         .auth-form {
@@ -114,7 +130,7 @@ const RegisterPage = () => {
           border: 1px solid #ddd;
           border-radius: 8px;
           background-color: #fff;
-          box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
         .auth-form h2 {
           text-align: center;
@@ -130,8 +146,8 @@ const RegisterPage = () => {
           text-align: center;
         }
         .auth-switch {
-            text-align: center;
-            margin-top: 20px;
+          text-align: center;
+          margin-top: 20px;
         }
       `}</style>
     </div>

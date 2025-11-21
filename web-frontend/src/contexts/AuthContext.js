@@ -42,30 +42,41 @@ export const AuthProvider = ({ children }) => {
     loadUserFromToken();
   }, [token]);
 
-  const login = useCallback(async (credentials) => {
-    // try {
-    //   const response = await apiService.auth.login(credentials);
-    //   updateUserAndToken(response.data.user, response.data.token);
-    //   return response.data.user;
-    // } catch (error) {
-    //   console.error("Login failed:", error);
-    //   throw error; // Re-throw to be caught by the calling component
-    // }
-    console.log("AuthContext: login called (simulated)", credentials);
-    // Simulate login
-    return new Promise((resolve, reject) => {
+  const login = useCallback(
+    async (credentials) => {
+      // try {
+      //   const response = await apiService.auth.login(credentials);
+      //   updateUserAndToken(response.data.user, response.data.token);
+      //   return response.data.user;
+      // } catch (error) {
+      //   console.error("Login failed:", error);
+      //   throw error; // Re-throw to be caught by the calling component
+      // }
+      console.log("AuthContext: login called (simulated)", credentials);
+      // Simulate login
+      return new Promise((resolve, reject) => {
         setTimeout(() => {
-            if (credentials.email === "test@example.com" && credentials.password === "password") {
-                const mockUser = { id: "1", username: "TestUser", email: "test@example.com", role: "borrower" };
-                const mockToken = "fake-jwt-token";
-                updateUserAndToken(mockUser, mockToken);
-                resolve(mockUser);
-            } else {
-                reject(new Error("Invalid credentials (simulated)"));
-            }
+          if (
+            credentials.email === "test@example.com" &&
+            credentials.password === "password"
+          ) {
+            const mockUser = {
+              id: "1",
+              username: "TestUser",
+              email: "test@example.com",
+              role: "borrower",
+            };
+            const mockToken = "fake-jwt-token";
+            updateUserAndToken(mockUser, mockToken);
+            resolve(mockUser);
+          } else {
+            reject(new Error("Invalid credentials (simulated)"));
+          }
         }, 500);
-    });
-  }, [updateUserAndToken]);
+      });
+    },
+    [updateUserAndToken],
+  );
 
   const register = useCallback(async (userData) => {
     // try {
@@ -79,15 +90,23 @@ export const AuthProvider = ({ children }) => {
     // }
     console.log("AuthContext: register called (simulated)", userData);
     return new Promise((resolve, reject) => {
-        setTimeout(() => {
-            if (userData.email === "existing@example.com") {
-                reject(new Error("Email already exists (simulated)"));
-            } else {
-                const mockUser = { id: "new", username: userData.username, email: userData.email, role: userData.role };
-                // Don't set token or user here, registration usually requires login separately
-                resolve({ user: mockUser, message: "Registration successful (simulated)" });
-            }
-        }, 500);
+      setTimeout(() => {
+        if (userData.email === "existing@example.com") {
+          reject(new Error("Email already exists (simulated)"));
+        } else {
+          const mockUser = {
+            id: "new",
+            username: userData.username,
+            email: userData.email,
+            role: userData.role,
+          };
+          // Don't set token or user here, registration usually requires login separately
+          resolve({
+            user: mockUser,
+            message: "Registration successful (simulated)",
+          });
+        }
+      }, 500);
     });
   }, []); // Removed updateUserAndToken from dependencies as it's not used for setting user state here
 
@@ -117,7 +136,8 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider value={authContextValue}>
-      {!loading && children} {/* Render children only after initial loading is done */}
+      {!loading && children}{" "}
+      {/* Render children only after initial loading is done */}
     </AuthContext.Provider>
   );
 };

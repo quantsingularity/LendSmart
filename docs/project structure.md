@@ -53,3 +53,4 @@ Smart_Contract_Based_Micro_Lending_Platform/
 │   ├── designs/
 │   │   ├── wireframes.pdf
 │   │   └── system_architecture.png
+```

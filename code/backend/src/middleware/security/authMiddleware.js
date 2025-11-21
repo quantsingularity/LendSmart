@@ -1,9 +1,9 @@
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
-const crypto = require('crypto');
-const rateLimit = require('express-rate-limit');
-const { logger } = require('../../utils/logger');
-const { AppError } = require('../monitoring/errorHandler');
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcryptjs");
+const crypto = require("crypto");
+const rateLimit = require("express-rate-limit");
+const { logger } = require("../../utils/logger");
+const { AppError } = require("../monitoring/errorHandler");
 
 /**
  * Enhanced Authentication Middleware for LendSmart
@@ -13,9 +13,10 @@ const { AppError } = require('../monitoring/errorHandler');
 class AuthMiddleware {
   constructor() {
     this.jwtSecret = process.env.JWT_SECRET || this._generateSecureSecret();
-    this.jwtRefreshSecret = process.env.JWT_REFRESH_SECRET || this._generateSecureSecret();
-    this.jwtExpiresIn = process.env.JWT_EXPIRES_IN || '15m';
-    this.refreshTokenExpiresIn = process.env.REFRESH_TOKEN_EXPIRES_IN || '7d';
+    this.jwtRefreshSecret =
+      process.env.JWT_REFRESH_SECRET || this._generateSecureSecret();
+    this.jwtExpiresIn = process.env.JWT_EXPIRES_IN || "15m";
+    this.refreshTokenExpiresIn = process.env.REFRESH_TOKEN_EXPIRES_IN || "7d";
 
     // Token blacklist (in production, use Redis or database)
     this.tokenBlacklist = new Set();
@@ -25,27 +26,27 @@ class AuthMiddleware {
     this.authRateLimiter = rateLimit({
       windowMs: 15 * 60 * 1000, // 15 minutes
       max: 5, // 5 attempts per window
-      message: 'Too many authentication attempts, please try again later',
+      message: "Too many authentication attempts, please try again later",
       standardHeaders: true,
       legacyHeaders: false,
       handler: (req, res) => {
         logger.security.suspiciousActivity(
-          req.body?.email || 'unknown',
-          'auth_rate_limit_exceeded',
+          req.body?.email || "unknown",
+          "auth_rate_limit_exceeded",
           req.ip,
-          req.get('User-Agent')
+          req.get("User-Agent"),
         );
         res.status(429).json({
-          error: 'Too many authentication attempts',
-          retryAfter: Math.round(req.rateLimit.resetTime / 1000)
+          error: "Too many authentication attempts",
+          retryAfter: Math.round(req.rateLimit.resetTime / 1000),
         });
-      }
+      },
     });
 
     this.passwordResetRateLimiter = rateLimit({
       windowMs: 60 * 60 * 1000, // 1 hour
       max: 3, // 3 password reset attempts per hour
-      message: 'Too many password reset attempts, please try again later'
+      message: "Too many password reset attempts, please try again later",
     });
   }
 
@@ -54,7 +55,7 @@ class AuthMiddleware {
    * @private
    */
   _generateSecureSecret() {
-    return crypto.randomBytes(64).toString('hex');
+    return crypto.randomBytes(64).toString("hex");
   }
 
   /**
@@ -67,8 +68,8 @@ class AuthMiddleware {
       const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS) || 12;
       return await bcrypt.hash(password, saltRounds);
     } catch (error) {
-      logger.error('Password hashing failed', { error: error.message });
-      throw new AppError('Password processing failed', 500, 'HASH_ERROR');
+      logger.error("Password hashing failed", { error: error.message });
+      throw new AppError("Password processing failed", 500, "HASH_ERROR");
     }
   }
 
@@ -82,8 +83,8 @@ class AuthMiddleware {
     try {
       return await bcrypt.compare(password, hash);
     } catch (error) {
-      logger.error('Password verification failed', { error: error.message });
-      throw new AppError('Password verification failed', 500, 'VERIFY_ERROR');
+      logger.error("Password verification failed", { error: error.message });
+      throw new AppError("Password verification failed", 500, "VERIFY_ERROR");
     }
   }
 
@@ -97,19 +98,19 @@ class AuthMiddleware {
     try {
       const tokenPayload = {
         ...payload,
-        type: 'access',
+        type: "access",
         iat: Math.floor(Date.now() / 1000),
-        jti: crypto.randomUUID() // JWT ID for tracking
+        jti: crypto.randomUUID(), // JWT ID for tracking
       };
 
       return jwt.sign(tokenPayload, this.jwtSecret, {
         expiresIn: options.expiresIn || this.jwtExpiresIn,
-        issuer: 'lendsmart-api',
-        audience: 'lendsmart-client'
+        issuer: "lendsmart-api",
+        audience: "lendsmart-client",
       });
     } catch (error) {
-      logger.error('Access token generation failed', { error: error.message });
-      throw new AppError('Token generation failed', 500, 'TOKEN_ERROR');
+      logger.error("Access token generation failed", { error: error.message });
+      throw new AppError("Token generation failed", 500, "TOKEN_ERROR");
     }
   }
 
@@ -123,15 +124,15 @@ class AuthMiddleware {
       const tokenId = crypto.randomUUID();
       const tokenPayload = {
         userId: payload.userId,
-        type: 'refresh',
+        type: "refresh",
         jti: tokenId,
-        iat: Math.floor(Date.now() / 1000)
+        iat: Math.floor(Date.now() / 1000),
       };
 
       const token = jwt.sign(tokenPayload, this.jwtRefreshSecret, {
         expiresIn: this.refreshTokenExpiresIn,
-        issuer: 'lendsmart-api',
-        audience: 'lendsmart-client'
+        issuer: "lendsmart-api",
+        audience: "lendsmart-client",
       });
 
       // Store refresh token metadata
@@ -140,13 +141,13 @@ class AuthMiddleware {
         createdAt: new Date(),
         lastUsed: new Date(),
         ipAddress: payload.ipAddress,
-        userAgent: payload.userAgent
+        userAgent: payload.userAgent,
       });
 
       return token;
     } catch (error) {
-      logger.error('Refresh token generation failed', { error: error.message });
-      throw new AppError('Refresh token generation failed', 500, 'TOKEN_ERROR');
+      logger.error("Refresh token generation failed", { error: error.message });
+      throw new AppError("Refresh token generation failed", 500, "TOKEN_ERROR");
     }
   }
 
@@ -156,35 +157,36 @@ class AuthMiddleware {
    * @param {string} type - Token type ('access' or 'refresh')
    * @returns {Object} Decoded token payload
    */
-  verifyToken(token, type = 'access') {
+  verifyToken(token, type = "access") {
     try {
-      const secret = type === 'refresh' ? this.jwtRefreshSecret : this.jwtSecret;
+      const secret =
+        type === "refresh" ? this.jwtRefreshSecret : this.jwtSecret;
       const decoded = jwt.verify(token, secret, {
-        issuer: 'lendsmart-api',
-        audience: 'lendsmart-client'
+        issuer: "lendsmart-api",
+        audience: "lendsmart-client",
       });
 
       // Check if token is blacklisted
       if (this.tokenBlacklist.has(decoded.jti)) {
-        throw new AppError('Token has been revoked', 401, 'TOKEN_REVOKED');
+        throw new AppError("Token has been revoked", 401, "TOKEN_REVOKED");
       }
 
       // Verify token type
       if (decoded.type !== type) {
-        throw new AppError('Invalid token type', 401, 'INVALID_TOKEN_TYPE');
+        throw new AppError("Invalid token type", 401, "INVALID_TOKEN_TYPE");
       }
 
       return decoded;
     } catch (error) {
       if (error instanceof jwt.JsonWebTokenError) {
-        throw new AppError('Invalid token', 401, 'INVALID_TOKEN');
+        throw new AppError("Invalid token", 401, "INVALID_TOKEN");
       } else if (error instanceof jwt.TokenExpiredError) {
-        throw new AppError('Token expired', 401, 'TOKEN_EXPIRED');
+        throw new AppError("Token expired", 401, "TOKEN_EXPIRED");
       } else if (error instanceof AppError) {
         throw error;
       } else {
-        logger.error('Token verification failed', { error: error.message });
-        throw new AppError('Token verification failed', 500, 'TOKEN_ERROR');
+        logger.error("Token verification failed", { error: error.message });
+        throw new AppError("Token verification failed", 500, "TOKEN_ERROR");
       }
     }
   }
@@ -195,7 +197,7 @@ class AuthMiddleware {
    */
   revokeToken(tokenId) {
     this.tokenBlacklist.add(tokenId);
-    logger.info('Token revoked', { tokenId });
+    logger.info("Token revoked", { tokenId });
   }
 
   /**
@@ -205,7 +207,7 @@ class AuthMiddleware {
   revokeRefreshToken(tokenId) {
     this.refreshTokens.delete(tokenId);
     this.tokenBlacklist.add(tokenId);
-    logger.info('Refresh token revoked', { tokenId });
+    logger.info("Refresh token revoked", { tokenId });
   }
 
   /**
@@ -220,7 +222,7 @@ class AuthMiddleware {
       }
     }
 
-    logger.info('All user tokens revoked', { userId });
+    logger.info("All user tokens revoked", { userId });
   }
 
   /**
@@ -233,12 +235,12 @@ class AuthMiddleware {
     try {
       const authHeader = req.headers.authorization;
 
-      if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        throw new AppError('Access token required', 401, 'MISSING_TOKEN');
+      if (!authHeader || !authHeader.startsWith("Bearer ")) {
+        throw new AppError("Access token required", 401, "MISSING_TOKEN");
       }
 
       const token = authHeader.substring(7); // Remove 'Bearer ' prefix
-      const decoded = this.verifyToken(token, 'access');
+      const decoded = this.verifyToken(token, "access");
 
       // Attach user info to request
       req.user = {
@@ -246,36 +248,36 @@ class AuthMiddleware {
         email: decoded.email,
         role: decoded.role,
         permissions: decoded.permissions || [],
-        tokenId: decoded.jti
+        tokenId: decoded.jti,
       };
 
       // Log successful authentication
-      logger.info('User authenticated', {
+      logger.info("User authenticated", {
         userId: req.user.id,
         email: req.user.email,
         ip: req.ip,
-        userAgent: req.get('User-Agent')
+        userAgent: req.get("User-Agent"),
       });
 
       next();
     } catch (error) {
-      logger.warn('Authentication failed', {
+      logger.warn("Authentication failed", {
         error: error.message,
         ip: req.ip,
-        userAgent: req.get('User-Agent'),
-        path: req.path
+        userAgent: req.get("User-Agent"),
+        path: req.path,
       });
 
       if (error instanceof AppError) {
         return res.status(error.statusCode).json({
           error: error.message,
-          code: error.code
+          code: error.code,
         });
       }
 
       return res.status(401).json({
-        error: 'Authentication failed',
-        code: 'AUTH_ERROR'
+        error: "Authentication failed",
+        code: "AUTH_ERROR",
       });
     }
   };
@@ -290,25 +292,25 @@ class AuthMiddleware {
     try {
       const authHeader = req.headers.authorization;
 
-      if (authHeader && authHeader.startsWith('Bearer ')) {
+      if (authHeader && authHeader.startsWith("Bearer ")) {
         const token = authHeader.substring(7);
-        const decoded = this.verifyToken(token, 'access');
+        const decoded = this.verifyToken(token, "access");
 
         req.user = {
           id: decoded.userId,
           email: decoded.email,
           role: decoded.role,
           permissions: decoded.permissions || [],
-          tokenId: decoded.jti
+          tokenId: decoded.jti,
         };
       }
 
       next();
     } catch (error) {
       // For optional auth, we don't fail on invalid tokens
-      logger.debug('Optional authentication failed', {
+      logger.debug("Optional authentication failed", {
         error: error.message,
-        ip: req.ip
+        ip: req.ip,
       });
       next();
     }
@@ -324,54 +326,66 @@ class AuthMiddleware {
     return (req, res, next) => {
       try {
         if (!req.user) {
-          throw new AppError('Authentication required', 401, 'AUTH_REQUIRED');
+          throw new AppError("Authentication required", 401, "AUTH_REQUIRED");
         }
 
         const userRole = req.user.role;
         const userPermissions = req.user.permissions || [];
 
         // Normalize to arrays
-        const roles = Array.isArray(requiredRoles) ? requiredRoles : [requiredRoles];
-        const permissions = Array.isArray(requiredPermissions) ? requiredPermissions : [requiredPermissions];
+        const roles = Array.isArray(requiredRoles)
+          ? requiredRoles
+          : [requiredRoles];
+        const permissions = Array.isArray(requiredPermissions)
+          ? requiredPermissions
+          : [requiredPermissions];
 
         // Check roles
         if (roles.length > 0 && !roles.includes(userRole)) {
-          logger.warn('Authorization failed - insufficient role', {
+          logger.warn("Authorization failed - insufficient role", {
             userId: req.user.id,
             userRole,
             requiredRoles: roles,
             ip: req.ip,
-            path: req.path
+            path: req.path,
           });
 
-          throw new AppError('Insufficient permissions', 403, 'INSUFFICIENT_ROLE');
+          throw new AppError(
+            "Insufficient permissions",
+            403,
+            "INSUFFICIENT_ROLE",
+          );
         }
 
         // Check permissions
         if (permissions.length > 0) {
-          const hasPermission = permissions.some(permission =>
-            userPermissions.includes(permission)
+          const hasPermission = permissions.some((permission) =>
+            userPermissions.includes(permission),
           );
 
           if (!hasPermission) {
-            logger.warn('Authorization failed - insufficient permissions', {
+            logger.warn("Authorization failed - insufficient permissions", {
               userId: req.user.id,
               userPermissions,
               requiredPermissions: permissions,
               ip: req.ip,
-              path: req.path
+              path: req.path,
             });
 
-            throw new AppError('Insufficient permissions', 403, 'INSUFFICIENT_PERMISSIONS');
+            throw new AppError(
+              "Insufficient permissions",
+              403,
+              "INSUFFICIENT_PERMISSIONS",
+            );
           }
         }
 
         // Log successful authorization
-        logger.debug('User authorized', {
+        logger.debug("User authorized", {
           userId: req.user.id,
           role: userRole,
           permissions: userPermissions,
-          path: req.path
+          path: req.path,
         });
 
         next();
@@ -379,14 +393,14 @@ class AuthMiddleware {
         if (error instanceof AppError) {
           return res.status(error.statusCode).json({
             error: error.message,
-            code: error.code
+            code: error.code,
           });
         }
 
-        logger.error('Authorization error', { error: error.message });
+        logger.error("Authorization error", { error: error.message });
         return res.status(500).json({
-          error: 'Authorization failed',
-          code: 'AUTHZ_ERROR'
+          error: "Authorization failed",
+          code: "AUTHZ_ERROR",
         });
       }
     };
@@ -402,31 +416,39 @@ class AuthMiddleware {
     return async (req, res, next) => {
       try {
         if (!req.user) {
-          throw new AppError('Authentication required', 401, 'AUTH_REQUIRED');
+          throw new AppError("Authentication required", 401, "AUTH_REQUIRED");
         }
 
         const resourceId = req.params[resourceIdParam];
         if (!resourceId) {
-          throw new AppError('Resource ID required', 400, 'MISSING_RESOURCE_ID');
+          throw new AppError(
+            "Resource ID required",
+            400,
+            "MISSING_RESOURCE_ID",
+          );
         }
 
         // Check if user is admin (admins can access all resources)
-        if (req.user.role === 'admin') {
+        if (req.user.role === "admin") {
           return next();
         }
 
         // Check ownership
         const isOwner = await ownershipCheck(req.user.id, resourceId);
         if (!isOwner) {
-          logger.warn('Resource access denied - not owner', {
+          logger.warn("Resource access denied - not owner", {
             userId: req.user.id,
             resourceId,
             resourceType: resourceIdParam,
             ip: req.ip,
-            path: req.path
+            path: req.path,
           });
 
-          throw new AppError('Access denied - resource not found', 404, 'RESOURCE_NOT_FOUND');
+          throw new AppError(
+            "Access denied - resource not found",
+            404,
+            "RESOURCE_NOT_FOUND",
+          );
         }
 
         next();
@@ -434,14 +456,14 @@ class AuthMiddleware {
         if (error instanceof AppError) {
           return res.status(error.statusCode).json({
             error: error.message,
-            code: error.code
+            code: error.code,
           });
         }
 
-        logger.error('Ownership check error', { error: error.message });
+        logger.error("Ownership check error", { error: error.message });
         return res.status(500).json({
-          error: 'Access check failed',
-          code: 'OWNERSHIP_ERROR'
+          error: "Access check failed",
+          code: "OWNERSHIP_ERROR",
         });
       }
     };
@@ -458,15 +480,23 @@ class AuthMiddleware {
       const { refreshToken } = req.body;
 
       if (!refreshToken) {
-        throw new AppError('Refresh token required', 400, 'MISSING_REFRESH_TOKEN');
+        throw new AppError(
+          "Refresh token required",
+          400,
+          "MISSING_REFRESH_TOKEN",
+        );
       }
 
-      const decoded = this.verifyToken(refreshToken, 'refresh');
+      const decoded = this.verifyToken(refreshToken, "refresh");
 
       // Check if refresh token exists in our store
       const tokenMetadata = this.refreshTokens.get(decoded.jti);
       if (!tokenMetadata) {
-        throw new AppError('Invalid refresh token', 401, 'INVALID_REFRESH_TOKEN');
+        throw new AppError(
+          "Invalid refresh token",
+          401,
+          "INVALID_REFRESH_TOKEN",
+        );
       }
 
       // Update last used timestamp
@@ -477,12 +507,12 @@ class AuthMiddleware {
         userId: decoded.userId,
         email: tokenMetadata.email,
         role: tokenMetadata.role,
-        permissions: tokenMetadata.permissions
+        permissions: tokenMetadata.permissions,
       });
 
       // Optionally rotate refresh token
       let newRefreshToken = refreshToken;
-      if (process.env.ROTATE_REFRESH_TOKENS === 'true') {
+      if (process.env.ROTATE_REFRESH_TOKENS === "true") {
         // Revoke old refresh token
         this.revokeRefreshToken(decoded.jti);
 
@@ -490,38 +520,38 @@ class AuthMiddleware {
         newRefreshToken = this.generateRefreshToken({
           userId: decoded.userId,
           ipAddress: req.ip,
-          userAgent: req.get('User-Agent')
+          userAgent: req.get("User-Agent"),
         });
       }
 
-      logger.info('Token refreshed', {
+      logger.info("Token refreshed", {
         userId: decoded.userId,
         ip: req.ip,
-        rotated: newRefreshToken !== refreshToken
+        rotated: newRefreshToken !== refreshToken,
       });
 
       res.json({
         accessToken: newAccessToken,
         refreshToken: newRefreshToken,
-        expiresIn: this.jwtExpiresIn
+        expiresIn: this.jwtExpiresIn,
       });
     } catch (error) {
-      logger.warn('Token refresh failed', {
+      logger.warn("Token refresh failed", {
         error: error.message,
         ip: req.ip,
-        userAgent: req.get('User-Agent')
+        userAgent: req.get("User-Agent"),
       });
 
       if (error instanceof AppError) {
         return res.status(error.statusCode).json({
           error: error.message,
-          code: error.code
+          code: error.code,
         });
       }
 
       return res.status(401).json({
-        error: 'Token refresh failed',
-        code: 'REFRESH_ERROR'
+        error: "Token refresh failed",
+        code: "REFRESH_ERROR",
       });
     }
   };
@@ -544,25 +574,27 @@ class AuthMiddleware {
       // Revoke refresh token if provided
       if (refreshToken) {
         try {
-          const decoded = this.verifyToken(refreshToken, 'refresh');
+          const decoded = this.verifyToken(refreshToken, "refresh");
           this.revokeRefreshToken(decoded.jti);
         } catch (error) {
           // Ignore errors for invalid refresh tokens during logout
-          logger.debug('Invalid refresh token during logout', { error: error.message });
+          logger.debug("Invalid refresh token during logout", {
+            error: error.message,
+          });
         }
       }
 
-      logger.info('User logged out', {
+      logger.info("User logged out", {
         userId: req.user?.id,
-        ip: req.ip
+        ip: req.ip,
       });
 
-      res.json({ message: 'Logged out successfully' });
+      res.json({ message: "Logged out successfully" });
     } catch (error) {
-      logger.error('Logout error', { error: error.message });
+      logger.error("Logout error", { error: error.message });
       return res.status(500).json({
-        error: 'Logout failed',
-        code: 'LOGOUT_ERROR'
+        error: "Logout failed",
+        code: "LOGOUT_ERROR",
       });
     }
   };
@@ -573,7 +605,7 @@ class AuthMiddleware {
   getRateLimiters() {
     return {
       auth: this.authRateLimiter,
-      passwordReset: this.passwordResetRateLimiter
+      passwordReset: this.passwordResetRateLimiter,
     };
   }
 
@@ -591,9 +623,9 @@ class AuthMiddleware {
       }
     }
 
-    logger.debug('Token cleanup completed', {
+    logger.debug("Token cleanup completed", {
       activeRefreshTokens: this.refreshTokens.size,
-      blacklistedTokens: this.tokenBlacklist.size
+      blacklistedTokens: this.tokenBlacklist.size,
     });
   }
 }

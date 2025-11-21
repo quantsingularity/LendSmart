@@ -59,6 +59,7 @@ backend/
 Controllers handle HTTP requests and responses. They validate input, call appropriate services, and format responses.
 
 Key controllers include:
+
 - `AuthController`: Handles user registration, login, and authentication
 - `LoanController`: Manages loan creation, updates, and queries
 - `UserController`: Handles user profile operations
@@ -70,6 +71,7 @@ Key controllers include:
 Models define the database schema and provide an interface for database operations.
 
 Key models include:
+
 - `User`: User account information
 - `Loan`: Loan details and status
 - `Transaction`: Financial transaction records
@@ -81,6 +83,7 @@ Key models include:
 Services contain the core business logic of the application.
 
 Key services include:
+
 - `AuthService`: Authentication and authorization logic
 - `LoanService`: Loan processing and management
 - `BlockchainService`: Interaction with smart contracts
@@ -92,6 +95,7 @@ Key services include:
 Middleware functions process requests before they reach route handlers.
 
 Key middleware includes:
+
 - `authMiddleware`: Validates JWT tokens
 - `roleMiddleware`: Checks user permissions
 - `validationMiddleware`: Validates request data
@@ -103,6 +107,7 @@ Key middleware includes:
 The MongoDB database uses the following schema:
 
 ### User Schema
+
 ```javascript
 {
   _id: ObjectId,
@@ -132,6 +137,7 @@ The MongoDB database uses the following schema:
 ```
 
 ### Loan Schema
+
 ```javascript
 {
   _id: ObjectId,
@@ -162,6 +168,7 @@ The MongoDB database uses the following schema:
 ```
 
 ### Transaction Schema
+
 ```javascript
 {
   _id: ObjectId,
@@ -209,18 +216,21 @@ LendSmart uses JWT (JSON Web Tokens) for authentication:
 The backend exposes the following API endpoints:
 
 ### Authentication Endpoints
+
 - `POST /api/auth/register`: Register a new user
 - `POST /api/auth/login`: Authenticate a user
 - `POST /api/auth/refresh`: Refresh access token
 - `POST /api/auth/logout`: Invalidate tokens
 
 ### User Endpoints
+
 - `GET /api/users/profile`: Get user profile
 - `PUT /api/users/profile`: Update user profile
 - `POST /api/users/verify`: Submit verification documents
 - `GET /api/users/notifications`: Get user notifications
 
 ### Loan Endpoints
+
 - `POST /api/loans`: Create a loan application
 - `GET /api/loans`: Get all loans (with filters)
 - `GET /api/loans/:id`: Get loan details
@@ -229,10 +239,12 @@ The backend exposes the following API endpoints:
 - `POST /api/loans/:id/repay`: Make a loan repayment
 
 ### Transaction Endpoints
+
 - `GET /api/transactions`: Get user transactions
 - `GET /api/transactions/:id`: Get transaction details
 
 ### Marketplace Endpoints
+
 - `GET /api/marketplace`: Get available loans for funding
 - `GET /api/marketplace/stats`: Get marketplace statistics
 
@@ -312,6 +324,7 @@ The backend uses a structured logging system:
    - `debug`: Detailed debugging information
 
 2. **Log Format**:
+
    ```json
    {
      "timestamp": "2025-04-25T10:30:00.000Z",

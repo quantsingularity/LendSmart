@@ -1,8 +1,8 @@
-const rateLimit = require('express-rate-limit');
-const slowDown = require('express-slow-down');
-const RedisStore = require('rate-limit-redis');
-const redisClient = require('../../config/redis');
-const logger = require('../../utils/logger');
+const rateLimit = require("express-rate-limit");
+const slowDown = require("express-slow-down");
+const RedisStore = require("rate-limit-redis");
+const redisClient = require("../../config/redis");
+const logger = require("../../utils/logger");
 
 /**
  * Advanced rate limiting middleware with Redis backend
@@ -22,8 +22,8 @@ const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 1000, // Limit each IP to 1000 requests per windowMs
   message: {
-    error: 'Too many requests from this IP, please try again later.',
-    retryAfter: '15 minutes'
+    error: "Too many requests from this IP, please try again later.",
+    retryAfter: "15 minutes",
   },
   standardHeaders: true,
   legacyHeaders: false,
@@ -33,16 +33,16 @@ const generalLimiter = rateLimit({
   },
   skip: (req) => {
     // Skip rate limiting for health checks
-    return req.path === '/health' || req.path === '/api/health';
+    return req.path === "/health" || req.path === "/api/health";
   },
   onLimitReached: (req, res, options) => {
-    logger.warn('Rate limit exceeded', {
+    logger.warn("Rate limit exceeded", {
       ip: req.ip,
-      userAgent: req.get('User-Agent'),
+      userAgent: req.get("User-Agent"),
       path: req.path,
-      userId: req.user?.id
+      userId: req.user?.id,
     });
-  }
+  },
 });
 
 /**
@@ -53,21 +53,21 @@ const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 5, // Limit each IP to 5 auth requests per windowMs
   message: {
-    error: 'Too many authentication attempts, please try again later.',
-    retryAfter: '15 minutes'
+    error: "Too many authentication attempts, please try again later.",
+    retryAfter: "15 minutes",
   },
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator: (req) => `auth:${req.ip}`,
   skipSuccessfulRequests: true, // Don't count successful requests
   onLimitReached: (req, res, options) => {
-    logger.warn('Auth rate limit exceeded', {
+    logger.warn("Auth rate limit exceeded", {
       ip: req.ip,
-      userAgent: req.get('User-Agent'),
+      userAgent: req.get("User-Agent"),
       path: req.path,
-      body: { email: req.body?.email, username: req.body?.username }
+      body: { email: req.body?.email, username: req.body?.username },
     });
-  }
+  },
 });
 
 /**
@@ -78,17 +78,17 @@ const passwordResetLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
   max: 3, // Limit each IP to 3 password reset requests per hour
   message: {
-    error: 'Too many password reset attempts, please try again later.',
-    retryAfter: '1 hour'
+    error: "Too many password reset attempts, please try again later.",
+    retryAfter: "1 hour",
   },
   keyGenerator: (req) => `password-reset:${req.ip}`,
   onLimitReached: (req, res, options) => {
-    logger.warn('Password reset rate limit exceeded', {
+    logger.warn("Password reset rate limit exceeded", {
       ip: req.ip,
-      userAgent: req.get('User-Agent'),
-      email: req.body?.email
+      userAgent: req.get("User-Agent"),
+      email: req.body?.email,
     });
-  }
+  },
 });
 
 /**
@@ -99,18 +99,18 @@ const loanApplicationLimiter = rateLimit({
   windowMs: 24 * 60 * 60 * 1000, // 24 hours
   max: 10, // Limit each user to 10 loan applications per day
   message: {
-    error: 'Too many loan applications today, please try again tomorrow.',
-    retryAfter: '24 hours'
+    error: "Too many loan applications today, please try again tomorrow.",
+    retryAfter: "24 hours",
   },
   keyGenerator: (req) => `loan-app:${req.user?.id || req.ip}`,
   skip: (req) => !req.user, // Only apply to authenticated users
   onLimitReached: (req, res, options) => {
-    logger.warn('Loan application rate limit exceeded', {
+    logger.warn("Loan application rate limit exceeded", {
       userId: req.user?.id,
       ip: req.ip,
-      userAgent: req.get('User-Agent')
+      userAgent: req.get("User-Agent"),
     });
-  }
+  },
 });
 
 /**
@@ -121,17 +121,17 @@ const uploadLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
   max: 50, // Limit each user to 50 uploads per hour
   message: {
-    error: 'Too many file uploads, please try again later.',
-    retryAfter: '1 hour'
+    error: "Too many file uploads, please try again later.",
+    retryAfter: "1 hour",
   },
   keyGenerator: (req) => `upload:${req.user?.id || req.ip}`,
   onLimitReached: (req, res, options) => {
-    logger.warn('Upload rate limit exceeded', {
+    logger.warn("Upload rate limit exceeded", {
       userId: req.user?.id,
       ip: req.ip,
-      userAgent: req.get('User-Agent')
+      userAgent: req.get("User-Agent"),
     });
-  }
+  },
 });
 
 /**
@@ -142,18 +142,18 @@ const apiKeyLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
   max: 10000, // Higher limit for API keys
   message: {
-    error: 'API rate limit exceeded.',
-    retryAfter: '1 hour'
+    error: "API rate limit exceeded.",
+    retryAfter: "1 hour",
   },
   keyGenerator: (req) => `api-key:${req.apiKey?.id || req.ip}`,
   skip: (req) => !req.apiKey,
   onLimitReached: (req, res, options) => {
-    logger.warn('API key rate limit exceeded', {
+    logger.warn("API key rate limit exceeded", {
       apiKeyId: req.apiKey?.id,
       ip: req.ip,
-      userAgent: req.get('User-Agent')
+      userAgent: req.get("User-Agent"),
     });
-  }
+  },
 });
 
 /**
@@ -165,14 +165,14 @@ const speedLimiter = slowDown({
   delayAfter: 100, // Allow 100 requests per windowMs without delay
   delayMs: 500, // Add 500ms delay per request after delayAfter
   maxDelayMs: 20000, // Maximum delay of 20 seconds
-  keyGenerator: (req) => req.user ? `user:${req.user.id}` : `ip:${req.ip}`,
+  keyGenerator: (req) => (req.user ? `user:${req.user.id}` : `ip:${req.ip}`),
   onLimitReached: (req, res, options) => {
-    logger.info('Speed limit applied', {
+    logger.info("Speed limit applied", {
       ip: req.ip,
       userId: req.user?.id,
-      delay: options.delay
+      delay: options.delay,
     });
-  }
+  },
 });
 
 /**
@@ -183,17 +183,18 @@ const burstLimiter = rateLimit({
   windowMs: 1000, // 1 second
   max: 10, // Maximum 10 requests per second
   message: {
-    error: 'Request rate too high, please slow down.',
-    retryAfter: '1 second'
+    error: "Request rate too high, please slow down.",
+    retryAfter: "1 second",
   },
-  keyGenerator: (req) => req.user ? `burst:user:${req.user.id}` : `burst:ip:${req.ip}`,
+  keyGenerator: (req) =>
+    req.user ? `burst:user:${req.user.id}` : `burst:ip:${req.ip}`,
   onLimitReached: (req, res, options) => {
-    logger.warn('Burst limit exceeded', {
+    logger.warn("Burst limit exceeded", {
       ip: req.ip,
       userId: req.user?.id,
-      path: req.path
+      path: req.path,
     });
-  }
+  },
 });
 
 /**
@@ -206,16 +207,17 @@ function createCustomLimiter(options) {
     store: redisStore,
     standardHeaders: true,
     legacyHeaders: false,
-    keyGenerator: (req) => req.user ? `custom:user:${req.user.id}` : `custom:ip:${req.ip}`,
+    keyGenerator: (req) =>
+      req.user ? `custom:user:${req.user.id}` : `custom:ip:${req.ip}`,
     onLimitReached: (req, res, opts) => {
-      logger.warn('Custom rate limit exceeded', {
+      logger.warn("Custom rate limit exceeded", {
         ip: req.ip,
         userId: req.user?.id,
         path: req.path,
         limit: opts.max,
-        window: opts.windowMs
+        window: opts.windowMs,
       });
-    }
+    },
   };
 
   return rateLimit({ ...defaultOptions, ...options });
@@ -228,16 +230,17 @@ function createCustomLimiter(options) {
  */
 function createRoleLimiter(limits) {
   return (req, res, next) => {
-    const userRole = req.user?.role || 'guest';
-    const limit = limits[userRole] || limits.default || { max: 100, windowMs: 15 * 60 * 1000 };
+    const userRole = req.user?.role || "guest";
+    const limit = limits[userRole] ||
+      limits.default || { max: 100, windowMs: 15 * 60 * 1000 };
 
     const limiter = createCustomLimiter({
       ...limit,
       keyGenerator: (req) => `role:${userRole}:${req.user?.id || req.ip}`,
       message: {
         error: `Rate limit exceeded for ${userRole} role.`,
-        retryAfter: Math.ceil(limit.windowMs / 60000) + ' minutes'
-      }
+        retryAfter: Math.ceil(limit.windowMs / 60000) + " minutes",
+      },
     });
 
     return limiter(req, res, next);
@@ -266,7 +269,7 @@ function createAdaptiveLimiter(baseOptions) {
       const limiter = createCustomLimiter({
         ...baseOptions,
         max: adjustedMax,
-        keyGenerator: (req) => `adaptive:${req.user?.id || req.ip}`
+        keyGenerator: (req) => `adaptive:${req.user?.id || req.ip}`,
       });
 
       return limiter(req, res, next);
@@ -311,22 +314,22 @@ function createWebSocketLimiter(options = {}) {
 
     // Clean old connections
     if (connections.has(key)) {
-      const userConnections = connections.get(key).filter(
-        conn => now - conn.timestamp < windowMs
-      );
+      const userConnections = connections
+        .get(key)
+        .filter((conn) => now - conn.timestamp < windowMs);
       connections.set(key, userConnections);
     }
 
     const currentConnections = connections.get(key) || [];
 
     if (currentConnections.length >= maxConnections) {
-      logger.warn('WebSocket rate limit exceeded', {
+      logger.warn("WebSocket rate limit exceeded", {
         ip: req.ip,
         userId: req.user?.id,
-        connections: currentConnections.length
+        connections: currentConnections.length,
       });
 
-      ws.close(1008, 'Rate limit exceeded');
+      ws.close(1008, "Rate limit exceeded");
       return;
     }
 
@@ -335,9 +338,9 @@ function createWebSocketLimiter(options = {}) {
     connections.set(key, currentConnections);
 
     // Remove connection on close
-    ws.on('close', () => {
+    ws.on("close", () => {
       const userConnections = connections.get(key) || [];
-      const index = userConnections.findIndex(conn => conn.timestamp === now);
+      const index = userConnections.findIndex((conn) => conn.timestamp === now);
       if (index > -1) {
         userConnections.splice(index, 1);
         connections.set(key, userConnections);
@@ -360,5 +363,5 @@ module.exports = {
   createCustomLimiter,
   createRoleLimiter,
   createAdaptiveLimiter,
-  createWebSocketLimiter
+  createWebSocketLimiter,
 };

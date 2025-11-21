@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Typography,
   Box,
@@ -9,24 +9,30 @@ import {
   CircularProgress,
   Alert,
   Avatar,
-  Divider
-} from '@mui/material';
-import { useApi } from '../contexts/ApiContext';
-import PersonIcon from '@mui/icons-material/Person';
+  Divider,
+} from "@mui/material";
+import { useApi } from "../contexts/ApiContext";
+import PersonIcon from "@mui/icons-material/Person";
 
 const Profile = () => {
-  const { user, updateProfile, updatePassword, loading, error: apiError } = useApi();
+  const {
+    user,
+    updateProfile,
+    updatePassword,
+    loading,
+    error: apiError,
+  } = useApi();
 
   const [profileData, setProfileData] = useState({
-    name: user?.name || '',
-    email: user?.email || '',
-    walletAddress: user?.walletAddress || ''
+    name: user?.name || "",
+    email: user?.email || "",
+    walletAddress: user?.walletAddress || "",
   });
 
   const [passwordData, setPasswordData] = useState({
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: ''
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
   });
 
   const [profileError, setProfileError] = useState(null);
@@ -38,7 +44,7 @@ const Profile = () => {
     const { name, value } = e.target;
     setProfileData({
       ...profileData,
-      [name]: value
+      [name]: value,
     });
   };
 
@@ -46,7 +52,7 @@ const Profile = () => {
     const { name, value } = e.target;
     setPasswordData({
       ...passwordData,
-      [name]: value
+      [name]: value,
     });
   };
 
@@ -59,7 +65,9 @@ const Profile = () => {
       await updateProfile(profileData);
       setProfileSuccess(true);
     } catch (err) {
-      setProfileError(err.response?.data?.message || 'Failed to update profile');
+      setProfileError(
+        err.response?.data?.message || "Failed to update profile",
+      );
     }
   };
 
@@ -69,24 +77,26 @@ const Profile = () => {
     setPasswordSuccess(false);
 
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      setPasswordError('New passwords do not match');
+      setPasswordError("New passwords do not match");
       return;
     }
 
     try {
       await updatePassword({
         currentPassword: passwordData.currentPassword,
-        newPassword: passwordData.newPassword
+        newPassword: passwordData.newPassword,
       });
 
       setPasswordSuccess(true);
       setPasswordData({
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: ''
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
       });
     } catch (err) {
-      setPasswordError(err.response?.data?.message || 'Failed to update password');
+      setPasswordError(
+        err.response?.data?.message || "Failed to update password",
+      );
     }
   };
 
@@ -99,13 +109,11 @@ const Profile = () => {
       <Grid container spacing={4}>
         <Grid item xs={12} md={6}>
           <Paper elevation={3} sx={{ p: 3 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-              <Avatar sx={{ bgcolor: 'primary.main', mr: 2 }}>
+            <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
+              <Avatar sx={{ bgcolor: "primary.main", mr: 2 }}>
                 <PersonIcon />
               </Avatar>
-              <Typography variant="h6">
-                Account Information
-              </Typography>
+              <Typography variant="h6">Account Information</Typography>
             </Box>
 
             {apiError && (
@@ -164,7 +172,7 @@ const Profile = () => {
                 sx={{ mt: 3 }}
                 disabled={loading}
               >
-                {loading ? <CircularProgress size={24} /> : 'Update Profile'}
+                {loading ? <CircularProgress size={24} /> : "Update Profile"}
               </Button>
             </form>
           </Paper>
@@ -228,7 +236,7 @@ const Profile = () => {
                 sx={{ mt: 3 }}
                 disabled={loading}
               >
-                {loading ? <CircularProgress size={24} /> : 'Change Password'}
+                {loading ? <CircularProgress size={24} /> : "Change Password"}
               </Button>
             </form>
           </Paper>
@@ -243,7 +251,9 @@ const Profile = () => {
                 Member Since
               </Typography>
               <Typography variant="body1">
-                {user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
+                {user?.createdAt
+                  ? new Date(user.createdAt).toLocaleDateString()
+                  : "N/A"}
               </Typography>
             </Box>
 

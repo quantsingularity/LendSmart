@@ -1,8 +1,8 @@
 import React from 'react';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import MarketplaceScreen from '../features/Loans/MarketplaceScreen';
 import LoanDetailsScreen from '../features/Loans/screens/LoanDetailsScreen'; // Corrected path
-import { useTheme } from 'react-native-paper';
+import {useTheme} from 'react-native-paper';
 
 const Stack = createNativeStackNavigator();
 
@@ -19,17 +19,16 @@ const MarketplaceNavigator = () => {
         headerTitleStyle: {
           fontFamily: theme.fonts.primarySemiBold, // Use theme font
         },
-      }}
-    >
+      }}>
       <Stack.Screen
         name="MarketplaceList"
         component={MarketplaceScreen}
-        options={{ title: 'Loan Marketplace' }}
+        options={{title: 'Loan Marketplace'}}
       />
       <Stack.Screen
         name="LoanDetails"
         component={LoanDetailsScreen}
-        options={({ route }) => ({
+        options={({route}) => ({
           title: `Loan Details`, // Title can be dynamic if needed
           // Example: title: `Loan #${route.params?.loanId}`
         })}

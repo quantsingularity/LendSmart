@@ -1,12 +1,12 @@
 import React from 'react';
-import { render, fireEvent, waitFor } from '@testing-library/react-native';
-import { PaperProvider, DefaultTheme } from 'react-native-paper';
-import { AuthContext } from '../../../../../contexts/AuthContext';
+import {render, fireEvent, waitFor} from '@testing-library/react-native';
+import {PaperProvider, DefaultTheme} from 'react-native-paper';
+import {AuthContext} from '../../../../../contexts/AuthContext';
 import DashboardScreen from '../DashboardScreen';
 
 // Mock navigation
 const mockNavigate = jest.fn();
-const mockNavigation = { navigate: mockNavigate };
+const mockNavigation = {navigate: mockNavigate};
 
 // Mock AuthContext
 let mockUser = {
@@ -25,7 +25,7 @@ const mockAuthContextValue = {
 };
 
 // Custom wrapper to provide necessary contexts and theme
-const AllTheProviders = ({ children }) => (
+const AllTheProviders = ({children}) => (
   <AuthContext.Provider value={mockAuthContextValue}>
     <PaperProvider theme={DefaultTheme}>{children}</PaperProvider>
   </AuthContext.Provider>
@@ -38,15 +38,15 @@ describe('DashboardScreen', () => {
   beforeEach(() => {
     // Reset mocks and user state before each test
     mockNavigate.mockClear();
-    mockUser = { name: 'Test User' };
+    mockUser = {name: 'Test User'};
     mockAuthContextValue.user = mockUser;
     jest.clearAllTimers();
   });
 
   it('renders correctly with user greeting and key sections', () => {
-    const { getByText } = render(
+    const {getByText} = render(
       <DashboardScreen navigation={mockNavigation} />,
-      { wrapper: AllTheProviders }
+      {wrapper: AllTheProviders},
     );
 
     expect(getByText('Hello, Test!')).toBeTruthy(); // Checks for first name
@@ -75,11 +75,11 @@ describe('DashboardScreen', () => {
 
   it('shows loading indicator if user is not available initially', () => {
     mockAuthContextValue.user = null; // Simulate user not yet loaded
-    const { getByTestId, queryByText } = render(
-        // DashboardScreen has an ActivityIndicator but it's not directly testable by role/text easily without testID
-        // We will check that the main content is not rendered.
-        <DashboardScreen navigation={mockNavigation} />,
-        { wrapper: AllTheProviders }
+    const {getByTestId, queryByText} = render(
+      // DashboardScreen has an ActivityIndicator but it's not directly testable by role/text easily without testID
+      // We will check that the main content is not rendered.
+      <DashboardScreen navigation={mockNavigation} />,
+      {wrapper: AllTheProviders},
     );
     // The component renders ActivityIndicator, not a specific text.
     // We'll check that the greeting is NOT there, implying loading or redirect.
@@ -88,27 +88,27 @@ describe('DashboardScreen', () => {
   });
 
   it('navigates to Apply screen when "Apply" button is pressed', () => {
-    const { getByText } = render(
+    const {getByText} = render(
       <DashboardScreen navigation={mockNavigation} />,
-      { wrapper: AllTheProviders }
+      {wrapper: AllTheProviders},
     );
     fireEvent.press(getByText('Apply'));
     expect(mockNavigate).toHaveBeenCalledWith('Apply');
   });
 
   it('navigates to Marketplace screen when "Market" button is pressed', () => {
-    const { getByText } = render(
+    const {getByText} = render(
       <DashboardScreen navigation={mockNavigation} />,
-      { wrapper: AllTheProviders }
+      {wrapper: AllTheProviders},
     );
     fireEvent.press(getByText('Market'));
     expect(mockNavigate).toHaveBeenCalledWith('Marketplace');
   });
 
   it('simulates refresh control and completes', async () => {
-    const { getByTestId, getByText } = render(
+    const {getByTestId, getByText} = render(
       <DashboardScreen navigation={mockNavigation} />,
-      { wrapper: AllTheProviders }
+      {wrapper: AllTheProviders},
     );
 
     // To test RefreshControl, we need to find the ScrollView and trigger its onRefresh prop.
@@ -135,9 +135,9 @@ describe('DashboardScreen', () => {
   });
 
   it('displays recent activity items correctly', () => {
-    const { getByText } = render(
+    const {getByText} = render(
       <DashboardScreen navigation={mockNavigation} />,
-      { wrapper: AllTheProviders }
+      {wrapper: AllTheProviders},
     );
     // Based on placeholder data in DashboardScreen.js
     expect(getByText('Loan Funded')).toBeTruthy();
@@ -149,5 +149,4 @@ describe('DashboardScreen', () => {
     expect(getByText('Viewed loan #LND123')).toBeTruthy();
     expect(getByText('Info')).toBeTruthy(); // Status
   });
-
 });

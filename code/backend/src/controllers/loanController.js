@@ -1,12 +1,12 @@
-const Loan = require('../models/LoanModel');
-const User = require('../models/UserModel');
-const { getAuditLogger } = require('../compliance/auditLogger');
-const { getEncryptionService } = require('../config/security/encryption');
-const { validateSchema } = require('../validators/inputValidator');
-const logger = require('../utils/logger');
-const creditScoringService = require('../services/creditScoringService');
-const blockchainService = require('../services/blockchainService');
-const notificationService = require('../services/notificationService');
+const Loan = require("../models/LoanModel");
+const User = require("../models/UserModel");
+const { getAuditLogger } = require("../compliance/auditLogger");
+const { getEncryptionService } = require("../config/security/encryption");
+const { validateSchema } = require("../validators/inputValidator");
+const logger = require("../utils/logger");
+const creditScoringService = require("../services/creditScoringService");
+const blockchainService = require("../services/blockchainService");
+const notificationService = require("../services/notificationService");
 
 /**
  * Enhanced Loan Controller
@@ -34,7 +34,7 @@ class LoanController {
         purpose,
         collateral,
         income,
-        employmentStatus
+        employmentStatus,
       } = req.body;
 
       // Get user for credit assessment
@@ -42,62 +42,63 @@ class LoanController {
       if (!user) {
         return res.status(404).json({
           success: false,
-          message: 'User not found'
+          message: "User not found",
         });
       }
 
       // Check if user has verified KYC
-      if (user.kycStatus !== 'verified') {
+      if (user.kycStatus !== "verified") {
         return res.status(400).json({
           success: false,
-          message: 'KYC verification required before applying for loans',
-          requiredAction: 'complete_kyc'
+          message: "KYC verification required before applying for loans",
+          requiredAction: "complete_kyc",
         });
       }
 
       // Check for existing pending applications
       const existingApplication = await Loan.findOne({
         borrower: userId,
-        status: { $in: ['pending_approval', 'marketplace'] }
+        status: { $in: ["pending_approval", "marketplace"] },
       });
 
       if (existingApplication) {
         return res.status(400).json({
           success: false,
-          message: 'You already have a pending loan application',
-          existingApplicationId: existingApplication._id
+          message: "You already have a pending loan application",
+          existingApplicationId: existingApplication._id,
         });
       }
 
       // Perform credit scoring
-      const creditAssessment = await creditScoringService.assessCreditworthiness({
-        userId,
-        requestedAmount: amount,
-        income,
-        employmentStatus,
-        existingLoans: await this.getUserActiveLoans(userId)
-      });
+      const creditAssessment =
+        await creditScoringService.assessCreditworthiness({
+          userId,
+          requestedAmount: amount,
+          income,
+          employmentStatus,
+          existingLoans: await this.getUserActiveLoans(userId),
+        });
 
       if (!creditAssessment.approved) {
         // Audit log for rejected application
         await this.auditLogger.logLoanEvent({
-          action: 'loan_application_rejected',
+          action: "loan_application_rejected",
           userId,
           amount,
           rejectionReason: creditAssessment.reason,
           creditScore: creditAssessment.creditScore,
           ip: req.ip,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
 
         return res.status(400).json({
           success: false,
-          message: 'Loan application does not meet credit requirements',
+          message: "Loan application does not meet credit requirements",
           creditAssessment: {
             creditScore: creditAssessment.creditScore,
             reason: creditAssessment.reason,
-            recommendations: creditAssessment.recommendations
-          }
+            recommendations: creditAssessment.recommendations,
+          },
         });
       }
 
@@ -110,13 +111,13 @@ class LoanController {
         termUnit,
         purpose,
         collateral,
-        status: 'pending_approval',
+        status: "pending_approval",
         applicationDate: new Date(),
         creditAssessment: {
           score: creditAssessment.creditScore,
           riskLevel: creditAssessment.riskLevel,
-          assessmentDate: new Date()
-        }
+          assessmentDate: new Date(),
+        },
       };
 
       const loan = new Loan(loanData);
@@ -127,7 +128,7 @@ class LoanController {
 
       // Audit log
       await this.auditLogger.logLoanEvent({
-        action: 'loan_application_submitted',
+        action: "loan_application_submitted",
         loanId: loan._id,
         userId,
         amount,
@@ -135,7 +136,7 @@ class LoanController {
         term,
         creditScore: creditAssessment.creditScore,
         ip: req.ip,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
 
       // Send notification to user
@@ -146,32 +147,32 @@ class LoanController {
 
       res.status(201).json({
         success: true,
-        message: 'Loan application submitted successfully',
+        message: "Loan application submitted successfully",
         data: {
           loan: await this.sanitizeLoanData(loan),
           creditAssessment: {
             creditScore: creditAssessment.creditScore,
             riskLevel: creditAssessment.riskLevel,
-            recommendedRate: creditAssessment.recommendedRate
+            recommendedRate: creditAssessment.recommendedRate,
           },
           nextSteps: {
             adminReview: true,
-            estimatedReviewTime: '24-48 hours'
-          }
-        }
+            estimatedReviewTime: "24-48 hours",
+          },
+        },
       });
     } catch (error) {
-      logger.error('Loan application error', {
+      logger.error("Loan application error", {
         error: error.message,
         userId: req.user?.id,
         body: req.body,
-        ip: req.ip
+        ip: req.ip,
       });
 
       res.status(500).json({
         success: false,
-        message: 'Failed to submit loan application',
-        errorCode: 'LOAN_APPLICATION_ERROR'
+        message: "Failed to submit loan application",
+        errorCode: "LOAN_APPLICATION_ERROR",
       });
     }
   }
@@ -191,27 +192,30 @@ class LoanController {
         maxInterestRate,
         termUnit,
         riskLevel,
-        sortBy = 'applicationDate',
-        sortOrder = 'desc'
+        sortBy = "applicationDate",
+        sortOrder = "desc",
       } = req.query;
 
       // Build filter query
-      const filter = { status: 'marketplace' };
+      const filter = { status: "marketplace" };
 
-      if (minAmount) filter.amount = { ...filter.amount, $gte: parseFloat(minAmount) };
-      if (maxAmount) filter.amount = { ...filter.amount, $lte: parseFloat(maxAmount) };
-      if (maxInterestRate) filter.interestRate = { $lte: parseFloat(maxInterestRate) };
+      if (minAmount)
+        filter.amount = { ...filter.amount, $gte: parseFloat(minAmount) };
+      if (maxAmount)
+        filter.amount = { ...filter.amount, $lte: parseFloat(maxAmount) };
+      if (maxInterestRate)
+        filter.interestRate = { $lte: parseFloat(maxInterestRate) };
       if (termUnit) filter.termUnit = termUnit;
-      if (riskLevel) filter['creditAssessment.riskLevel'] = riskLevel;
+      if (riskLevel) filter["creditAssessment.riskLevel"] = riskLevel;
 
       // Build sort object
       const sort = {};
-      sort[sortBy] = sortOrder === 'desc' ? -1 : 1;
+      sort[sortBy] = sortOrder === "desc" ? -1 : 1;
 
       // Execute query with pagination
       const skip = (parseInt(page) - 1) * parseInt(limit);
       const loans = await Loan.find(filter)
-        .populate('borrower', 'username creditScore kycStatus')
+        .populate("borrower", "username creditScore kycStatus")
         .sort(sort)
         .skip(skip)
         .limit(parseInt(limit));
@@ -221,17 +225,17 @@ class LoanController {
 
       // Sanitize loan data for marketplace
       const sanitizedLoans = await Promise.all(
-        loans.map(loan => this.sanitizeLoanDataForMarketplace(loan))
+        loans.map((loan) => this.sanitizeLoanDataForMarketplace(loan)),
       );
 
       // Audit log
       await this.auditLogger.logDataAccess({
-        action: 'marketplace_loans_accessed',
+        action: "marketplace_loans_accessed",
         userId: req.user?.id,
         filters: filter,
         resultCount: loans.length,
         ip: req.ip,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
 
       res.json({
@@ -243,28 +247,33 @@ class LoanController {
             totalPages,
             totalLoans,
             hasNextPage: parseInt(page) < totalPages,
-            hasPrevPage: parseInt(page) > 1
+            hasPrevPage: parseInt(page) > 1,
           },
           filters: {
             applied: filter,
             available: {
-              riskLevels: ['low', 'medium', 'high'],
-              termUnits: ['days', 'weeks', 'months', 'years'],
-              sortOptions: ['applicationDate', 'amount', 'interestRate', 'term']
-            }
-          }
-        }
+              riskLevels: ["low", "medium", "high"],
+              termUnits: ["days", "weeks", "months", "years"],
+              sortOptions: [
+                "applicationDate",
+                "amount",
+                "interestRate",
+                "term",
+              ],
+            },
+          },
+        },
       });
     } catch (error) {
-      logger.error('Get marketplace loans error', {
+      logger.error("Get marketplace loans error", {
         error: error.message,
         query: req.query,
-        ip: req.ip
+        ip: req.ip,
       });
 
       res.status(500).json({
         success: false,
-        message: 'Failed to retrieve marketplace loans'
+        message: "Failed to retrieve marketplace loans",
       });
     }
   }
@@ -281,20 +290,20 @@ class LoanController {
       const { fundingAmount, paymentMethod, walletAddress } = req.body;
 
       // Get loan
-      const loan = await Loan.findById(loanId).populate('borrower');
+      const loan = await Loan.findById(loanId).populate("borrower");
       if (!loan) {
         return res.status(404).json({
           success: false,
-          message: 'Loan not found'
+          message: "Loan not found",
         });
       }
 
       // Check loan status
-      if (loan.status !== 'marketplace') {
+      if (loan.status !== "marketplace") {
         return res.status(400).json({
           success: false,
-          message: 'Loan is not available for funding',
-          currentStatus: loan.status
+          message: "Loan is not available for funding",
+          currentStatus: loan.status,
         });
       }
 
@@ -302,7 +311,7 @@ class LoanController {
       if (loan.borrower._id.toString() === lenderId) {
         return res.status(400).json({
           success: false,
-          message: 'Cannot fund your own loan'
+          message: "Cannot fund your own loan",
         });
       }
 
@@ -310,9 +319,9 @@ class LoanController {
       if (fundingAmount !== loan.amount) {
         return res.status(400).json({
           success: false,
-          message: 'Funding amount must match loan amount',
+          message: "Funding amount must match loan amount",
           requiredAmount: loan.amount,
-          providedAmount: fundingAmount
+          providedAmount: fundingAmount,
         });
       }
 
@@ -321,15 +330,15 @@ class LoanController {
       if (!lender) {
         return res.status(404).json({
           success: false,
-          message: 'Lender not found'
+          message: "Lender not found",
         });
       }
 
       // Check lender KYC status
-      if (lender.kycStatus !== 'verified') {
+      if (lender.kycStatus !== "verified") {
         return res.status(400).json({
           success: false,
-          message: 'KYC verification required before funding loans'
+          message: "KYC verification required before funding loans",
         });
       }
 
@@ -340,26 +349,26 @@ class LoanController {
         amount: fundingAmount,
         paymentMethod,
         walletAddress,
-        loanId
+        loanId,
       });
 
       if (!paymentResult.success) {
         return res.status(400).json({
           success: false,
-          message: 'Payment processing failed',
-          error: paymentResult.error
+          message: "Payment processing failed",
+          error: paymentResult.error,
         });
       }
 
       // Update loan with funding information
       loan.lender = lenderId;
-      loan.status = 'funded';
+      loan.status = "funded";
       loan.fundedDate = new Date();
       loan.amountFunded = fundingAmount;
       loan.paymentDetails = {
         transactionId: paymentResult.transactionId,
         paymentMethod,
-        processedAt: new Date()
+        processedAt: new Date(),
       };
 
       // Calculate maturity date
@@ -374,67 +383,73 @@ class LoanController {
           amount: loan.amount,
           interestRate: loan.interestRate,
           term: loan.term,
-          maturityDate: loan.maturityDate
+          maturityDate: loan.maturityDate,
         });
 
         loan.blockchainContract = {
           contractAddress: contractResult.contractAddress,
           transactionHash: contractResult.transactionHash,
-          createdAt: new Date()
+          createdAt: new Date(),
         };
         await loan.save();
       } catch (blockchainError) {
-        logger.error('Blockchain contract creation failed', {
+        logger.error("Blockchain contract creation failed", {
           error: blockchainError.message,
-          loanId: loan._id
+          loanId: loan._id,
         });
         // Continue without blockchain - can be retried later
       }
 
       // Audit log
       await this.auditLogger.logLoanEvent({
-        action: 'loan_funded',
+        action: "loan_funded",
         loanId: loan._id,
         lenderId,
         borrowerId: loan.borrower._id,
         amount: fundingAmount,
         transactionId: paymentResult.transactionId,
         ip: req.ip,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
 
       // Send notifications
-      await notificationService.sendLoanFundedNotification(loan.borrower, loan, lender);
+      await notificationService.sendLoanFundedNotification(
+        loan.borrower,
+        loan,
+        lender,
+      );
       await notificationService.sendFundingConfirmation(lender, loan);
 
       res.json({
         success: true,
-        message: 'Loan funded successfully',
+        message: "Loan funded successfully",
         data: {
           loan: await this.sanitizeLoanData(loan),
           payment: {
             transactionId: paymentResult.transactionId,
             amount: fundingAmount,
-            processedAt: loan.paymentDetails.processedAt
+            processedAt: loan.paymentDetails.processedAt,
           },
-          blockchain: loan.blockchainContract ? {
-            contractAddress: loan.blockchainContract.contractAddress,
-            transactionHash: loan.blockchainContract.transactionHash
-          } : null
-        }
+          blockchain: loan.blockchainContract
+            ? {
+                contractAddress: loan.blockchainContract.contractAddress,
+                transactionHash: loan.blockchainContract.transactionHash,
+              }
+            : null,
+        },
       });
     } catch (error) {
-      logger.error('Loan funding error', {
+      logger.error("Loan funding error", {
         error: error.message,
         loanId: req.params.loanId,
         lenderId: req.user?.id,
-        ip: req.ip
+        ip: req.ip,
       });
 
       res.status(500).json({
         success: false,
-        message: 'Failed to fund loan',
-        errorCode: 'LOAN_FUNDING_ERROR'
+        message: "Failed to fund loan",
+        errorCode: "LOAN_FUNDING_ERROR",
       });
     }
   }
@@ -451,11 +466,11 @@ class LoanController {
       const { amount, paymentMethod, walletAddress } = req.body;
 
       // Get loan
-      const loan = await Loan.findById(loanId).populate('borrower lender');
+      const loan = await Loan.findById(loanId).populate("borrower lender");
       if (!loan) {
         return res.status(404).json({
           success: false,
-          message: 'Loan not found'
+          message: "Loan not found",
         });
       }
 
@@ -463,21 +478,24 @@ class LoanController {
       if (loan.borrower._id.toString() !== userId) {
         return res.status(403).json({
           success: false,
-          message: 'Only the borrower can make repayments'
+          message: "Only the borrower can make repayments",
         });
       }
 
       // Check loan status
-      if (!['active', 'funded'].includes(loan.status)) {
+      if (!["active", "funded"].includes(loan.status)) {
         return res.status(400).json({
           success: false,
-          message: 'Loan is not in a state that accepts repayments',
-          currentStatus: loan.status
+          message: "Loan is not in a state that accepts repayments",
+          currentStatus: loan.status,
         });
       }
 
       // Calculate repayment details
-      const repaymentDetails = await this.calculateRepaymentDetails(loan, amount);
+      const repaymentDetails = await this.calculateRepaymentDetails(
+        loan,
+        amount,
+      );
 
       // Process payment
       const paymentResult = await this.processLoanRepayment({
@@ -486,14 +504,14 @@ class LoanController {
         amount,
         paymentMethod,
         walletAddress,
-        loanId
+        loanId,
       });
 
       if (!paymentResult.success) {
         return res.status(400).json({
           success: false,
-          message: 'Payment processing failed',
-          error: paymentResult.error
+          message: "Payment processing failed",
+          error: paymentResult.error,
         });
       }
 
@@ -508,17 +526,17 @@ class LoanController {
         transactionId: paymentResult.transactionId,
         paymentMethod,
         principalAmount: repaymentDetails.principalAmount,
-        interestAmount: repaymentDetails.interestAmount
+        interestAmount: repaymentDetails.interestAmount,
       });
 
       loan.amountRepaid = (loan.amountRepaid || 0) + amount;
 
       // Check if loan is fully repaid
       if (loan.amountRepaid >= repaymentDetails.totalAmountDue) {
-        loan.status = 'repaid';
+        loan.status = "repaid";
         loan.repaidDate = new Date();
       } else {
-        loan.status = 'active';
+        loan.status = "active";
       }
 
       await loan.save();
@@ -529,37 +547,48 @@ class LoanController {
           await blockchainService.recordRepayment({
             contractAddress: loan.blockchainContract.contractAddress,
             amount,
-            transactionHash: paymentResult.transactionHash
+            transactionHash: paymentResult.transactionHash,
           });
         }
       } catch (blockchainError) {
-        logger.error('Blockchain repayment recording failed', {
+        logger.error("Blockchain repayment recording failed", {
           error: blockchainError.message,
-          loanId: loan._id
+          loanId: loan._id,
         });
       }
 
       // Audit log
       await this.auditLogger.logFinancialTransaction({
-        action: 'loan_repayment',
+        action: "loan_repayment",
         loanId: loan._id,
         borrowerId: userId,
         lenderId: loan.lender._id,
         amount,
         transactionId: paymentResult.transactionId,
         remainingBalance: repaymentDetails.totalAmountDue - loan.amountRepaid,
-        isFullRepayment: loan.status === 'repaid',
+        isFullRepayment: loan.status === "repaid",
         ip: req.ip,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
 
       // Send notifications
-      await notificationService.sendRepaymentConfirmation(loan.borrower, loan, amount);
-      await notificationService.sendRepaymentReceived(loan.lender, loan, amount);
+      await notificationService.sendRepaymentConfirmation(
+        loan.borrower,
+        loan,
+        amount,
+      );
+      await notificationService.sendRepaymentReceived(
+        loan.lender,
+        loan,
+        amount,
+      );
 
       res.json({
         success: true,
-        message: loan.status === 'repaid' ? 'Loan fully repaid' : 'Repayment processed successfully',
+        message:
+          loan.status === "repaid"
+            ? "Loan fully repaid"
+            : "Repayment processed successfully",
         data: {
           loan: await this.sanitizeLoanData(loan),
           repayment: {
@@ -567,23 +596,24 @@ class LoanController {
             transactionId: paymentResult.transactionId,
             principalAmount: repaymentDetails.principalAmount,
             interestAmount: repaymentDetails.interestAmount,
-            remainingBalance: repaymentDetails.totalAmountDue - loan.amountRepaid
+            remainingBalance:
+              repaymentDetails.totalAmountDue - loan.amountRepaid,
           },
-          loanStatus: loan.status
-        }
+          loanStatus: loan.status,
+        },
       });
     } catch (error) {
-      logger.error('Loan repayment error', {
+      logger.error("Loan repayment error", {
         error: error.message,
         loanId: req.params.loanId,
         userId: req.user?.id,
-        ip: req.ip
+        ip: req.ip,
       });
 
       res.status(500).json({
         success: false,
-        message: 'Failed to process repayment',
-        errorCode: 'REPAYMENT_ERROR'
+        message: "Failed to process repayment",
+        errorCode: "REPAYMENT_ERROR",
       });
     }
   }
@@ -596,14 +626,14 @@ class LoanController {
   async getUserLoans(req, res) {
     try {
       const userId = req.user.id;
-      const { type = 'all', status, page = 1, limit = 20 } = req.query;
+      const { type = "all", status, page = 1, limit = 20 } = req.query;
 
       // Build filter
       let filter = {};
 
-      if (type === 'borrowed') {
+      if (type === "borrowed") {
         filter.borrower = userId;
-      } else if (type === 'lent') {
+      } else if (type === "lent") {
         filter.lender = userId;
       } else {
         filter.$or = [{ borrower: userId }, { lender: userId }];
@@ -616,7 +646,7 @@ class LoanController {
       // Execute query with pagination
       const skip = (parseInt(page) - 1) * parseInt(limit);
       const loans = await Loan.find(filter)
-        .populate('borrower lender', 'username creditScore')
+        .populate("borrower lender", "username creditScore")
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(parseInt(limit));
@@ -625,7 +655,7 @@ class LoanController {
 
       // Sanitize loan data
       const sanitizedLoans = await Promise.all(
-        loans.map(loan => this.sanitizeLoanData(loan))
+        loans.map((loan) => this.sanitizeLoanData(loan)),
       );
 
       // Calculate summary statistics
@@ -633,12 +663,12 @@ class LoanController {
 
       // Audit log
       await this.auditLogger.logDataAccess({
-        action: 'user_loans_accessed',
+        action: "user_loans_accessed",
         userId,
         loanType: type,
         resultCount: loans.length,
         ip: req.ip,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
 
       res.json({
@@ -650,21 +680,22 @@ class LoanController {
             currentPage: parseInt(page),
             totalPages: Math.ceil(totalLoans / parseInt(limit)),
             totalLoans,
-            hasNextPage: parseInt(page) < Math.ceil(totalLoans / parseInt(limit)),
-            hasPrevPage: parseInt(page) > 1
-          }
-        }
+            hasNextPage:
+              parseInt(page) < Math.ceil(totalLoans / parseInt(limit)),
+            hasPrevPage: parseInt(page) > 1,
+          },
+        },
       });
     } catch (error) {
-      logger.error('Get user loans error', {
+      logger.error("Get user loans error", {
         error: error.message,
         userId: req.user?.id,
-        ip: req.ip
+        ip: req.ip,
       });
 
       res.status(500).json({
         success: false,
-        message: 'Failed to retrieve loans'
+        message: "Failed to retrieve loans",
       });
     }
   }
@@ -679,25 +710,28 @@ class LoanController {
       const userId = req.user.id;
       const { loanId } = req.params;
 
-      const loan = await Loan.findById(loanId)
-        .populate('borrower lender', 'username creditScore kycStatus');
+      const loan = await Loan.findById(loanId).populate(
+        "borrower lender",
+        "username creditScore kycStatus",
+      );
 
       if (!loan) {
         return res.status(404).json({
           success: false,
-          message: 'Loan not found'
+          message: "Loan not found",
         });
       }
 
       // Check if user has access to this loan
-      const hasAccess = loan.borrower._id.toString() === userId ||
-                       loan.lender?._id.toString() === userId ||
-                       req.user.role === 'admin';
+      const hasAccess =
+        loan.borrower._id.toString() === userId ||
+        loan.lender?._id.toString() === userId ||
+        req.user.role === "admin";
 
       if (!hasAccess) {
         return res.status(403).json({
           success: false,
-          message: 'Access denied'
+          message: "Access denied",
         });
       }
 
@@ -706,28 +740,28 @@ class LoanController {
 
       // Audit log
       await this.auditLogger.logDataAccess({
-        action: 'loan_details_accessed',
+        action: "loan_details_accessed",
         loanId,
         userId,
         ip: req.ip,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
 
       res.json({
         success: true,
-        data: loanDetails
+        data: loanDetails,
       });
     } catch (error) {
-      logger.error('Get loan details error', {
+      logger.error("Get loan details error", {
         error: error.message,
         loanId: req.params.loanId,
         userId: req.user?.id,
-        ip: req.ip
+        ip: req.ip,
       });
 
       res.status(500).json({
         success: false,
-        message: 'Failed to retrieve loan details'
+        message: "Failed to retrieve loan details",
       });
     }
   }
@@ -742,7 +776,7 @@ class LoanController {
   async getUserActiveLoans(userId) {
     return await Loan.find({
       borrower: userId,
-      status: { $in: ['active', 'funded', 'pending_approval'] }
+      status: { $in: ["active", "funded", "pending_approval"] },
     });
   }
 
@@ -773,7 +807,7 @@ class LoanController {
     if (sanitized.borrower) {
       sanitized.borrower = {
         creditScore: sanitized.borrower.creditScore,
-        kycStatus: sanitized.borrower.kycStatus
+        kycStatus: sanitized.borrower.kycStatus,
       };
     }
 
@@ -791,7 +825,7 @@ class LoanController {
     return {
       success: true,
       transactionId: `txn_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      processedAt: new Date()
+      processedAt: new Date(),
     };
   }
 
@@ -806,7 +840,7 @@ class LoanController {
       success: true,
       transactionId: `rep_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       transactionHash: `0x${Math.random().toString(16).substr(2, 64)}`,
-      processedAt: new Date()
+      processedAt: new Date(),
     };
   }
 
@@ -820,20 +854,23 @@ class LoanController {
     // Simple interest calculation - in production, use more sophisticated models
     const principal = loan.amount;
     const rate = loan.interestRate / 100;
-    const timeInYears = loan.term / (loan.termUnit === 'months' ? 12 : 365);
+    const timeInYears = loan.term / (loan.termUnit === "months" ? 12 : 365);
 
     const totalInterest = principal * rate * timeInYears;
     const totalAmountDue = principal + totalInterest;
 
     const remainingBalance = totalAmountDue - (loan.amountRepaid || 0);
-    const interestPortion = Math.min(paymentAmount, totalInterest * (remainingBalance / totalAmountDue));
+    const interestPortion = Math.min(
+      paymentAmount,
+      totalInterest * (remainingBalance / totalAmountDue),
+    );
     const principalPortion = paymentAmount - interestPortion;
 
     return {
       totalAmountDue,
       remainingBalance,
       principalAmount: principalPortion,
-      interestAmount: interestPortion
+      interestAmount: interestPortion,
     };
   }
 
@@ -852,7 +889,7 @@ class LoanController {
       totalLent: 0,
       totalRepaid: 0,
       averageInterestRate: 0,
-      creditScore: 0
+      creditScore: 0,
     };
   }
 
@@ -866,7 +903,10 @@ class LoanController {
     const details = await this.sanitizeLoanData(loan);
 
     // Add additional details based on user role
-    if (loan.borrower._id.toString() === userId || loan.lender?._id.toString() === userId) {
+    if (
+      loan.borrower._id.toString() === userId ||
+      loan.lender?._id.toString() === userId
+    ) {
       // Add repayment schedule, payment history, etc.
       details.repaymentSchedule = await this.generateRepaymentSchedule(loan);
       details.paymentHistory = loan.repayments || [];

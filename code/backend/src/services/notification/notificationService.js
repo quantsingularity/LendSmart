@@ -1,8 +1,8 @@
-const nodemailer = require('nodemailer');
-const twilio = require('twilio');
-const webpush = require('web-push');
-const { logger } = require('../../utils/logger');
-const { AppError } = require('../../middleware/monitoring/errorHandler');
+const nodemailer = require("nodemailer");
+const twilio = require("twilio");
+const webpush = require("web-push");
+const { logger } = require("../../utils/logger");
+const { AppError } = require("../../middleware/monitoring/errorHandler");
 
 /**
  * Notification Service for LendSmart
@@ -20,36 +20,40 @@ class NotificationService {
     this.templates = {
       email: {
         loanApproved: {
-          subject: 'Loan Application Approved - LendSmart',
-          template: 'loan-approved'
+          subject: "Loan Application Approved - LendSmart",
+          template: "loan-approved",
         },
         loanRejected: {
-          subject: 'Loan Application Update - LendSmart',
-          template: 'loan-rejected'
+          subject: "Loan Application Update - LendSmart",
+          template: "loan-rejected",
         },
         paymentReminder: {
-          subject: 'Payment Reminder - LendSmart',
-          template: 'payment-reminder'
+          subject: "Payment Reminder - LendSmart",
+          template: "payment-reminder",
         },
         paymentReceived: {
-          subject: 'Payment Confirmation - LendSmart',
-          template: 'payment-received'
+          subject: "Payment Confirmation - LendSmart",
+          template: "payment-received",
         },
         kycRequired: {
-          subject: 'Identity Verification Required - LendSmart',
-          template: 'kyc-required'
+          subject: "Identity Verification Required - LendSmart",
+          template: "kyc-required",
         },
         accountSuspended: {
-          subject: 'Account Security Alert - LendSmart',
-          template: 'account-suspended'
-        }
+          subject: "Account Security Alert - LendSmart",
+          template: "account-suspended",
+        },
       },
       sms: {
-        loanApproved: 'Your loan application has been approved! Check your LendSmart account for details.',
-        paymentReminder: 'Payment reminder: Your loan payment of ${amount} is due on ${dueDate}.',
-        paymentReceived: 'Payment received: Thank you for your payment of ${amount}.',
-        securityAlert: 'Security alert: Unusual activity detected on your LendSmart account.'
-      }
+        loanApproved:
+          "Your loan application has been approved! Check your LendSmart account for details.",
+        paymentReminder:
+          "Payment reminder: Your loan payment of ${amount} is due on ${dueDate}.",
+        paymentReceived:
+          "Payment received: Thank you for your payment of ${amount}.",
+        securityAlert:
+          "Security alert: Unusual activity detected on your LendSmart account.",
+      },
     };
 
     this.initialize();
@@ -65,46 +69,45 @@ class NotificationService {
         this.emailTransporter = nodemailer.createTransporter({
           host: process.env.SMTP_HOST,
           port: parseInt(process.env.SMTP_PORT) || 587,
-          secure: process.env.SMTP_SECURE === 'true',
+          secure: process.env.SMTP_SECURE === "true",
           auth: {
             user: process.env.SMTP_USER,
-            pass: process.env.SMTP_PASS
+            pass: process.env.SMTP_PASS,
           },
           pool: true,
           maxConnections: 5,
-          maxMessages: 100
+          maxMessages: 100,
         });
 
         // Verify email connection
         await this.emailTransporter.verify();
-        logger.info('Email transporter initialized successfully');
+        logger.info("Email transporter initialized successfully");
       }
 
       // Initialize Twilio client
       if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN) {
         this.twilioClient = twilio(
           process.env.TWILIO_ACCOUNT_SID,
-          process.env.TWILIO_AUTH_TOKEN
+          process.env.TWILIO_AUTH_TOKEN,
         );
-        logger.info('Twilio client initialized successfully');
+        logger.info("Twilio client initialized successfully");
       }
 
       // Initialize web push
       if (process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
         webpush.setVapidDetails(
-          'mailto:' + (process.env.VAPID_EMAIL || 'admin@lendsmart.com'),
+          "mailto:" + (process.env.VAPID_EMAIL || "admin@lendsmart.com"),
           process.env.VAPID_PUBLIC_KEY,
-          process.env.VAPID_PRIVATE_KEY
+          process.env.VAPID_PRIVATE_KEY,
         );
-        logger.info('Web push initialized successfully');
+        logger.info("Web push initialized successfully");
       }
 
-      logger.info('Notification service initialized');
-
+      logger.info("Notification service initialized");
     } catch (error) {
-      logger.error('Failed to initialize notification service', {
+      logger.error("Failed to initialize notification service", {
         error: error.message,
-        stack: error.stack
+        stack: error.stack,
       });
       throw error;
     }
@@ -121,13 +124,17 @@ class NotificationService {
    */
   async sendEmail(emailData) {
     try {
-      logger.info('Sending email notification', {
+      logger.info("Sending email notification", {
         to: emailData.to,
-        template: emailData.template
+        template: emailData.template,
       });
 
       if (!this.emailTransporter) {
-        throw new AppError('Email service not configured', 500, 'EMAIL_CONFIG_ERROR');
+        throw new AppError(
+          "Email service not configured",
+          500,
+          "EMAIL_CONFIG_ERROR",
+        );
       }
 
       // Validate email data
@@ -136,20 +143,27 @@ class NotificationService {
       // Get template configuration
       const templateConfig = this.templates.email[emailData.template];
       if (!templateConfig) {
-        throw new AppError(`Email template not found: ${emailData.template}`, 400, 'TEMPLATE_ERROR');
+        throw new AppError(
+          `Email template not found: ${emailData.template}`,
+          400,
+          "TEMPLATE_ERROR",
+        );
       }
 
       // Generate email content
-      const emailContent = await this._generateEmailContent(templateConfig, emailData.data);
+      const emailContent = await this._generateEmailContent(
+        templateConfig,
+        emailData.data,
+      );
 
       // Prepare email options
       const mailOptions = {
-        from: process.env.SMTP_FROM || 'noreply@lendsmart.com',
+        from: process.env.SMTP_FROM || "noreply@lendsmart.com",
         to: emailData.to,
         subject: this._processTemplate(templateConfig.subject, emailData.data),
         html: emailContent.html,
         text: emailContent.text,
-        ...emailData.options
+        ...emailData.options,
       };
 
       // Send email with retry logic
@@ -158,47 +172,46 @@ class NotificationService {
       });
 
       // Log successful delivery
-      await this._logNotificationDelivery('EMAIL', {
+      await this._logNotificationDelivery("EMAIL", {
         to: emailData.to,
         template: emailData.template,
         messageId: result.messageId,
-        status: 'SENT'
+        status: "SENT",
       });
 
-      logger.info('Email sent successfully', {
+      logger.info("Email sent successfully", {
         to: emailData.to,
         template: emailData.template,
-        messageId: result.messageId
+        messageId: result.messageId,
       });
 
       return {
         success: true,
         messageId: result.messageId,
-        provider: 'SMTP',
-        timestamp: new Date().toISOString()
+        provider: "SMTP",
+        timestamp: new Date().toISOString(),
       };
-
     } catch (error) {
-      logger.error('Failed to send email', {
+      logger.error("Failed to send email", {
         to: emailData.to,
         template: emailData.template,
         error: error.message,
-        stack: error.stack
+        stack: error.stack,
       });
 
       // Log failed delivery
-      await this._logNotificationDelivery('EMAIL', {
+      await this._logNotificationDelivery("EMAIL", {
         to: emailData.to,
         template: emailData.template,
-        status: 'FAILED',
-        error: error.message
+        status: "FAILED",
+        error: error.message,
       });
 
       throw new AppError(
-        'Failed to send email notification',
+        "Failed to send email notification",
         500,
-        'EMAIL_SEND_ERROR',
-        { originalError: error.message, to: emailData.to }
+        "EMAIL_SEND_ERROR",
+        { originalError: error.message, to: emailData.to },
       );
     }
   }
@@ -213,13 +226,17 @@ class NotificationService {
    */
   async sendSMS(smsData) {
     try {
-      logger.info('Sending SMS notification', {
+      logger.info("Sending SMS notification", {
         to: smsData.to,
-        template: smsData.template
+        template: smsData.template,
       });
 
       if (!this.twilioClient) {
-        throw new AppError('SMS service not configured', 500, 'SMS_CONFIG_ERROR');
+        throw new AppError(
+          "SMS service not configured",
+          500,
+          "SMS_CONFIG_ERROR",
+        );
       }
 
       // Validate SMS data
@@ -228,7 +245,11 @@ class NotificationService {
       // Get template
       const template = this.templates.sms[smsData.template];
       if (!template) {
-        throw new AppError(`SMS template not found: ${smsData.template}`, 400, 'TEMPLATE_ERROR');
+        throw new AppError(
+          `SMS template not found: ${smsData.template}`,
+          400,
+          "TEMPLATE_ERROR",
+        );
       }
 
       // Process template
@@ -239,52 +260,51 @@ class NotificationService {
         return await this.twilioClient.messages.create({
           body: message,
           from: process.env.TWILIO_PHONE_NUMBER,
-          to: smsData.to
+          to: smsData.to,
         });
       });
 
       // Log successful delivery
-      await this._logNotificationDelivery('SMS', {
+      await this._logNotificationDelivery("SMS", {
         to: smsData.to,
         template: smsData.template,
         messageId: result.sid,
-        status: 'SENT'
+        status: "SENT",
       });
 
-      logger.info('SMS sent successfully', {
+      logger.info("SMS sent successfully", {
         to: smsData.to,
         template: smsData.template,
-        messageId: result.sid
+        messageId: result.sid,
       });
 
       return {
         success: true,
         messageId: result.sid,
-        provider: 'TWILIO',
-        timestamp: new Date().toISOString()
+        provider: "TWILIO",
+        timestamp: new Date().toISOString(),
       };
-
     } catch (error) {
-      logger.error('Failed to send SMS', {
+      logger.error("Failed to send SMS", {
         to: smsData.to,
         template: smsData.template,
         error: error.message,
-        stack: error.stack
+        stack: error.stack,
       });
 
       // Log failed delivery
-      await this._logNotificationDelivery('SMS', {
+      await this._logNotificationDelivery("SMS", {
         to: smsData.to,
         template: smsData.template,
-        status: 'FAILED',
-        error: error.message
+        status: "FAILED",
+        error: error.message,
       });
 
       throw new AppError(
-        'Failed to send SMS notification',
+        "Failed to send SMS notification",
         500,
-        'SMS_SEND_ERROR',
-        { originalError: error.message, to: smsData.to }
+        "SMS_SEND_ERROR",
+        { originalError: error.message, to: smsData.to },
       );
     }
   }
@@ -300,9 +320,9 @@ class NotificationService {
    */
   async sendPushNotification(pushData) {
     try {
-      logger.info('Sending push notification', {
+      logger.info("Sending push notification", {
         title: pushData.title,
-        hasSubscription: !!pushData.subscription
+        hasSubscription: !!pushData.subscription,
       });
 
       // Validate push data
@@ -312,10 +332,10 @@ class NotificationService {
       const payload = JSON.stringify({
         title: pushData.title,
         body: pushData.body,
-        icon: pushData.icon || '/icons/icon-192x192.png',
-        badge: pushData.badge || '/icons/badge-72x72.png',
+        icon: pushData.icon || "/icons/icon-192x192.png",
+        badge: pushData.badge || "/icons/badge-72x72.png",
         data: pushData.data || {},
-        timestamp: Date.now()
+        timestamp: Date.now(),
       });
 
       // Send push notification with retry logic
@@ -324,43 +344,42 @@ class NotificationService {
       });
 
       // Log successful delivery
-      await this._logNotificationDelivery('PUSH', {
+      await this._logNotificationDelivery("PUSH", {
         title: pushData.title,
-        status: 'SENT',
-        statusCode: result.statusCode
+        status: "SENT",
+        statusCode: result.statusCode,
       });
 
-      logger.info('Push notification sent successfully', {
+      logger.info("Push notification sent successfully", {
         title: pushData.title,
-        statusCode: result.statusCode
+        statusCode: result.statusCode,
       });
 
       return {
         success: true,
         statusCode: result.statusCode,
-        provider: 'WEB_PUSH',
-        timestamp: new Date().toISOString()
+        provider: "WEB_PUSH",
+        timestamp: new Date().toISOString(),
       };
-
     } catch (error) {
-      logger.error('Failed to send push notification', {
+      logger.error("Failed to send push notification", {
         title: pushData.title,
         error: error.message,
-        stack: error.stack
+        stack: error.stack,
       });
 
       // Log failed delivery
-      await this._logNotificationDelivery('PUSH', {
+      await this._logNotificationDelivery("PUSH", {
         title: pushData.title,
-        status: 'FAILED',
-        error: error.message
+        status: "FAILED",
+        error: error.message,
       });
 
       throw new AppError(
-        'Failed to send push notification',
+        "Failed to send push notification",
         500,
-        'PUSH_SEND_ERROR',
-        { originalError: error.message }
+        "PUSH_SEND_ERROR",
+        { originalError: error.message },
       );
     }
   }
@@ -377,10 +396,10 @@ class NotificationService {
    */
   async sendMultiChannelNotification(notificationData) {
     try {
-      logger.info('Sending multi-channel notification', {
+      logger.info("Sending multi-channel notification", {
         userId: notificationData.userId,
         template: notificationData.template,
-        channels: notificationData.channels
+        channels: notificationData.channels,
       });
 
       // Validate notification data
@@ -390,51 +409,72 @@ class NotificationService {
       const promises = [];
 
       // Send email if requested and user has email
-      if (notificationData.channels.includes('EMAIL') && notificationData.userPreferences.email) {
+      if (
+        notificationData.channels.includes("EMAIL") &&
+        notificationData.userPreferences.email
+      ) {
         promises.push(
           this.sendEmail({
             to: notificationData.userPreferences.email,
             template: notificationData.template,
-            data: notificationData.data
-          }).then(result => {
-            results.email = result;
-          }).catch(error => {
-            results.email = { success: false, error: error.message };
+            data: notificationData.data,
           })
+            .then((result) => {
+              results.email = result;
+            })
+            .catch((error) => {
+              results.email = { success: false, error: error.message };
+            }),
         );
       }
 
       // Send SMS if requested and user has phone
-      if (notificationData.channels.includes('SMS') && notificationData.userPreferences.phone) {
+      if (
+        notificationData.channels.includes("SMS") &&
+        notificationData.userPreferences.phone
+      ) {
         promises.push(
           this.sendSMS({
             to: notificationData.userPreferences.phone,
             template: notificationData.template,
-            data: notificationData.data
-          }).then(result => {
-            results.sms = result;
-          }).catch(error => {
-            results.sms = { success: false, error: error.message };
+            data: notificationData.data,
           })
+            .then((result) => {
+              results.sms = result;
+            })
+            .catch((error) => {
+              results.sms = { success: false, error: error.message };
+            }),
         );
       }
 
       // Send push notification if requested and user has subscription
-      if (notificationData.channels.includes('PUSH') && notificationData.userPreferences.pushSubscription) {
-        const pushTitle = this._getPushTitle(notificationData.template, notificationData.data);
-        const pushBody = this._getPushBody(notificationData.template, notificationData.data);
+      if (
+        notificationData.channels.includes("PUSH") &&
+        notificationData.userPreferences.pushSubscription
+      ) {
+        const pushTitle = this._getPushTitle(
+          notificationData.template,
+          notificationData.data,
+        );
+        const pushBody = this._getPushBody(
+          notificationData.template,
+          notificationData.data,
+        );
 
         promises.push(
           this.sendPushNotification({
             subscription: notificationData.userPreferences.pushSubscription,
             title: pushTitle,
             body: pushBody,
-            data: notificationData.data
-          }).then(result => {
-            results.push = result;
-          }).catch(error => {
-            results.push = { success: false, error: error.message };
+            data: notificationData.data,
           })
+            .then((result) => {
+              results.push = result;
+            })
+            .catch((error) => {
+              results.push = { success: false, error: error.message };
+            }),
         );
       }
 
@@ -442,44 +482,43 @@ class NotificationService {
       await Promise.all(promises);
 
       // Log multi-channel delivery
-      await this._logNotificationDelivery('MULTI_CHANNEL', {
+      await this._logNotificationDelivery("MULTI_CHANNEL", {
         userId: notificationData.userId,
         template: notificationData.template,
         channels: notificationData.channels,
-        results: Object.keys(results).map(channel => ({
+        results: Object.keys(results).map((channel) => ({
           channel,
-          success: results[channel].success
-        }))
+          success: results[channel].success,
+        })),
       });
 
-      logger.info('Multi-channel notification completed', {
+      logger.info("Multi-channel notification completed", {
         userId: notificationData.userId,
         template: notificationData.template,
-        results: Object.keys(results).map(channel => ({
+        results: Object.keys(results).map((channel) => ({
           channel,
-          success: results[channel].success
-        }))
+          success: results[channel].success,
+        })),
       });
 
       return {
-        success: Object.values(results).some(result => result.success),
+        success: Object.values(results).some((result) => result.success),
         results,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
-
     } catch (error) {
-      logger.error('Failed to send multi-channel notification', {
+      logger.error("Failed to send multi-channel notification", {
         userId: notificationData.userId,
         template: notificationData.template,
         error: error.message,
-        stack: error.stack
+        stack: error.stack,
       });
 
       throw new AppError(
-        'Failed to send multi-channel notification',
+        "Failed to send multi-channel notification",
         500,
-        'MULTI_CHANNEL_ERROR',
-        { originalError: error.message, userId: notificationData.userId }
+        "MULTI_CHANNEL_ERROR",
+        { originalError: error.message, userId: notificationData.userId },
       );
     }
   }
@@ -492,43 +531,45 @@ class NotificationService {
    */
   async getDeliveryStatus(messageId, provider) {
     try {
-      let status = 'UNKNOWN';
+      let status = "UNKNOWN";
 
       switch (provider) {
-        case 'TWILIO':
+        case "TWILIO":
           if (this.twilioClient) {
             const message = await this.twilioClient.messages(messageId).fetch();
             status = message.status.toUpperCase();
           }
           break;
-        case 'SMTP':
+        case "SMTP":
           // SMTP doesn't provide delivery status tracking
-          status = 'SENT';
+          status = "SENT";
           break;
         default:
-          throw new AppError(`Unsupported provider: ${provider}`, 400, 'PROVIDER_ERROR');
+          throw new AppError(
+            `Unsupported provider: ${provider}`,
+            400,
+            "PROVIDER_ERROR",
+          );
       }
 
       return {
         messageId,
         provider,
         status,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
-
     } catch (error) {
-      logger.error('Failed to get delivery status', {
+      logger.error("Failed to get delivery status", {
         messageId,
         provider,
-        error: error.message
+        error: error.message,
       });
 
-      throw new AppError(
-        'Failed to get delivery status',
-        500,
-        'STATUS_ERROR',
-        { originalError: error.message, messageId, provider }
-      );
+      throw new AppError("Failed to get delivery status", 500, "STATUS_ERROR", {
+        originalError: error.message,
+        messageId,
+        provider,
+      });
     }
   }
 
@@ -538,13 +579,17 @@ class NotificationService {
    */
   _validateEmailData(data) {
     if (!data.to || !data.template) {
-      throw new AppError('Missing required email fields: to, template', 400, 'VALIDATION_ERROR');
+      throw new AppError(
+        "Missing required email fields: to, template",
+        400,
+        "VALIDATION_ERROR",
+      );
     }
 
     // Basic email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(data.to)) {
-      throw new AppError('Invalid email address', 400, 'VALIDATION_ERROR');
+      throw new AppError("Invalid email address", 400, "VALIDATION_ERROR");
     }
   }
 
@@ -554,13 +599,21 @@ class NotificationService {
    */
   _validateSMSData(data) {
     if (!data.to || !data.template) {
-      throw new AppError('Missing required SMS fields: to, template', 400, 'VALIDATION_ERROR');
+      throw new AppError(
+        "Missing required SMS fields: to, template",
+        400,
+        "VALIDATION_ERROR",
+      );
     }
 
     // Basic phone number validation
     const phoneRegex = /^\+[1-9]\d{1,14}$/;
     if (!phoneRegex.test(data.to)) {
-      throw new AppError('Invalid phone number format (E.164)', 400, 'VALIDATION_ERROR');
+      throw new AppError(
+        "Invalid phone number format (E.164)",
+        400,
+        "VALIDATION_ERROR",
+      );
     }
   }
 
@@ -570,11 +623,19 @@ class NotificationService {
    */
   _validatePushData(data) {
     if (!data.subscription || !data.title || !data.body) {
-      throw new AppError('Missing required push fields: subscription, title, body', 400, 'VALIDATION_ERROR');
+      throw new AppError(
+        "Missing required push fields: subscription, title, body",
+        400,
+        "VALIDATION_ERROR",
+      );
     }
 
-    if (typeof data.subscription !== 'object' || !data.subscription.endpoint) {
-      throw new AppError('Invalid push subscription format', 400, 'VALIDATION_ERROR');
+    if (typeof data.subscription !== "object" || !data.subscription.endpoint) {
+      throw new AppError(
+        "Invalid push subscription format",
+        400,
+        "VALIDATION_ERROR",
+      );
     }
   }
 
@@ -583,16 +644,25 @@ class NotificationService {
    * @private
    */
   _validateMultiChannelData(data) {
-    if (!data.userId || !data.template || !data.channels || !data.userPreferences) {
+    if (
+      !data.userId ||
+      !data.template ||
+      !data.channels ||
+      !data.userPreferences
+    ) {
       throw new AppError(
-        'Missing required multi-channel fields: userId, template, channels, userPreferences',
+        "Missing required multi-channel fields: userId, template, channels, userPreferences",
         400,
-        'VALIDATION_ERROR'
+        "VALIDATION_ERROR",
       );
     }
 
     if (!Array.isArray(data.channels) || data.channels.length === 0) {
-      throw new AppError('Channels must be a non-empty array', 400, 'VALIDATION_ERROR');
+      throw new AppError(
+        "Channels must be a non-empty array",
+        400,
+        "VALIDATION_ERROR",
+      );
     }
   }
 
@@ -626,8 +696,8 @@ class NotificationService {
     let processed = template;
 
     // Simple template variable replacement
-    Object.keys(data || {}).forEach(key => {
-      const regex = new RegExp(`\\$\\{${key}\\}`, 'g');
+    Object.keys(data || {}).forEach((key) => {
+      const regex = new RegExp(`\\$\\{${key}\\}`, "g");
       processed = processed.replace(regex, data[key]);
     });
 
@@ -640,15 +710,15 @@ class NotificationService {
    */
   _getPushTitle(template, data) {
     const titles = {
-      loanApproved: 'Loan Approved!',
-      loanRejected: 'Loan Application Update',
-      paymentReminder: 'Payment Reminder',
-      paymentReceived: 'Payment Confirmed',
-      kycRequired: 'Verification Required',
-      accountSuspended: 'Security Alert'
+      loanApproved: "Loan Approved!",
+      loanRejected: "Loan Application Update",
+      paymentReminder: "Payment Reminder",
+      paymentReceived: "Payment Confirmed",
+      kycRequired: "Verification Required",
+      accountSuspended: "Security Alert",
     };
 
-    return titles[template] || 'LendSmart Notification';
+    return titles[template] || "LendSmart Notification";
   }
 
   /**
@@ -658,14 +728,16 @@ class NotificationService {
   _getPushBody(template, data) {
     const bodies = {
       loanApproved: `Your loan application for $${data.amount} has been approved!`,
-      loanRejected: 'Your loan application has been reviewed. Please check your account.',
+      loanRejected:
+        "Your loan application has been reviewed. Please check your account.",
       paymentReminder: `Payment of $${data.amount} is due on ${data.dueDate}`,
       paymentReceived: `Thank you for your payment of $${data.amount}`,
-      kycRequired: 'Please complete identity verification to continue.',
-      accountSuspended: 'Unusual activity detected. Please review your account.'
+      kycRequired: "Please complete identity verification to continue.",
+      accountSuspended:
+        "Unusual activity detected. Please review your account.",
     };
 
-    return bodies[template] || 'You have a new notification from LendSmart.';
+    return bodies[template] || "You have a new notification from LendSmart.";
   }
 
   /**
@@ -683,13 +755,16 @@ class NotificationService {
 
         if (attempt < this.retryAttempts) {
           const delay = this.retryDelay * Math.pow(2, attempt - 1);
-          logger.warn(`Notification attempt ${attempt} failed, retrying in ${delay}ms`, {
-            error: error.message,
-            attempt,
-            maxAttempts: this.retryAttempts
-          });
+          logger.warn(
+            `Notification attempt ${attempt} failed, retrying in ${delay}ms`,
+            {
+              error: error.message,
+              attempt,
+              maxAttempts: this.retryAttempts,
+            },
+          );
 
-          await new Promise(resolve => setTimeout(resolve, delay));
+          await new Promise((resolve) => setTimeout(resolve, delay));
         }
       }
     }
@@ -705,11 +780,11 @@ class NotificationService {
     const logEntry = {
       type,
       details,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
 
     // Implementation would store delivery log in database
-    logger.info('Notification delivery logged', logEntry);
+    logger.info("Notification delivery logged", logEntry);
   }
 }
 

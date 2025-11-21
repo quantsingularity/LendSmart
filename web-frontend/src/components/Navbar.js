@@ -8,28 +8,40 @@ const Navbar = () => {
 
   return (
     <nav className="navbar">
-      <Link to="/" className="navbar-brand">LendSmart</Link>
+      <Link to="/" className="navbar-brand">
+        LendSmart
+      </Link>
       <ul className="navbar-nav">
         <li className="nav-item">
-          <Link to="/loans" className="nav-link">Marketplace</Link>
+          <Link to="/loans" className="nav-link">
+            Marketplace
+          </Link>
         </li>
         {isAuthenticated ? (
           <>
             <li className="nav-item">
-              <Link to="/dashboard" className="nav-link">Dashboard</Link>
+              <Link to="/dashboard" className="nav-link">
+                Dashboard
+              </Link>
             </li>
             <li className="nav-item">
               {/* <button onClick={logout} className="nav-link btn-link">Logout</button> */}
-              <Link to="/login" className="nav-link">Logout (Placeholder)</Link>
+              <Link to="/login" className="nav-link">
+                Logout (Placeholder)
+              </Link>
             </li>
           </>
         ) : (
           <>
             <li className="nav-item">
-              <Link to="/login" className="nav-link">Login</Link>
+              <Link to="/login" className="nav-link">
+                Login
+              </Link>
             </li>
             <li className="nav-item">
-              <Link to="/register" className="nav-link">Sign Up</Link>
+              <Link to="/register" className="nav-link">
+                Sign Up
+              </Link>
             </li>
           </>
         )}

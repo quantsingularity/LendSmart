@@ -1,12 +1,12 @@
-const multer = require('multer');
-const path = require('path');
-const fs = require('fs').promises;
-const crypto = require('crypto');
-const sharp = require('sharp');
-const { getEncryptionService } = require('../config/security/encryption');
-const { getAuditLogger } = require('../compliance/auditLogger');
-const inputValidator = require('../validators/inputValidator');
-const logger = require('../utils/logger');
+const multer = require("multer");
+const path = require("path");
+const fs = require("fs").promises;
+const crypto = require("crypto");
+const sharp = require("sharp");
+const { getEncryptionService } = require("../config/security/encryption");
+const { getAuditLogger } = require("../compliance/auditLogger");
+const inputValidator = require("../validators/inputValidator");
+const logger = require("../utils/logger");
 
 /**
  * Secure File Upload Service
@@ -20,12 +20,24 @@ class FileUploadService {
     // Upload configuration
     this.config = {
       maxFileSize: 10 * 1024 * 1024, // 10MB
-      allowedImageTypes: ['image/jpeg', 'image/png', 'image/gif'],
-      allowedDocumentTypes: ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
-      allowedExtensions: ['.jpg', '.jpeg', '.png', '.gif', '.pdf', '.doc', '.docx'],
-      uploadDir: process.env.UPLOAD_DIR || './uploads',
-      tempDir: process.env.TEMP_DIR || './temp',
-      encryptFiles: process.env.ENCRYPT_FILES === 'true'
+      allowedImageTypes: ["image/jpeg", "image/png", "image/gif"],
+      allowedDocumentTypes: [
+        "application/pdf",
+        "application/msword",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      ],
+      allowedExtensions: [
+        ".jpg",
+        ".jpeg",
+        ".png",
+        ".gif",
+        ".pdf",
+        ".doc",
+        ".docx",
+      ],
+      uploadDir: process.env.UPLOAD_DIR || "./uploads",
+      tempDir: process.env.TEMP_DIR || "./temp",
+      encryptFiles: process.env.ENCRYPT_FILES === "true",
     };
 
     // Ensure upload directories exist
@@ -39,12 +51,18 @@ class FileUploadService {
     try {
       await fs.mkdir(this.config.uploadDir, { recursive: true });
       await fs.mkdir(this.config.tempDir, { recursive: true });
-      await fs.mkdir(path.join(this.config.uploadDir, 'kyc'), { recursive: true });
-      await fs.mkdir(path.join(this.config.uploadDir, 'profile'), { recursive: true });
-      await fs.mkdir(path.join(this.config.uploadDir, 'documents'), { recursive: true });
+      await fs.mkdir(path.join(this.config.uploadDir, "kyc"), {
+        recursive: true,
+      });
+      await fs.mkdir(path.join(this.config.uploadDir, "profile"), {
+        recursive: true,
+      });
+      await fs.mkdir(path.join(this.config.uploadDir, "documents"), {
+        recursive: true,
+      });
     } catch (error) {
-      logger.error('Failed to initialize upload directories', {
-        error: error.message
+      logger.error("Failed to initialize upload directories", {
+        error: error.message,
       });
     }
   }
@@ -56,28 +74,28 @@ class FileUploadService {
   createKYCUploadConfig() {
     const storage = multer.diskStorage({
       destination: (req, file, cb) => {
-        const uploadPath = path.join(this.config.uploadDir, 'kyc', req.user.id);
+        const uploadPath = path.join(this.config.uploadDir, "kyc", req.user.id);
         fs.mkdir(uploadPath, { recursive: true })
           .then(() => cb(null, uploadPath))
-          .catch(err => cb(err));
+          .catch((err) => cb(err));
       },
       filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
         const extension = path.extname(file.originalname);
         const filename = `kyc-${uniqueSuffix}${extension}`;
         cb(null, filename);
-      }
+      },
     });
 
     return multer({
       storage,
       limits: {
         fileSize: this.config.maxFileSize,
-        files: 5 // Maximum 5 files per upload
+        files: 5, // Maximum 5 files per upload
       },
       fileFilter: (req, file, cb) => {
         this.validateKYCFile(file, cb);
-      }
+      },
     });
   }
 
@@ -88,28 +106,32 @@ class FileUploadService {
   createProfileImageUploadConfig() {
     const storage = multer.diskStorage({
       destination: (req, file, cb) => {
-        const uploadPath = path.join(this.config.uploadDir, 'profile', req.user.id);
+        const uploadPath = path.join(
+          this.config.uploadDir,
+          "profile",
+          req.user.id,
+        );
         fs.mkdir(uploadPath, { recursive: true })
           .then(() => cb(null, uploadPath))
-          .catch(err => cb(err));
+          .catch((err) => cb(err));
       },
       filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
         const extension = path.extname(file.originalname);
         const filename = `profile-${uniqueSuffix}${extension}`;
         cb(null, filename);
-      }
+      },
     });
 
     return multer({
       storage,
       limits: {
         fileSize: 5 * 1024 * 1024, // 5MB for profile images
-        files: 1
+        files: 1,
       },
       fileFilter: (req, file, cb) => {
         this.validateImageFile(file, cb);
-      }
+      },
     });
   }
 
@@ -120,28 +142,32 @@ class FileUploadService {
   createDocumentUploadConfig() {
     const storage = multer.diskStorage({
       destination: (req, file, cb) => {
-        const uploadPath = path.join(this.config.uploadDir, 'documents', req.user.id);
+        const uploadPath = path.join(
+          this.config.uploadDir,
+          "documents",
+          req.user.id,
+        );
         fs.mkdir(uploadPath, { recursive: true })
           .then(() => cb(null, uploadPath))
-          .catch(err => cb(err));
+          .catch((err) => cb(err));
       },
       filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
         const extension = path.extname(file.originalname);
         const filename = `doc-${uniqueSuffix}${extension}`;
         cb(null, filename);
-      }
+      },
     });
 
     return multer({
       storage,
       limits: {
         fileSize: this.config.maxFileSize,
-        files: 10
+        files: 10,
       },
       fileFilter: (req, file, cb) => {
         this.validateDocumentFile(file, cb);
-      }
+      },
     });
   }
 
@@ -153,8 +179,11 @@ class FileUploadService {
   validateKYCFile(file, cb) {
     const validation = inputValidator.validateFileUpload(file, {
       maxSize: this.config.maxFileSize,
-      allowedTypes: [...this.config.allowedImageTypes, ...this.config.allowedDocumentTypes],
-      allowedExtensions: this.config.allowedExtensions
+      allowedTypes: [
+        ...this.config.allowedImageTypes,
+        ...this.config.allowedDocumentTypes,
+      ],
+      allowedExtensions: this.config.allowedExtensions,
     });
 
     if (!validation.isValid) {
@@ -163,7 +192,7 @@ class FileUploadService {
 
     // Additional KYC-specific validation
     if (this.isSuspiciousFile(file)) {
-      return cb(new Error('Suspicious file detected'), false);
+      return cb(new Error("Suspicious file detected"), false);
     }
 
     cb(null, true);
@@ -178,7 +207,7 @@ class FileUploadService {
     const validation = inputValidator.validateFileUpload(file, {
       maxSize: 5 * 1024 * 1024, // 5MB for images
       allowedTypes: this.config.allowedImageTypes,
-      allowedExtensions: ['.jpg', '.jpeg', '.png', '.gif']
+      allowedExtensions: [".jpg", ".jpeg", ".png", ".gif"],
     });
 
     if (!validation.isValid) {
@@ -197,7 +226,7 @@ class FileUploadService {
     const validation = inputValidator.validateFileUpload(file, {
       maxSize: this.config.maxFileSize,
       allowedTypes: this.config.allowedDocumentTypes,
-      allowedExtensions: ['.pdf', '.doc', '.docx']
+      allowedExtensions: [".pdf", ".doc", ".docx"],
     });
 
     if (!validation.isValid) {
@@ -220,12 +249,13 @@ class FileUploadService {
       /javascript:/i,
       /\x00/, // Null bytes
       /\.\.\//, // Directory traversal
-      /[<>:"|?*]/ // Invalid filename characters
+      /[<>:"|?*]/, // Invalid filename characters
     ];
 
-    return suspiciousPatterns.some(pattern =>
-      pattern.test(file.originalname) ||
-      (file.buffer && pattern.test(file.buffer.toString()))
+    return suspiciousPatterns.some(
+      (pattern) =>
+        pattern.test(file.originalname) ||
+        (file.buffer && pattern.test(file.buffer.toString())),
     );
   }
 
@@ -242,12 +272,12 @@ class FileUploadService {
       const scanResult = await this.scanFileForMalware(file.path);
       if (!scanResult.clean) {
         await this.deleteFile(file.path);
-        throw new Error('File failed security scan');
+        throw new Error("File failed security scan");
       }
 
       // Extract text content for indexing (if PDF)
       let extractedText = null;
-      if (file.mimetype === 'application/pdf') {
+      if (file.mimetype === "application/pdf") {
         extractedText = await this.extractTextFromPDF(file.path);
       }
 
@@ -273,35 +303,35 @@ class FileUploadService {
         extractedText,
         metadata,
         uploadedAt: new Date(),
-        userId
+        userId,
       };
 
       // Audit log
       await this.auditLogger.logDataEvent({
-        action: 'kyc_document_uploaded',
+        action: "kyc_document_uploaded",
         userId,
         fileId: fileRecord.filename,
         fileType: metadata.documentType,
         fileSize: file.size,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
 
-      logger.info('KYC document processed', {
+      logger.info("KYC document processed", {
         userId,
         filename: file.filename,
         size: file.size,
-        type: metadata.documentType
+        type: metadata.documentType,
       });
 
       return {
         success: true,
-        file: fileRecord
+        file: fileRecord,
       };
     } catch (error) {
-      logger.error('KYC document processing failed', {
+      logger.error("KYC document processing failed", {
         error: error.message,
         userId,
-        filename: file.filename
+        filename: file.filename,
       });
 
       // Clean up on error
@@ -309,7 +339,7 @@ class FileUploadService {
 
       return {
         success: false,
-        error: error.message
+        error: error.message,
       };
     }
   }
@@ -326,7 +356,7 @@ class FileUploadService {
       const imageValidation = await this.validateImageContent(file.path);
       if (!imageValidation.valid) {
         await this.deleteFile(file.path);
-        throw new Error('Invalid image content');
+        throw new Error("Invalid image content");
       }
 
       // Generate thumbnails
@@ -352,34 +382,34 @@ class FileUploadService {
         encrypted: this.config.encryptFiles,
         thumbnails,
         uploadedAt: new Date(),
-        userId
+        userId,
       };
 
       // Audit log
       await this.auditLogger.logDataEvent({
-        action: 'profile_image_uploaded',
+        action: "profile_image_uploaded",
         userId,
         fileId: fileRecord.filename,
         fileSize: file.size,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
 
       return {
         success: true,
-        file: fileRecord
+        file: fileRecord,
       };
     } catch (error) {
-      logger.error('Profile image processing failed', {
+      logger.error("Profile image processing failed", {
         error: error.message,
         userId,
-        filename: file.filename
+        filename: file.filename,
       });
 
       await this.deleteFile(file.path);
 
       return {
         success: false,
-        error: error.message
+        error: error.message,
       };
     }
   }
@@ -396,8 +426,9 @@ class FileUploadService {
       const stats = await fs.stat(filePath);
 
       // Reject extremely large files
-      if (stats.size > 50 * 1024 * 1024) { // 50MB
-        return { clean: false, reason: 'File too large' };
+      if (stats.size > 50 * 1024 * 1024) {
+        // 50MB
+        return { clean: false, reason: "File too large" };
       }
 
       // Basic content scanning (would be more sophisticated in production)
@@ -405,22 +436,22 @@ class FileUploadService {
       const suspiciousPatterns = [
         /X5O!P%@AP\[4\\PZX54\(P\^\)7CC\)7\}\$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!\$H\+H\*/, // EICAR test string
         /<script/gi,
-        /javascript:/gi
+        /javascript:/gi,
       ];
 
       for (const pattern of suspiciousPatterns) {
         if (pattern.test(content.toString())) {
-          return { clean: false, reason: 'Suspicious content detected' };
+          return { clean: false, reason: "Suspicious content detected" };
         }
       }
 
       return { clean: true };
     } catch (error) {
-      logger.error('Malware scan failed', {
+      logger.error("Malware scan failed", {
         error: error.message,
-        filePath
+        filePath,
       });
-      return { clean: false, reason: 'Scan failed' };
+      return { clean: false, reason: "Scan failed" };
     }
   }
 
@@ -437,11 +468,11 @@ class FileUploadService {
       // const data = await pdfParse(dataBuffer);
       // return data.text;
 
-      return 'Text extraction not implemented';
+      return "Text extraction not implemented";
     } catch (error) {
-      logger.error('PDF text extraction failed', {
+      logger.error("PDF text extraction failed", {
         error: error.message,
-        filePath
+        filePath,
       });
       return null;
     }
@@ -455,11 +486,11 @@ class FileUploadService {
   async generateFileHash(filePath) {
     try {
       const fileBuffer = await fs.readFile(filePath);
-      return crypto.createHash('sha256').update(fileBuffer).digest('hex');
+      return crypto.createHash("sha256").update(fileBuffer).digest("hex");
     } catch (error) {
-      logger.error('File hash generation failed', {
+      logger.error("File hash generation failed", {
         error: error.message,
-        filePath
+        filePath,
       });
       throw error;
     }
@@ -474,13 +505,13 @@ class FileUploadService {
     try {
       const fileBuffer = await fs.readFile(filePath);
       const encryptedData = this.encryptionService.encrypt(fileBuffer);
-      const encryptedPath = filePath + '.enc';
+      const encryptedPath = filePath + ".enc";
       await fs.writeFile(encryptedPath, encryptedData);
       return encryptedPath;
     } catch (error) {
-      logger.error('File encryption failed', {
+      logger.error("File encryption failed", {
         error: error.message,
-        filePath
+        filePath,
       });
       throw error;
     }
@@ -496,9 +527,9 @@ class FileUploadService {
       const encryptedData = await fs.readFile(encryptedPath);
       return this.encryptionService.decrypt(encryptedData);
     } catch (error) {
-      logger.error('File decryption failed', {
+      logger.error("File decryption failed", {
         error: error.message,
-        encryptedPath
+        encryptedPath,
       });
       throw error;
     }
@@ -516,26 +547,26 @@ class FileUploadService {
 
       // Check if it's a valid image
       if (!metadata.format) {
-        return { valid: false, reason: 'Invalid image format' };
+        return { valid: false, reason: "Invalid image format" };
       }
 
       // Check image dimensions (prevent extremely large images)
       if (metadata.width > 10000 || metadata.height > 10000) {
-        return { valid: false, reason: 'Image dimensions too large' };
+        return { valid: false, reason: "Image dimensions too large" };
       }
 
       // Check for suspicious metadata
       if (metadata.exif && this.hasSuspiciousExif(metadata.exif)) {
-        return { valid: false, reason: 'Suspicious metadata detected' };
+        return { valid: false, reason: "Suspicious metadata detected" };
       }
 
       return { valid: true, metadata };
     } catch (error) {
-      logger.error('Image validation failed', {
+      logger.error("Image validation failed", {
         error: error.message,
-        imagePath
+        imagePath,
       });
-      return { valid: false, reason: 'Image validation failed' };
+      return { valid: false, reason: "Image validation failed" };
     }
   }
 
@@ -549,11 +580,11 @@ class FileUploadService {
     const suspiciousPatterns = [
       /<script/gi,
       /javascript:/gi,
-      /\x00/ // Null bytes
+      /\x00/, // Null bytes
     ];
 
     const exifString = JSON.stringify(exif);
-    return suspiciousPatterns.some(pattern => pattern.test(exifString));
+    return suspiciousPatterns.some((pattern) => pattern.test(exifString));
   }
 
   /**
@@ -564,7 +595,12 @@ class FileUploadService {
    */
   async generateThumbnails(imagePath, userId) {
     try {
-      const thumbnailDir = path.join(this.config.uploadDir, 'profile', userId, 'thumbnails');
+      const thumbnailDir = path.join(
+        this.config.uploadDir,
+        "profile",
+        userId,
+        "thumbnails",
+      );
       await fs.mkdir(thumbnailDir, { recursive: true });
 
       const filename = path.basename(imagePath, path.extname(imagePath));
@@ -572,32 +608,32 @@ class FileUploadService {
       const thumbnails = {
         small: path.join(thumbnailDir, `${filename}_small.jpg`),
         medium: path.join(thumbnailDir, `${filename}_medium.jpg`),
-        large: path.join(thumbnailDir, `${filename}_large.jpg`)
+        large: path.join(thumbnailDir, `${filename}_large.jpg`),
       };
 
       // Generate different sizes
       await Promise.all([
         sharp(imagePath)
-          .resize(150, 150, { fit: 'cover' })
+          .resize(150, 150, { fit: "cover" })
           .jpeg({ quality: 80 })
           .toFile(thumbnails.small),
 
         sharp(imagePath)
-          .resize(300, 300, { fit: 'cover' })
+          .resize(300, 300, { fit: "cover" })
           .jpeg({ quality: 85 })
           .toFile(thumbnails.medium),
 
         sharp(imagePath)
-          .resize(600, 600, { fit: 'cover' })
+          .resize(600, 600, { fit: "cover" })
           .jpeg({ quality: 90 })
-          .toFile(thumbnails.large)
+          .toFile(thumbnails.large),
       ]);
 
       return thumbnails;
     } catch (error) {
-      logger.error('Thumbnail generation failed', {
+      logger.error("Thumbnail generation failed", {
         error: error.message,
-        imagePath
+        imagePath,
       });
       return null;
     }
@@ -611,9 +647,9 @@ class FileUploadService {
     try {
       await fs.unlink(filePath);
     } catch (error) {
-      logger.error('File deletion failed', {
+      logger.error("File deletion failed", {
         error: error.message,
-        filePath
+        filePath,
       });
     }
   }
@@ -628,19 +664,19 @@ class FileUploadService {
     try {
       if (encrypted) {
         const decryptedData = await this.decryptFile(filePath);
-        const { Readable } = require('stream');
+        const { Readable } = require("stream");
         const stream = new Readable();
         stream.push(decryptedData);
         stream.push(null);
         return stream;
       } else {
-        const fs = require('fs');
+        const fs = require("fs");
         return fs.createReadStream(filePath);
       }
     } catch (error) {
-      logger.error('File stream creation failed', {
+      logger.error("File stream creation failed", {
         error: error.message,
-        filePath
+        filePath,
       });
       throw error;
     }
@@ -658,14 +694,14 @@ class FileUploadService {
       // This would typically query the database for old file records
       // and remove both the database records and physical files
 
-      logger.info('File cleanup completed', {
+      logger.info("File cleanup completed", {
         cutoffDate: cutoffDate.toISOString(),
-        maxAge
+        maxAge,
       });
     } catch (error) {
-      logger.error('File cleanup failed', {
+      logger.error("File cleanup failed", {
         error: error.message,
-        maxAge
+        maxAge,
       });
     }
   }

@@ -5,6 +5,7 @@ This directory contains the source code for the LendSmart mobile application, bu
 ## Overview
 
 The mobile app provides users (borrowers and lenders) with a native experience to interact with the LendSmart platform. Key features include:
+
 - User registration and login.
 - Browsing available loans in the marketplace.
 - Applying for new loans (for borrowers).
@@ -77,23 +78,25 @@ mobile-frontend/
 
 ## Prerequisites
 
--   Node.js (LTS version recommended)
--   npm or Yarn
--   React Native CLI (or Expo CLI if using Expo)
--   Android Studio (for Android development) with JDK and Android SDK
--   Xcode (for iOS development, macOS only)
--   CocoaPods (for iOS dependency management)
+- Node.js (LTS version recommended)
+- npm or Yarn
+- React Native CLI (or Expo CLI if using Expo)
+- Android Studio (for Android development) with JDK and Android SDK
+- Xcode (for iOS development, macOS only)
+- CocoaPods (for iOS dependency management)
 
 Refer to the [React Native Environment Setup Guide](https://reactnative.dev/docs/environment-setup) for detailed instructions.
 
 ## Setup and Installation
 
 1.  **Navigate to the `mobile-frontend` directory:**
+
     ```bash
     cd LendSmart/mobile-frontend
     ```
 
 2.  **Install dependencies:**
+
     ```bash
     npm install
     # or
@@ -101,6 +104,7 @@ Refer to the [React Native Environment Setup Guide](https://reactnative.dev/docs
     ```
 
 3.  **Install iOS dependencies (if on macOS):**
+
     ```bash
     cd ios
     pod install
@@ -123,6 +127,7 @@ Refer to the [React Native Environment Setup Guide](https://reactnative.dev/docs
 
 1.  **Start the Metro Bundler:**
     Open a terminal in the `mobile-frontend` directory and run:
+
     ```bash
     npm start
     # or
@@ -130,59 +135,63 @@ Refer to the [React Native Environment Setup Guide](https://reactnative.dev/docs
     ```
 
 2.  **Run on Android:**
-    -   Ensure an Android emulator is running or a physical device is connected and configured for debugging.
-    -   In a new terminal window (in the `mobile-frontend` directory), run:
-        ```bash
-        npm run android
-        # or
-        # yarn android
-        ```
+    - Ensure an Android emulator is running or a physical device is connected and configured for debugging.
+    - In a new terminal window (in the `mobile-frontend` directory), run:
+      ```bash
+      npm run android
+      # or
+      # yarn android
+      ```
 
 3.  **Run on iOS (macOS only):**
-    -   Ensure an iOS simulator is running or a physical device is connected.
-    -   In a new terminal window (in the `mobile-frontend` directory), run:
-        ```bash
-        npm run ios
-        # or
-        # yarn ios
-        ```
+    - Ensure an iOS simulator is running or a physical device is connected.
+    - In a new terminal window (in the `mobile-frontend` directory), run:
+      ```bash
+      npm run ios
+      # or
+      # yarn ios
+      ```
 
 ## Key Libraries Used
 
--   **React Native:** Core framework.
--   **React Navigation:** For routing and navigation.
--   **Axios (or Fetch API):** For making HTTP requests to the backend API.
--   **Ethers.js / Web3.js:** For interacting with Ethereum smart contracts (via `blockchainService.js`).
--   **React Context API / Redux / Zustand:** For state management.
--   **Styled Components / React Native StyleSheet:** For styling.
--   **Jest / React Native Testing Library:** For testing.
+- **React Native:** Core framework.
+- **React Navigation:** For routing and navigation.
+- **Axios (or Fetch API):** For making HTTP requests to the backend API.
+- **Ethers.js / Web3.js:** For interacting with Ethereum smart contracts (via `blockchainService.js`).
+- **React Context API / Redux / Zustand:** For state management.
+- **Styled Components / React Native StyleSheet:** For styling.
+- **Jest / React Native Testing Library:** For testing.
 
 ## Development Notes
 
--   **API Integration:** All backend API calls are managed through `src/services/apiService.js`. Ensure the `API_BASE_URL` is correctly configured.
--   **Blockchain Integration:** Interactions with smart contracts are handled by `src/services/blockchainService.js`. This service will require configuration for the network, contract addresses, and ABIs.
--   **State Management:** Global state (e.g., authentication status, user profile, theme) is managed using React Context API in `src/contexts/`. Consider more robust solutions like Redux or Zustand for larger applications.
--   **Styling:** Consistent styling is maintained using a combination of `StyleSheet` and potentially a theming solution in `src/theme/`.
--   **Error Handling:** Implement comprehensive error handling for API calls, blockchain interactions, and user inputs.
+- **API Integration:** All backend API calls are managed through `src/services/apiService.js`. Ensure the `API_BASE_URL` is correctly configured.
+- **Blockchain Integration:** Interactions with smart contracts are handled by `src/services/blockchainService.js`. This service will require configuration for the network, contract addresses, and ABIs.
+- **State Management:** Global state (e.g., authentication status, user profile, theme) is managed using React Context API in `src/contexts/`. Consider more robust solutions like Redux or Zustand for larger applications.
+- **Styling:** Consistent styling is maintained using a combination of `StyleSheet` and potentially a theming solution in `src/theme/`.
+- **Error Handling:** Implement comprehensive error handling for API calls, blockchain interactions, and user inputs.
 
 ## Testing
 
 Run tests using:
+
 ```bash
 npm test
 # or
 # yarn test
 ```
+
 Test files are located in the `tests/__tests__/` directory.
 
 ## Linting
 
 Run the linter using:
+
 ```bash
 npm run lint
 # or
 # yarn lint
 ```
+
 (Ensure ESLint is configured in `.eslintrc.js`)
 
 ## License

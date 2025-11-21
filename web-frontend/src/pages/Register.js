@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Typography,
   Box,
@@ -8,21 +8,21 @@ import {
   Grid,
   Alert,
   CircularProgress,
-  Avatar
-} from '@mui/material';
-import { useApi } from '../contexts/ApiContext';
-import PersonAddIcon from '@mui/icons-material/PersonAdd';
-import { Link as RouterLink, useNavigate } from 'react-router-dom';
+  Avatar,
+} from "@mui/material";
+import { useApi } from "../contexts/ApiContext";
+import PersonAddIcon from "@mui/icons-material/PersonAdd";
+import { Link as RouterLink, useNavigate } from "react-router-dom";
 
 const Register = () => {
   const navigate = useNavigate();
   const { register, loading, error: apiError } = useApi();
 
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    confirmPassword: ''
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
   });
 
   const [error, setError] = useState(null);
@@ -31,7 +31,7 @@ const Register = () => {
     const { name, value } = e.target;
     setFormData({
       ...formData,
-      [name]: value
+      [name]: value,
     });
   };
 
@@ -41,7 +41,7 @@ const Register = () => {
 
     // Validate passwords match
     if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
+      setError("Passwords do not match");
       return;
     }
 
@@ -49,26 +49,26 @@ const Register = () => {
       await register({
         name: formData.name,
         email: formData.email,
-        password: formData.password
+        password: formData.password,
       });
-      navigate('/dashboard');
+      navigate("/dashboard");
     } catch (err) {
-      setError(err.response?.data?.message || 'Registration failed');
+      setError(err.response?.data?.message || "Registration failed");
     }
   };
 
   return (
     <Box
       sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        maxWidth: '500px',
-        mx: 'auto',
-        mt: 4
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        maxWidth: "500px",
+        mx: "auto",
+        mt: 4,
       }}
     >
-      <Avatar sx={{ m: 1, bgcolor: 'secondary.main' }}>
+      <Avatar sx={{ m: 1, bgcolor: "secondary.main" }}>
         <PersonAddIcon />
       </Avatar>
 
@@ -76,7 +76,7 @@ const Register = () => {
         Sign up
       </Typography>
 
-      <Paper elevation={3} sx={{ p: 4, mt: 3, width: '100%' }}>
+      <Paper elevation={3} sx={{ p: 4, mt: 3, width: "100%" }}>
         {(error || apiError) && (
           <Alert severity="error" sx={{ mb: 3 }}>
             {error || apiError}
@@ -145,12 +145,12 @@ const Register = () => {
             sx={{ mt: 3, mb: 2 }}
             disabled={loading}
           >
-            {loading ? <CircularProgress size={24} /> : 'Sign Up'}
+            {loading ? <CircularProgress size={24} /> : "Sign Up"}
           </Button>
 
           <Grid container justifyContent="flex-end">
             <Grid item>
-              <RouterLink to="/login" style={{ textDecoration: 'none' }}>
+              <RouterLink to="/login" style={{ textDecoration: "none" }}>
                 <Typography variant="body2" color="primary">
                   Already have an account? Sign in
                 </Typography>

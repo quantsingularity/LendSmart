@@ -1,10 +1,17 @@
-import React, { useContext } from 'react';
-import { View, StyleSheet, ScrollView, RefreshControl } from 'react-native';
-import { Text, Card, Button, useTheme, ActivityIndicator, Divider } from 'react-native-paper';
+import React, {useContext} from 'react';
+import {View, StyleSheet, ScrollView, RefreshControl} from 'react-native';
+import {
+  Text,
+  Card,
+  Button,
+  useTheme,
+  ActivityIndicator,
+  Divider,
+} from 'react-native-paper';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import PropTypes from 'prop-types';
 // Removed direct import of spacing, use theme.spacing instead
-import { AuthContext } from '../../../contexts/AuthContext';
+import {AuthContext} from '../../../contexts/AuthContext';
 
 // Placeholder data - In a real app, this would come from context or API
 const loanSummary = {
@@ -15,14 +22,42 @@ const loanSummary = {
 };
 
 const recentActivity = [
-  { id: 1, type: 'Loan Funded', amount: '$1,000', date: '2025-04-25', status: 'Completed', icon: 'cash-check' },
-  { id: 2, type: 'Loan Repayment', amount: '$250', date: '2025-04-20', status: 'Completed', icon: 'cash-refund' },
-  { id: 3, type: 'Loan Application', amount: '$2,000', date: '2025-04-15', status: 'Pending', icon: 'file-document-edit-outline' },
-  { id: 4, type: 'New Listing Viewed', description: 'Viewed loan #LND123', date: '2025-04-28', status: 'Info', icon: 'eye-outline' },
+  {
+    id: 1,
+    type: 'Loan Funded',
+    amount: '$1,000',
+    date: '2025-04-25',
+    status: 'Completed',
+    icon: 'cash-check',
+  },
+  {
+    id: 2,
+    type: 'Loan Repayment',
+    amount: '$250',
+    date: '2025-04-20',
+    status: 'Completed',
+    icon: 'cash-refund',
+  },
+  {
+    id: 3,
+    type: 'Loan Application',
+    amount: '$2,000',
+    date: '2025-04-15',
+    status: 'Pending',
+    icon: 'file-document-edit-outline',
+  },
+  {
+    id: 4,
+    type: 'New Listing Viewed',
+    description: 'Viewed loan #LND123',
+    date: '2025-04-28',
+    status: 'Info',
+    icon: 'eye-outline',
+  },
 ];
 
-const DashboardScreen = ({ navigation }) => {
-  const { user } = useContext(AuthContext);
+const DashboardScreen = ({navigation}) => {
+  const {user} = useContext(AuthContext);
   const theme = useTheme();
   const styles = createStyles(theme);
   const [refreshing, setRefreshing] = React.useState(false);
@@ -43,16 +78,16 @@ const DashboardScreen = ({ navigation }) => {
     );
   }
 
-  const getStatusStyle = (status) => {
+  const getStatusStyle = status => {
     switch (status) {
       case 'Completed':
-        return { color: theme.colors.success, icon: 'check-circle' };
+        return {color: theme.colors.success, icon: 'check-circle'};
       case 'Pending':
-        return { color: theme.colors.warning, icon: 'clock-outline' };
+        return {color: theme.colors.warning, icon: 'clock-outline'};
       case 'Failed':
-        return { color: theme.colors.error, icon: 'alert-circle-outline' };
+        return {color: theme.colors.error, icon: 'alert-circle-outline'};
       default:
-        return { color: theme.colors.textSecondary, icon: 'information-outline' };
+        return {color: theme.colors.textSecondary, icon: 'information-outline'};
     }
   };
 
@@ -60,12 +95,17 @@ const DashboardScreen = ({ navigation }) => {
     <ScrollView
       style={styles.container}
       refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.colors.primary} />
-      }
-    >
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          tintColor={theme.colors.primary}
+        />
+      }>
       {/* Header Section */}
       <View style={styles.header}>
-        <Text style={styles.greeting}>Hello, {user?.name?.split(' ')[0] || 'User'}!</Text>
+        <Text style={styles.greeting}>
+          Hello, {user?.name?.split(' ')[0] || 'User'}!
+        </Text>
         <Text style={styles.subGreeting}>Here's your financial overview</Text>
       </View>
 
@@ -75,23 +115,45 @@ const DashboardScreen = ({ navigation }) => {
           <Text style={styles.cardTitle}>Loan Summary</Text>
           <View style={styles.summaryGrid}>
             <View style={styles.summaryItem}>
-              <MaterialCommunityIcons name="cash-multiple" size={24} color={theme.colors.primary} />
+              <MaterialCommunityIcons
+                name="cash-multiple"
+                size={24}
+                color={theme.colors.primary}
+              />
               <Text style={styles.summaryValue}>{loanSummary.activeLoans}</Text>
               <Text style={styles.summaryLabel}>Active Loans</Text>
             </View>
             <View style={styles.summaryItem}>
-              <MaterialCommunityIcons name="arrow-down-bold-circle-outline" size={24} color={theme.colors.error} />
-              <Text style={styles.summaryValue}>${loanSummary.totalBorrowed.toLocaleString()}</Text>
+              <MaterialCommunityIcons
+                name="arrow-down-bold-circle-outline"
+                size={24}
+                color={theme.colors.error}
+              />
+              <Text style={styles.summaryValue}>
+                ${loanSummary.totalBorrowed.toLocaleString()}
+              </Text>
               <Text style={styles.summaryLabel}>Borrowed</Text>
             </View>
             <View style={styles.summaryItem}>
-              <MaterialCommunityIcons name="arrow-up-bold-circle-outline" size={24} color={theme.colors.success} />
-              <Text style={styles.summaryValue}>${loanSummary.totalLent.toLocaleString()}</Text>
+              <MaterialCommunityIcons
+                name="arrow-up-bold-circle-outline"
+                size={24}
+                color={theme.colors.success}
+              />
+              <Text style={styles.summaryValue}>
+                ${loanSummary.totalLent.toLocaleString()}
+              </Text>
               <Text style={styles.summaryLabel}>Lent</Text>
             </View>
             <View style={styles.summaryItem}>
-              <MaterialCommunityIcons name="star-circle-outline" size={24} color={theme.colors.warning} />
-              <Text style={styles.summaryValue}>{loanSummary.reputation.toFixed(1)}</Text>
+              <MaterialCommunityIcons
+                name="star-circle-outline"
+                size={24}
+                color={theme.colors.warning}
+              />
+              <Text style={styles.summaryValue}>
+                {loanSummary.reputation.toFixed(1)}
+              </Text>
               <Text style={styles.summaryLabel}>Reputation</Text>
             </View>
           </View>
@@ -106,8 +168,7 @@ const DashboardScreen = ({ navigation }) => {
           contentStyle={styles.actionButtonContent}
           labelStyle={styles.actionButtonLabel}
           icon="plus-circle-outline"
-          onPress={() => navigation.navigate('Apply')}
-        >
+          onPress={() => navigation.navigate('Apply')}>
           Apply
         </Button>
         <Button
@@ -116,8 +177,7 @@ const DashboardScreen = ({ navigation }) => {
           contentStyle={styles.actionButtonContent}
           labelStyle={styles.actionButtonLabel}
           icon="storefront-outline"
-          onPress={() => navigation.navigate('Marketplace')}
-        >
+          onPress={() => navigation.navigate('Marketplace')}>
           Market
         </Button>
         {/* Add more actions if needed, e.g., Wallet */}
@@ -134,21 +194,40 @@ const DashboardScreen = ({ navigation }) => {
               <React.Fragment key={activity.id}>
                 <Card style={styles.activityCard} elevation={0}>
                   <Card.Content style={styles.activityCardContent}>
-                    <MaterialCommunityIcons name={activity.icon || statusInfo.icon} size={24} color={statusInfo.color} style={styles.activityIcon} />
+                    <MaterialCommunityIcons
+                      name={activity.icon || statusInfo.icon}
+                      size={24}
+                      color={statusInfo.color}
+                      style={styles.activityIcon}
+                    />
                     <View style={styles.activityDetails}>
                       <Text style={styles.activityType}>{activity.type}</Text>
-                      {activity.description && <Text style={styles.activityDescription}>{activity.description}</Text>}
+                      {activity.description && (
+                        <Text style={styles.activityDescription}>
+                          {activity.description}
+                        </Text>
+                      )}
                       <Text style={styles.activityDate}>{activity.date}</Text>
                     </View>
                     <View style={styles.activityAmountStatus}>
-                      {activity.amount && <Text style={styles.activityAmount}>{activity.amount}</Text>}
-                      <Text style={[styles.activityStatus, { color: statusInfo.color }]}>
+                      {activity.amount && (
+                        <Text style={styles.activityAmount}>
+                          {activity.amount}
+                        </Text>
+                      )}
+                      <Text
+                        style={[
+                          styles.activityStatus,
+                          {color: statusInfo.color},
+                        ]}>
                         {activity.status}
                       </Text>
                     </View>
                   </Card.Content>
                 </Card>
-                {index < recentActivity.length - 1 && <Divider style={styles.divider} />}
+                {index < recentActivity.length - 1 && (
+                  <Divider style={styles.divider} />
+                )}
               </React.Fragment>
             );
           })
@@ -169,158 +248,159 @@ DashboardScreen.propTypes = {
 };
 
 // Updated createStyles using modernized theme
-const createStyles = (theme) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: theme.colors.background,
-  },
-  header: {
-    paddingHorizontal: theme.spacing.xl,
-    paddingTop: theme.spacing.lg, // Adjust top padding as needed
-    paddingBottom: theme.spacing.md,
-  },
-  greeting: {
-    fontSize: theme.fontSizes.h2,
-    fontFamily: theme.fonts.primaryBold,
-    color: theme.colors.textPrimary,
-    marginBottom: theme.spacing.xs,
-  },
-  subGreeting: {
-    fontSize: theme.fontSizes.body1,
-    fontFamily: theme.fonts.primary,
-    color: theme.colors.textSecondary,
-  },
-  summaryCard: {
-    marginHorizontal: theme.spacing.lg,
-    marginTop: theme.spacing.sm,
-    marginBottom: theme.spacing.lg,
-    borderRadius: theme.borderRadius.lg,
-    backgroundColor: theme.colors.surface,
-    elevation: 4,
-  },
-  cardTitle: {
-    fontSize: theme.fontSizes.h5,
-    fontFamily: theme.fonts.primarySemiBold,
-    color: theme.colors.textPrimary,
-    marginBottom: theme.spacing.md,
-  },
-  summaryGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap', // Arrange items in a grid
-    justifyContent: 'space-around',
-  },
-  summaryItem: {
-    alignItems: 'center',
-    width: '45%', // Roughly two items per row
-    marginBottom: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-  },
-  summaryValue: {
-    fontSize: theme.fontSizes.h4,
-    fontFamily: theme.fonts.primaryBold,
-    color: theme.colors.textPrimary,
-    marginTop: theme.spacing.xs,
-  },
-  summaryLabel: {
-    fontSize: theme.fontSizes.caption,
-    fontFamily: theme.fonts.primary,
-    color: theme.colors.textSecondary,
-    marginTop: theme.spacing.xxs,
-  },
-  actionsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around', // Space out buttons
-    paddingHorizontal: theme.spacing.lg,
-    marginBottom: theme.spacing.lg,
-  },
-  actionButton: {
-    flex: 1, // Allow buttons to grow
-    marginHorizontal: theme.spacing.sm,
-    borderRadius: theme.borderRadius.lg,
-    elevation: 2,
-  },
-  actionButtonContent: {
-    paddingVertical: theme.spacing.xs,
-  },
-  actionButtonLabel: {
-    fontFamily: theme.fonts.primaryMedium,
-    fontSize: theme.fontSizes.body2,
-  },
-  recentActivityContainer: {
-    paddingHorizontal: theme.spacing.lg,
-    marginBottom: theme.spacing.xl,
-  },
-  sectionTitle: {
-    fontSize: theme.fontSizes.h5,
-    fontFamily: theme.fonts.primarySemiBold,
-    color: theme.colors.textPrimary,
-    marginBottom: theme.spacing.md,
-  },
-  activityCard: {
-    backgroundColor: theme.colors.surface, // Use surface color for cards
-    borderRadius: theme.borderRadius.md,
-    // Removed margin bottom, using divider instead
-  },
-  activityCardContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: theme.spacing.md,
-    paddingHorizontal: theme.spacing.md,
-  },
-  activityIcon: {
-    marginRight: theme.spacing.md,
-  },
-  activityDetails: {
-    flex: 1,
-  },
-  activityType: {
-    fontSize: theme.fontSizes.body1,
-    fontFamily: theme.fonts.primaryMedium,
-    color: theme.colors.textPrimary,
-  },
-  activityDescription: {
-    fontSize: theme.fontSizes.caption,
-    fontFamily: theme.fonts.primary,
-    color: theme.colors.textSecondary,
-    marginTop: theme.spacing.xxs,
-  },
-  activityDate: {
-    fontSize: theme.fontSizes.caption,
-    fontFamily: theme.fonts.primary,
-    color: theme.colors.textSecondary,
-    marginTop: theme.spacing.xs,
-  },
-  activityAmountStatus: {
-    alignItems: 'flex-end',
-  },
-  activityAmount: {
-    fontSize: theme.fontSizes.body1,
-    fontFamily: theme.fonts.primarySemiBold,
-    color: theme.colors.textPrimary,
-    marginBottom: theme.spacing.xs,
-  },
-  activityStatus: {
-    fontSize: theme.fontSizes.caption,
-    fontFamily: theme.fonts.primaryMedium,
-    // Color is set dynamically
-  },
-  divider: {
-    // Divider between activity items, no extra margin needed
-    backgroundColor: theme.colors.border,
-  },
-  noActivityText: {
-    textAlign: 'center',
-    color: theme.colors.textSecondary,
-    marginTop: theme.spacing.lg,
-    fontFamily: theme.fonts.primary,
-    fontSize: theme.fontSizes.body1,
-  },
-});
+const createStyles = theme =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+    },
+    loadingContainer: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: theme.colors.background,
+    },
+    header: {
+      paddingHorizontal: theme.spacing.xl,
+      paddingTop: theme.spacing.lg, // Adjust top padding as needed
+      paddingBottom: theme.spacing.md,
+    },
+    greeting: {
+      fontSize: theme.fontSizes.h2,
+      fontFamily: theme.fonts.primaryBold,
+      color: theme.colors.textPrimary,
+      marginBottom: theme.spacing.xs,
+    },
+    subGreeting: {
+      fontSize: theme.fontSizes.body1,
+      fontFamily: theme.fonts.primary,
+      color: theme.colors.textSecondary,
+    },
+    summaryCard: {
+      marginHorizontal: theme.spacing.lg,
+      marginTop: theme.spacing.sm,
+      marginBottom: theme.spacing.lg,
+      borderRadius: theme.borderRadius.lg,
+      backgroundColor: theme.colors.surface,
+      elevation: 4,
+    },
+    cardTitle: {
+      fontSize: theme.fontSizes.h5,
+      fontFamily: theme.fonts.primarySemiBold,
+      color: theme.colors.textPrimary,
+      marginBottom: theme.spacing.md,
+    },
+    summaryGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap', // Arrange items in a grid
+      justifyContent: 'space-around',
+    },
+    summaryItem: {
+      alignItems: 'center',
+      width: '45%', // Roughly two items per row
+      marginBottom: theme.spacing.md,
+      paddingVertical: theme.spacing.sm,
+    },
+    summaryValue: {
+      fontSize: theme.fontSizes.h4,
+      fontFamily: theme.fonts.primaryBold,
+      color: theme.colors.textPrimary,
+      marginTop: theme.spacing.xs,
+    },
+    summaryLabel: {
+      fontSize: theme.fontSizes.caption,
+      fontFamily: theme.fonts.primary,
+      color: theme.colors.textSecondary,
+      marginTop: theme.spacing.xxs,
+    },
+    actionsContainer: {
+      flexDirection: 'row',
+      justifyContent: 'space-around', // Space out buttons
+      paddingHorizontal: theme.spacing.lg,
+      marginBottom: theme.spacing.lg,
+    },
+    actionButton: {
+      flex: 1, // Allow buttons to grow
+      marginHorizontal: theme.spacing.sm,
+      borderRadius: theme.borderRadius.lg,
+      elevation: 2,
+    },
+    actionButtonContent: {
+      paddingVertical: theme.spacing.xs,
+    },
+    actionButtonLabel: {
+      fontFamily: theme.fonts.primaryMedium,
+      fontSize: theme.fontSizes.body2,
+    },
+    recentActivityContainer: {
+      paddingHorizontal: theme.spacing.lg,
+      marginBottom: theme.spacing.xl,
+    },
+    sectionTitle: {
+      fontSize: theme.fontSizes.h5,
+      fontFamily: theme.fonts.primarySemiBold,
+      color: theme.colors.textPrimary,
+      marginBottom: theme.spacing.md,
+    },
+    activityCard: {
+      backgroundColor: theme.colors.surface, // Use surface color for cards
+      borderRadius: theme.borderRadius.md,
+      // Removed margin bottom, using divider instead
+    },
+    activityCardContent: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: theme.spacing.md,
+      paddingHorizontal: theme.spacing.md,
+    },
+    activityIcon: {
+      marginRight: theme.spacing.md,
+    },
+    activityDetails: {
+      flex: 1,
+    },
+    activityType: {
+      fontSize: theme.fontSizes.body1,
+      fontFamily: theme.fonts.primaryMedium,
+      color: theme.colors.textPrimary,
+    },
+    activityDescription: {
+      fontSize: theme.fontSizes.caption,
+      fontFamily: theme.fonts.primary,
+      color: theme.colors.textSecondary,
+      marginTop: theme.spacing.xxs,
+    },
+    activityDate: {
+      fontSize: theme.fontSizes.caption,
+      fontFamily: theme.fonts.primary,
+      color: theme.colors.textSecondary,
+      marginTop: theme.spacing.xs,
+    },
+    activityAmountStatus: {
+      alignItems: 'flex-end',
+    },
+    activityAmount: {
+      fontSize: theme.fontSizes.body1,
+      fontFamily: theme.fonts.primarySemiBold,
+      color: theme.colors.textPrimary,
+      marginBottom: theme.spacing.xs,
+    },
+    activityStatus: {
+      fontSize: theme.fontSizes.caption,
+      fontFamily: theme.fonts.primaryMedium,
+      // Color is set dynamically
+    },
+    divider: {
+      // Divider between activity items, no extra margin needed
+      backgroundColor: theme.colors.border,
+    },
+    noActivityText: {
+      textAlign: 'center',
+      color: theme.colors.textSecondary,
+      marginTop: theme.spacing.lg,
+      fontFamily: theme.fonts.primary,
+      fontSize: theme.fontSizes.body1,
+    },
+  });
 
 export default DashboardScreen;

@@ -16,7 +16,7 @@ const users = [
     role: "admin",
     firstName: "Admin",
     lastName: "User",
-    walletAddress: "0xAdminWalletAddress001"
+    walletAddress: "0xAdminWalletAddress001",
   },
   {
     username: "borrower1",
@@ -25,7 +25,7 @@ const users = [
     role: "borrower",
     firstName: "John",
     lastName: "Doe",
-    walletAddress: "0xBorrowerWalletAddress001"
+    walletAddress: "0xBorrowerWalletAddress001",
   },
   {
     username: "lender1",
@@ -34,12 +34,12 @@ const users = [
     role: "lender",
     firstName: "Jane",
     lastName: "Smith",
-    walletAddress: "0xLenderWalletAddress001"
+    walletAddress: "0xLenderWalletAddress001",
   },
 ];
 
 const loans = (
-  userRefs // This will be an object like { adminUserId: "mongoId", borrower1Id: "mongoId", ... }
+  userRefs, // This will be an object like { adminUserId: "mongoId", borrower1Id: "mongoId", ... }
 ) => [
   {
     borrower: userRefs.borrower1Id,
@@ -82,24 +82,28 @@ const importData = async () => {
     console.log("Old data cleared...");
 
     // Create users and get their IDs
-    const createdUsers = await User.insertMany(users.map(user => {
+    const createdUsers = await User.insertMany(
+      users.map((user) => {
         // Note: Password hashing is handled by the pre-save hook in UserModel
         // If not using insertMany or if hook doesn't run, hash here or save individually.
         // For insertMany, hooks are NOT executed by default. So we need to save them one by one or hash passwords before.
         return user; // For now, assuming we might need to adjust this if hooks don't run with insertMany
-    }));
+      }),
+    );
 
     // Let's save users one by one to ensure hooks run
     await User.deleteMany(); // Clear again before individual save
     const userRefs = {};
     const savedUsers = [];
     for (const userData of users) {
-        const user = new User(userData);
-        const savedUser = await user.save();
-        savedUsers.push(savedUser);
-        if (userData.username === "adminUser") userRefs.adminUserId = savedUser._id;
-        if (userData.username === "borrower1") userRefs.borrower1Id = savedUser._id;
-        if (userData.username === "lender1") userRefs.lender1Id = savedUser._id;
+      const user = new User(userData);
+      const savedUser = await user.save();
+      savedUsers.push(savedUser);
+      if (userData.username === "adminUser")
+        userRefs.adminUserId = savedUser._id;
+      if (userData.username === "borrower1")
+        userRefs.borrower1Id = savedUser._id;
+      if (userData.username === "lender1") userRefs.lender1Id = savedUser._id;
     }
     console.log(`${savedUsers.length} Users Imported...`);
 

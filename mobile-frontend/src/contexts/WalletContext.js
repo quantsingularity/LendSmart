@@ -1,8 +1,14 @@
-import React, { createContext, useState, useMemo, useCallback, useContext } from 'react';
+import React, {
+  createContext,
+  useState,
+  useMemo,
+  useCallback,
+  useContext,
+} from 'react';
 import PropTypes from 'prop-types';
-import { useWalletConnectModal } from '@walletconnect/modal-react-native';
-import { Alert } from 'react-native';
-import { ethers } from 'ethers'; // For provider wrapping
+import {useWalletConnectModal} from '@walletconnect/modal-react-native';
+import {Alert} from 'react-native';
+import {ethers} from 'ethers'; // For provider wrapping
 
 export const WalletContext = createContext({
   isConnected: false,
@@ -13,8 +19,8 @@ export const WalletContext = createContext({
   disconnectWallet: () => {},
 });
 
-export const WalletProvider = ({ children }) => {
-  const { open, isConnected, address, provider } = useWalletConnectModal();
+export const WalletProvider = ({children}) => {
+  const {open, isConnected, address, provider} = useWalletConnectModal();
   const [ethersProvider, setEthersProvider] = useState(null);
 
   // Wrap the WalletConnect provider with ethers.js when connected
@@ -23,7 +29,7 @@ export const WalletProvider = ({ children }) => {
       // Wrap the WalletConnect provider with ethers.js BrowserProvider
       const web3Provider = new ethers.BrowserProvider(provider);
       setEthersProvider(web3Provider);
-      console.log("Ethers provider set up for address:", address);
+      console.log('Ethers provider set up for address:', address);
     } else {
       setEthersProvider(null);
     }
@@ -36,7 +42,10 @@ export const WalletProvider = ({ children }) => {
       }
     } catch (error) {
       console.error('Failed to connect wallet:', error);
-      Alert.alert('Connection Error', 'Could not connect wallet. Please try again.');
+      Alert.alert(
+        'Connection Error',
+        'Could not connect wallet. Please try again.',
+      );
     }
   }, [isConnected, open]);
 
@@ -52,14 +61,24 @@ export const WalletProvider = ({ children }) => {
     }
   }, [isConnected, provider]);
 
-  const walletContextValue = useMemo(() => ({
-    isConnected,
-    address,
-    provider, // Raw WalletConnect provider
-    ethersProvider, // Ethers.js provider
-    connectWallet,
-    disconnectWallet,
-  }), [isConnected, address, provider, ethersProvider, connectWallet, disconnectWallet]);
+  const walletContextValue = useMemo(
+    () => ({
+      isConnected,
+      address,
+      provider, // Raw WalletConnect provider
+      ethersProvider, // Ethers.js provider
+      connectWallet,
+      disconnectWallet,
+    }),
+    [
+      isConnected,
+      address,
+      provider,
+      ethersProvider,
+      connectWallet,
+      disconnectWallet,
+    ],
+  );
 
   return (
     <WalletContext.Provider value={walletContextValue}>

@@ -1,10 +1,10 @@
-const crypto = require('crypto');
-const { getEncryptionService } = require('../config/security/encryption');
-const { getAuditLogger } = require('./auditLogger');
-const User = require('../models/UserModel');
-const Loan = require('../models/LoanModel');
-const redisClient = require('../config/redis');
-const logger = require('../utils/logger');
+const crypto = require("crypto");
+const { getEncryptionService } = require("../config/security/encryption");
+const { getAuditLogger } = require("./auditLogger");
+const User = require("../models/UserModel");
+const Loan = require("../models/LoanModel");
+const redisClient = require("../config/redis");
+const logger = require("../utils/logger");
 
 /**
  * GDPR Compliance Module
@@ -25,30 +25,30 @@ class GDPRCompliance {
   setupRetentionPolicies() {
     return {
       user_profile: {
-        retention_period: '7_years', // Financial regulation requirement
+        retention_period: "7_years", // Financial regulation requirement
         auto_delete: false, // Manual review required
-        anonymize_after: '2_years'
+        anonymize_after: "2_years",
       },
       financial_data: {
-        retention_period: '7_years',
+        retention_period: "7_years",
         auto_delete: false,
-        anonymize_after: null // Never anonymize financial data
+        anonymize_after: null, // Never anonymize financial data
       },
       marketing_data: {
-        retention_period: '2_years',
+        retention_period: "2_years",
         auto_delete: true,
-        anonymize_after: '1_year'
+        anonymize_after: "1_year",
       },
       session_data: {
-        retention_period: '30_days',
+        retention_period: "30_days",
         auto_delete: true,
-        anonymize_after: null
+        anonymize_after: null,
       },
       audit_logs: {
-        retention_period: '7_years',
+        retention_period: "7_years",
         auto_delete: false,
-        anonymize_after: null
-      }
+        anonymize_after: null,
+      },
     };
   }
 
@@ -59,35 +59,36 @@ class GDPRCompliance {
   setupConsentTypes() {
     return {
       essential: {
-        name: 'Essential Services',
-        description: 'Required for basic platform functionality',
+        name: "Essential Services",
+        description: "Required for basic platform functionality",
         required: true,
-        withdrawable: false
+        withdrawable: false,
       },
       financial_services: {
-        name: 'Financial Services',
-        description: 'Processing loans and financial transactions',
+        name: "Financial Services",
+        description: "Processing loans and financial transactions",
         required: true,
-        withdrawable: false
+        withdrawable: false,
       },
       marketing: {
-        name: 'Marketing Communications',
-        description: 'Promotional emails and product updates',
+        name: "Marketing Communications",
+        description: "Promotional emails and product updates",
         required: false,
-        withdrawable: true
+        withdrawable: true,
       },
       analytics: {
-        name: 'Analytics and Insights',
-        description: 'Platform improvement and user experience analytics',
+        name: "Analytics and Insights",
+        description: "Platform improvement and user experience analytics",
         required: false,
-        withdrawable: true
+        withdrawable: true,
       },
       third_party_sharing: {
-        name: 'Third Party Data Sharing',
-        description: 'Sharing data with credit bureaus and verification services',
+        name: "Third Party Data Sharing",
+        description:
+          "Sharing data with credit bureaus and verification services",
         required: false,
-        withdrawable: true
-      }
+        withdrawable: true,
+      },
     };
   }
 
@@ -108,13 +109,13 @@ class GDPRCompliance {
         ip,
         userAgent,
         consentId: crypto.randomUUID(),
-        version: '1.0' // Consent form version
+        version: "1.0", // Consent form version
       };
 
       // Store consent record in Redis with encryption
       const encryptedRecord = await this.encryptionService.encrypt(
         JSON.stringify(consentRecord),
-        'consent_record'
+        "consent_record",
       );
 
       const consentKey = `consent:${userId}:${consentRecord.consentId}`;
@@ -122,35 +123,39 @@ class GDPRCompliance {
 
       // Store current consent status
       const currentConsentKey = `current_consent:${userId}`;
-      await redisClient.setex(currentConsentKey, 86400 * 365 * 7, JSON.stringify(consents));
+      await redisClient.setex(
+        currentConsentKey,
+        86400 * 365 * 7,
+        JSON.stringify(consents),
+      );
 
       // Audit log
       await this.auditLogger.logDataAccess({
-        action: 'consent_recorded',
+        action: "consent_recorded",
         userId,
         consents,
         ip,
         userAgent,
-        consentId: consentRecord.consentId
+        consentId: consentRecord.consentId,
       });
 
-      logger.info('User consent recorded', {
+      logger.info("User consent recorded", {
         userId,
         consentId: consentRecord.consentId,
-        consents: Object.keys(consents)
+        consents: Object.keys(consents),
       });
 
       return {
         success: true,
         consentId: consentRecord.consentId,
-        timestamp: consentRecord.timestamp
+        timestamp: consentRecord.timestamp,
       };
     } catch (error) {
-      logger.error('Failed to record consent', {
+      logger.error("Failed to record consent", {
         error: error.message,
-        userId
+        userId,
       });
-      throw new Error('Failed to record consent');
+      throw new Error("Failed to record consent");
     }
   }
 
@@ -168,7 +173,7 @@ class GDPRCompliance {
         return {
           hasConsent: false,
           consents: {},
-          lastUpdated: null
+          lastUpdated: null,
         };
       }
 
@@ -178,14 +183,14 @@ class GDPRCompliance {
         hasConsent: true,
         consents,
         consentTypes: this.consentTypes,
-        lastUpdated: consents.timestamp || null
+        lastUpdated: consents.timestamp || null,
       };
     } catch (error) {
-      logger.error('Failed to get consent status', {
+      logger.error("Failed to get consent status", {
         error: error.message,
-        userId
+        userId,
       });
-      throw new Error('Failed to retrieve consent status');
+      throw new Error("Failed to retrieve consent status");
     }
   }
 
@@ -203,13 +208,18 @@ class GDPRCompliance {
       const currentConsent = await this.getConsentStatus(userId);
 
       // Record new consent
-      const result = await this.recordConsent(userId, newConsents, ip, userAgent);
+      const result = await this.recordConsent(
+        userId,
+        newConsents,
+        ip,
+        userAgent,
+      );
 
       // Check for withdrawn consents and trigger data handling
       if (currentConsent.hasConsent) {
         const withdrawnConsents = this.findWithdrawnConsents(
           currentConsent.consents,
-          newConsents
+          newConsents,
         );
 
         if (withdrawnConsents.length > 0) {
@@ -219,11 +229,11 @@ class GDPRCompliance {
 
       return result;
     } catch (error) {
-      logger.error('Failed to update consent', {
+      logger.error("Failed to update consent", {
         error: error.message,
-        userId
+        userId,
       });
-      throw new Error('Failed to update consent');
+      throw new Error("Failed to update consent");
     }
   }
 
@@ -255,13 +265,13 @@ class GDPRCompliance {
     try {
       for (const consentType of withdrawnConsents) {
         switch (consentType) {
-          case 'marketing':
+          case "marketing":
             await this.removeMarketingData(userId);
             break;
-          case 'analytics':
+          case "analytics":
             await this.anonymizeAnalyticsData(userId);
             break;
-          case 'third_party_sharing':
+          case "third_party_sharing":
             await this.revokeThirdPartyAccess(userId);
             break;
         }
@@ -269,21 +279,21 @@ class GDPRCompliance {
 
       // Audit log
       await this.auditLogger.logDataAccess({
-        action: 'consent_withdrawn',
+        action: "consent_withdrawn",
         userId,
         withdrawnConsents,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
 
-      logger.info('Consent withdrawal processed', {
+      logger.info("Consent withdrawal processed", {
         userId,
-        withdrawnConsents
+        withdrawnConsents,
       });
     } catch (error) {
-      logger.error('Failed to handle consent withdrawal', {
+      logger.error("Failed to handle consent withdrawal", {
         error: error.message,
         userId,
-        withdrawnConsents
+        withdrawnConsents,
       });
     }
   }
@@ -294,12 +304,12 @@ class GDPRCompliance {
    * @param {string} format - Export format (json, csv, xml)
    * @returns {Object} Exported data
    */
-  async exportUserData(userId, format = 'json') {
+  async exportUserData(userId, format = "json") {
     try {
       // Verify user consent for data export
       const consentStatus = await this.getConsentStatus(userId);
       if (!consentStatus.hasConsent) {
-        throw new Error('User consent required for data export');
+        throw new Error("User consent required for data export");
       }
 
       // Collect user data from various sources
@@ -318,28 +328,32 @@ class GDPRCompliance {
         format,
         timestamp: new Date().toISOString(),
         dataTypes: Object.keys(userData),
-        recordCount: this.countRecords(userData)
+        recordCount: this.countRecords(userData),
       };
 
       // Store export record
       const exportKey = `data_export:${userId}:${exportRecord.exportId}`;
-      await redisClient.setex(exportKey, 86400 * 30, JSON.stringify(exportRecord)); // 30 days
+      await redisClient.setex(
+        exportKey,
+        86400 * 30,
+        JSON.stringify(exportRecord),
+      ); // 30 days
 
       // Audit log
       await this.auditLogger.logDataAccess({
-        action: 'data_exported',
+        action: "data_exported",
         userId,
         exportId: exportRecord.exportId,
         format,
         dataTypes: exportRecord.dataTypes,
-        recordCount: exportRecord.recordCount
+        recordCount: exportRecord.recordCount,
       });
 
-      logger.info('User data exported', {
+      logger.info("User data exported", {
         userId,
         exportId: exportRecord.exportId,
         format,
-        recordCount: exportRecord.recordCount
+        recordCount: exportRecord.recordCount,
       });
 
       return {
@@ -349,16 +363,16 @@ class GDPRCompliance {
         metadata: {
           exportedAt: exportRecord.timestamp,
           format,
-          recordCount: exportRecord.recordCount
-        }
+          recordCount: exportRecord.recordCount,
+        },
       };
     } catch (error) {
-      logger.error('Failed to export user data', {
+      logger.error("Failed to export user data", {
         error: error.message,
         userId,
-        format
+        format,
       });
-      throw new Error('Failed to export user data');
+      throw new Error("Failed to export user data");
     }
   }
 
@@ -373,17 +387,17 @@ class GDPRCompliance {
       const {
         deleteFinancialData = false,
         anonymizeInstead = true,
-        reason = 'user_request'
+        reason = "user_request",
       } = options;
 
       // Check if user has active loans
       const activeLoans = await Loan.find({
         $or: [{ borrower: userId }, { lender: userId }],
-        status: { $in: ['active', 'funded', 'pending_approval'] }
+        status: { $in: ["active", "funded", "pending_approval"] },
       });
 
       if (activeLoans.length > 0 && deleteFinancialData) {
-        throw new Error('Cannot delete data while user has active loans');
+        throw new Error("Cannot delete data while user has active loans");
       }
 
       const deletionRecord = {
@@ -393,36 +407,43 @@ class GDPRCompliance {
         reason,
         deleteFinancialData,
         anonymizeInstead,
-        deletedData: {}
+        deletedData: {},
       };
 
       // Delete or anonymize different data types
       if (anonymizeInstead) {
         deletionRecord.deletedData = await this.anonymizeUserData(userId);
       } else {
-        deletionRecord.deletedData = await this.hardDeleteUserData(userId, deleteFinancialData);
+        deletionRecord.deletedData = await this.hardDeleteUserData(
+          userId,
+          deleteFinancialData,
+        );
       }
 
       // Store deletion record
       const deletionKey = `data_deletion:${userId}:${deletionRecord.deletionId}`;
-      await redisClient.setex(deletionKey, 86400 * 365 * 7, JSON.stringify(deletionRecord)); // 7 years
+      await redisClient.setex(
+        deletionKey,
+        86400 * 365 * 7,
+        JSON.stringify(deletionRecord),
+      ); // 7 years
 
       // Audit log
       await this.auditLogger.logDataAccess({
-        action: 'data_deleted',
+        action: "data_deleted",
         userId,
         deletionId: deletionRecord.deletionId,
         reason,
         deleteFinancialData,
         anonymizeInstead,
-        deletedDataTypes: Object.keys(deletionRecord.deletedData)
+        deletedDataTypes: Object.keys(deletionRecord.deletedData),
       });
 
-      logger.info('User data deletion completed', {
+      logger.info("User data deletion completed", {
         userId,
         deletionId: deletionRecord.deletionId,
         anonymizeInstead,
-        deletedDataTypes: Object.keys(deletionRecord.deletedData)
+        deletedDataTypes: Object.keys(deletionRecord.deletedData),
       });
 
       return {
@@ -430,14 +451,14 @@ class GDPRCompliance {
         deletionId: deletionRecord.deletionId,
         deletedAt: deletionRecord.timestamp,
         anonymized: anonymizeInstead,
-        deletedDataTypes: Object.keys(deletionRecord.deletedData)
+        deletedDataTypes: Object.keys(deletionRecord.deletedData),
       };
     } catch (error) {
-      logger.error('Failed to delete user data', {
+      logger.error("Failed to delete user data", {
         error: error.message,
-        userId
+        userId,
       });
-      throw new Error('Failed to delete user data');
+      throw new Error("Failed to delete user data");
     }
   }
 
@@ -457,9 +478,9 @@ class GDPRCompliance {
 
     // Loan data
     const loans = await Loan.find({
-      $or: [{ borrower: userId }, { lender: userId }]
+      $or: [{ borrower: userId }, { lender: userId }],
     });
-    userData.loans = loans.map(loan => loan.toObject());
+    userData.loans = loans.map((loan) => loan.toObject());
 
     // Consent records
     const consentKeys = await redisClient.keys(`consent:${userId}:*`);
@@ -470,7 +491,7 @@ class GDPRCompliance {
         try {
           const decryptedConsent = await this.encryptionService.decrypt(
             encryptedConsent,
-            'consent_record'
+            "consent_record",
           );
           userData.consents.push(JSON.parse(decryptedConsent));
         } catch (error) {
@@ -502,10 +523,10 @@ class GDPRCompliance {
 
     // Decrypt user profile fields
     if (decrypted.profile) {
-      const encryptedFields = ['email', 'firstName', 'lastName', 'phoneNumber'];
+      const encryptedFields = ["email", "firstName", "lastName", "phoneNumber"];
       decrypted.profile = await this.encryptionService.decryptFields(
         decrypted.profile,
-        encryptedFields
+        encryptedFields,
       );
     }
 
@@ -520,11 +541,11 @@ class GDPRCompliance {
    */
   async formatExportData(data, format) {
     switch (format.toLowerCase()) {
-      case 'json':
+      case "json":
         return JSON.stringify(data, null, 2);
-      case 'csv':
+      case "csv":
         return this.convertToCSV(data);
-      case 'xml':
+      case "xml":
         return this.convertToXML(data);
       default:
         return data;
@@ -547,23 +568,23 @@ class GDPRCompliance {
       if (Array.isArray(sectionData)) {
         if (sectionData.length > 0) {
           const headers = Object.keys(sectionData[0]);
-          csvLines.push(headers.join(','));
+          csvLines.push(headers.join(","));
 
           for (const item of sectionData) {
-            const values = headers.map(header =>
-              JSON.stringify(item[header] || '')
+            const values = headers.map((header) =>
+              JSON.stringify(item[header] || ""),
             );
-            csvLines.push(values.join(','));
+            csvLines.push(values.join(","));
           }
         }
-      } else if (typeof sectionData === 'object') {
+      } else if (typeof sectionData === "object") {
         for (const [key, value] of Object.entries(sectionData)) {
           csvLines.push(`${key},${JSON.stringify(value)}`);
         }
       }
     }
 
-    return csvLines.join('\n');
+    return csvLines.join("\n");
   }
 
   /**
@@ -581,7 +602,7 @@ class GDPRCompliance {
       xml += `  </${section}>\n`;
     }
 
-    xml += '</userData>';
+    xml += "</userData>";
     return xml;
   }
 
@@ -592,8 +613,8 @@ class GDPRCompliance {
    * @returns {string} XML string
    */
   objectToXML(obj, indent = 0) {
-    const spaces = ' '.repeat(indent);
-    let xml = '';
+    const spaces = " ".repeat(indent);
+    let xml = "";
 
     if (Array.isArray(obj)) {
       for (const item of obj) {
@@ -601,11 +622,11 @@ class GDPRCompliance {
         xml += this.objectToXML(item, indent + 2);
         xml += `${spaces}</item>\n`;
       }
-    } else if (typeof obj === 'object' && obj !== null) {
+    } else if (typeof obj === "object" && obj !== null) {
       for (const [key, value] of Object.entries(obj)) {
         xml += `${spaces}<${key}>`;
-        if (typeof value === 'object') {
-          xml += '\n';
+        if (typeof value === "object") {
+          xml += "\n";
           xml += this.objectToXML(value, indent + 2);
           xml += `${spaces}`;
         } else {
@@ -627,11 +648,11 @@ class GDPRCompliance {
    */
   escapeXML(str) {
     return str
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#39;');
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
   }
 
   /**
@@ -645,7 +666,7 @@ class GDPRCompliance {
     for (const [key, value] of Object.entries(userData)) {
       if (Array.isArray(value)) {
         count += value.length;
-      } else if (typeof value === 'object' && value !== null) {
+      } else if (typeof value === "object" && value !== null) {
         count += 1;
       }
     }
@@ -664,9 +685,9 @@ class GDPRCompliance {
     // Anonymize user profile
     const user = await User.findById(userId);
     if (user) {
-      user.email = `anonymized_${crypto.randomBytes(8).toString('hex')}@example.com`;
-      user.firstName = 'Anonymized';
-      user.lastName = 'User';
+      user.email = `anonymized_${crypto.randomBytes(8).toString("hex")}@example.com`;
+      user.firstName = "Anonymized";
+      user.lastName = "User";
       user.phoneNumber = null;
       user.address = null;
       user.dateOfBirth = null;
@@ -708,8 +729,8 @@ class GDPRCompliance {
       const deletedLoans = await Loan.deleteMany({
         $or: [
           { borrower: userId, lender: null },
-          { lender: userId, borrower: null }
-        ]
+          { lender: userId, borrower: null },
+        ],
       });
       deleted.loans = deletedLoans.deletedCount;
     } else {
@@ -734,7 +755,7 @@ class GDPRCompliance {
   async removeMarketingData(userId) {
     // Remove from marketing lists, email subscriptions, etc.
     // Implementation would integrate with marketing systems
-    logger.info('Marketing data removed', { userId });
+    logger.info("Marketing data removed", { userId });
   }
 
   /**
@@ -744,7 +765,7 @@ class GDPRCompliance {
   async anonymizeAnalyticsData(userId) {
     // Anonymize user in analytics systems
     // Implementation would integrate with analytics platforms
-    logger.info('Analytics data anonymized', { userId });
+    logger.info("Analytics data anonymized", { userId });
   }
 
   /**
@@ -754,7 +775,7 @@ class GDPRCompliance {
   async revokeThirdPartyAccess(userId) {
     // Revoke access tokens, notify third parties, etc.
     // Implementation would integrate with third-party systems
-    logger.info('Third-party access revoked', { userId });
+    logger.info("Third-party access revoked", { userId });
   }
 }
 
@@ -774,5 +795,5 @@ function getGDPRCompliance() {
 
 module.exports = {
   GDPRCompliance,
-  getGDPRCompliance
+  getGDPRCompliance,
 };

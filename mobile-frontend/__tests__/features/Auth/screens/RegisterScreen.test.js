@@ -1,13 +1,13 @@
 import React from 'react';
-import { render, fireEvent, waitFor, act } from '@testing-library/react-native';
-import { PaperProvider } from 'react-native-paper';
-import { AuthContext } from '../../../../../contexts/AuthContext';
+import {render, fireEvent, waitFor, act} from '@testing-library/react-native';
+import {PaperProvider} from 'react-native-paper';
+import {AuthContext} from '../../../../../contexts/AuthContext';
 import RegisterScreen from '../RegisterScreen';
-import { Alert } from 'react-native';
+import {Alert} from 'react-native';
 
 // Mock navigation
 const mockNavigate = jest.fn();
-const mockNavigation = { navigate: mockNavigate };
+const mockNavigation = {navigate: mockNavigate};
 
 // Mock AuthContext
 const mockRegister = jest.fn();
@@ -29,7 +29,7 @@ const mockAuthContextValue = {
 jest.spyOn(Alert, 'alert');
 
 // Custom wrapper to provide necessary contexts and theme
-const AllTheProviders = ({ children }) => (
+const AllTheProviders = ({children}) => (
   <AuthContext.Provider value={mockAuthContextValue}>
     <PaperProvider>{children}</PaperProvider>
   </AuthContext.Provider>
@@ -48,9 +48,9 @@ describe('RegisterScreen', () => {
   });
 
   it('renders correctly with all form elements', () => {
-    const { getByText, getByLabelText } = render(
+    const {getByText, getByLabelText} = render(
       <RegisterScreen navigation={mockNavigation} />,
-      { wrapper: AllTheProviders }
+      {wrapper: AllTheProviders},
     );
 
     expect(getByText('Create Account')).toBeTruthy();
@@ -64,9 +64,9 @@ describe('RegisterScreen', () => {
   });
 
   it('allows typing in form fields', () => {
-    const { getByLabelText } = render(
+    const {getByLabelText} = render(
       <RegisterScreen navigation={mockNavigation} />,
-      { wrapper: AllTheProviders }
+      {wrapper: AllTheProviders},
     );
 
     fireEvent.changeText(getByLabelText('Full Name'), 'Test User');
@@ -81,9 +81,9 @@ describe('RegisterScreen', () => {
   });
 
   it('shows validation errors for invalid input', async () => {
-    const { getByText, getByLabelText } = render(
+    const {getByText, getByLabelText} = render(
       <RegisterScreen navigation={mockNavigation} />,
-      { wrapper: AllTheProviders }
+      {wrapper: AllTheProviders},
     );
     const registerButton = getByText('Register');
 
@@ -104,25 +104,34 @@ describe('RegisterScreen', () => {
     // Test with short password
     fireEvent.changeText(getByLabelText('Password'), 'short');
     fireEvent.press(registerButton);
-    await waitFor(() => expect(getByText('Password must be at least 8 characters')).toBeTruthy());
+    await waitFor(() =>
+      expect(getByText('Password must be at least 8 characters')).toBeTruthy(),
+    );
 
     // Test password complexity (missing uppercase)
     fireEvent.changeText(getByLabelText('Password'), 'password123');
     fireEvent.press(registerButton);
-    await waitFor(() => expect(getByText('Password must contain at least one uppercase letter')).toBeTruthy());
+    await waitFor(() =>
+      expect(
+        getByText('Password must contain at least one uppercase letter'),
+      ).toBeTruthy(),
+    );
 
     // Test password mismatch
     fireEvent.changeText(getByLabelText('Password'), 'Password123');
-    fireEvent.changeText(getByLabelText('Confirm Password'), 'PasswordMismatch');
+    fireEvent.changeText(
+      getByLabelText('Confirm Password'),
+      'PasswordMismatch',
+    );
     fireEvent.press(registerButton);
     await waitFor(() => expect(getByText('Passwords must match')).toBeTruthy());
   });
 
   it('calls register function from AuthContext on valid submission and shows success alert', async () => {
-    mockRegister.mockResolvedValueOnce({ success: true }); // Assume register resolves successfully
-    const { getByText, getByLabelText } = render(
+    mockRegister.mockResolvedValueOnce({success: true}); // Assume register resolves successfully
+    const {getByText, getByLabelText} = render(
       <RegisterScreen navigation={mockNavigation} />,
-      { wrapper: AllTheProviders }
+      {wrapper: AllTheProviders},
     );
 
     fireEvent.changeText(getByLabelText('Full Name'), 'Test User');
@@ -136,29 +145,28 @@ describe('RegisterScreen', () => {
       expect(mockRegister).toHaveBeenCalledWith({
         name: 'Test User',
         email: 'test@example.com',
-        password: 'Password123'
+        password: 'Password123',
       });
       expect(Alert.alert).toHaveBeenCalledWith(
         'Registration Successful',
         'You can now log in with your credentials.',
-        [{ text: 'OK', onPress: expect.any(Function) }]
+        [{text: 'OK', onPress: expect.any(Function)}],
       );
     });
 
     // Simulate pressing OK on the alert
     const alertOkButton = Alert.alert.mock.calls[0][2][0].onPress;
     act(() => {
-        alertOkButton();
+      alertOkButton();
     });
     expect(mockNavigate).toHaveBeenCalledWith('Login');
   });
 
   it('displays loading indicator when auth is loading', () => {
     mockAuthContextValue.loading = true;
-    const { getByText } = render(
-      <RegisterScreen navigation={mockNavigation} />,
-      { wrapper: AllTheProviders }
-    );
+    const {getByText} = render(<RegisterScreen navigation={mockNavigation} />, {
+      wrapper: AllTheProviders,
+    });
     const registerButton = getByText('Register').parent.parent; // Access the Button component
     expect(registerButton.props.loading).toBe(true);
     expect(registerButton.props.disabled).toBe(true);
@@ -167,9 +175,9 @@ describe('RegisterScreen', () => {
   it('displays error message from AuthContext or server if registration fails', async () => {
     const authErrorMessage = 'Email already exists.';
     mockAuthContextValue.error = authErrorMessage;
-    const { getByText, getByLabelText } = render(
+    const {getByText, getByLabelText} = render(
       <RegisterScreen navigation={mockNavigation} />,
-      { wrapper: AllTheProviders }
+      {wrapper: AllTheProviders},
     );
     expect(getByText(authErrorMessage)).toBeTruthy();
     mockAuthContextValue.error = null; // Reset for next part of test
@@ -189,10 +197,9 @@ describe('RegisterScreen', () => {
   });
 
   it('navigates to Login screen when "Login" button is pressed', () => {
-    const { getByText } = render(
-      <RegisterScreen navigation={mockNavigation} />,
-      { wrapper: AllTheProviders }
-    );
+    const {getByText} = render(<RegisterScreen navigation={mockNavigation} />, {
+      wrapper: AllTheProviders,
+    });
 
     const loginButton = getByText('Already have an account? Login');
     fireEvent.press(loginButton);

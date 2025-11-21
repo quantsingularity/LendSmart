@@ -1,12 +1,12 @@
-const express = require('express');
-const httpProxy = require('http-proxy-middleware');
-const rateLimit = require('express-rate-limit');
-const helmet = require('helmet');
-const cors = require('cors');
-const compression = require('compression');
-const { logger } = require('../utils/logger');
-const { AppError } = require('../middleware/monitoring/errorHandler');
-const authMiddleware = require('../middleware/security/authMiddleware');
+const express = require("express");
+const httpProxy = require("http-proxy-middleware");
+const rateLimit = require("express-rate-limit");
+const helmet = require("helmet");
+const cors = require("cors");
+const compression = require("compression");
+const { logger } = require("../utils/logger");
+const { AppError } = require("../middleware/monitoring/errorHandler");
+const authMiddleware = require("../middleware/security/authMiddleware");
 
 /**
  * API Gateway for LendSmart
@@ -25,8 +25,10 @@ class APIGateway {
       port: process.env.GATEWAY_PORT || 3000,
       timeout: parseInt(process.env.GATEWAY_TIMEOUT) || 30000,
       retries: parseInt(process.env.GATEWAY_RETRIES) || 3,
-      circuitBreakerThreshold: parseInt(process.env.CIRCUIT_BREAKER_THRESHOLD) || 5,
-      circuitBreakerTimeout: parseInt(process.env.CIRCUIT_BREAKER_TIMEOUT) || 60000
+      circuitBreakerThreshold:
+        parseInt(process.env.CIRCUIT_BREAKER_THRESHOLD) || 5,
+      circuitBreakerTimeout:
+        parseInt(process.env.CIRCUIT_BREAKER_TIMEOUT) || 60000,
     };
 
     // Rate limiting configurations
@@ -34,22 +36,22 @@ class APIGateway {
       global: rateLimit({
         windowMs: 15 * 60 * 1000, // 15 minutes
         max: 1000, // 1000 requests per window
-        message: 'Too many requests from this IP',
+        message: "Too many requests from this IP",
         standardHeaders: true,
         legacyHeaders: false,
-        handler: this._rateLimitHandler.bind(this)
+        handler: this._rateLimitHandler.bind(this),
       }),
       auth: rateLimit({
         windowMs: 15 * 60 * 1000, // 15 minutes
         max: 10, // 10 auth requests per window
-        message: 'Too many authentication attempts',
-        skipSuccessfulRequests: true
+        message: "Too many authentication attempts",
+        skipSuccessfulRequests: true,
       }),
       api: rateLimit({
         windowMs: 60 * 1000, // 1 minute
         max: 100, // 100 API requests per minute
-        message: 'API rate limit exceeded'
-      })
+        message: "API rate limit exceeded",
+      }),
     };
 
     this.initialize();
@@ -72,58 +74,65 @@ class APIGateway {
    */
   _setupMiddleware() {
     // Trust proxy for accurate IP addresses
-    this.app.set('trust proxy', 1);
+    this.app.set("trust proxy", 1);
 
     // Security middleware
-    this.app.use(helmet({
-      contentSecurityPolicy: {
-        directives: {
-          defaultSrc: ["'self'"],
-          styleSrc: ["'self'", "'unsafe-inline'"],
-          scriptSrc: ["'self'"],
-          imgSrc: ["'self'", "data:", "https:"],
-          connectSrc: ["'self'"],
-          fontSrc: ["'self'"],
-          objectSrc: ["'none'"],
-          mediaSrc: ["'self'"],
-          frameSrc: ["'none'"]
-        }
-      }
-    }));
+    this.app.use(
+      helmet({
+        contentSecurityPolicy: {
+          directives: {
+            defaultSrc: ["'self'"],
+            styleSrc: ["'self'", "'unsafe-inline'"],
+            scriptSrc: ["'self'"],
+            imgSrc: ["'self'", "data:", "https:"],
+            connectSrc: ["'self'"],
+            fontSrc: ["'self'"],
+            objectSrc: ["'none'"],
+            mediaSrc: ["'self'"],
+            frameSrc: ["'none'"],
+          },
+        },
+      }),
+    );
 
     // CORS configuration
-    this.app.use(cors({
-      origin: process.env.NODE_ENV === 'production'
-        ? process.env.ALLOWED_ORIGINS?.split(',') || ['https://lendsmart.com']
-        : true,
-      credentials: true,
-      methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-      allowedHeaders: [
-        'Origin',
-        'X-Requested-With',
-        'Content-Type',
-        'Accept',
-        'Authorization',
-        'X-Request-ID',
-        'X-Correlation-ID'
-      ],
-      exposedHeaders: ['X-Request-ID', 'X-Rate-Limit-Remaining']
-    }));
+    this.app.use(
+      cors({
+        origin:
+          process.env.NODE_ENV === "production"
+            ? process.env.ALLOWED_ORIGINS?.split(",") || [
+                "https://lendsmart.com",
+              ]
+            : true,
+        credentials: true,
+        methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+        allowedHeaders: [
+          "Origin",
+          "X-Requested-With",
+          "Content-Type",
+          "Accept",
+          "Authorization",
+          "X-Request-ID",
+          "X-Correlation-ID",
+        ],
+        exposedHeaders: ["X-Request-ID", "X-Rate-Limit-Remaining"],
+      }),
+    );
 
     // Compression
     this.app.use(compression());
 
     // Body parsing
-    this.app.use(express.json({ limit: '10mb' }));
-    this.app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+    this.app.use(express.json({ limit: "10mb" }));
+    this.app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
     // Request ID and correlation ID
     this.app.use((req, res, next) => {
-      req.id = req.headers['x-request-id'] || this._generateRequestId();
-      req.correlationId = req.headers['x-correlation-id'] || req.id;
+      req.id = req.headers["x-request-id"] || this._generateRequestId();
+      req.correlationId = req.headers["x-correlation-id"] || req.id;
 
-      res.setHeader('X-Request-ID', req.id);
-      res.setHeader('X-Correlation-ID', req.correlationId);
+      res.setHeader("X-Request-ID", req.id);
+      res.setHeader("X-Correlation-ID", req.correlationId);
 
       next();
     });
@@ -132,10 +141,10 @@ class APIGateway {
     this.app.use((req, res, next) => {
       const startTime = Date.now();
 
-      res.on('finish', () => {
+      res.on("finish", () => {
         const duration = Date.now() - startTime;
 
-        logger.info('Gateway request', {
+        logger.info("Gateway request", {
           requestId: req.id,
           correlationId: req.correlationId,
           method: req.method,
@@ -143,8 +152,8 @@ class APIGateway {
           statusCode: res.statusCode,
           duration,
           ip: req.ip,
-          userAgent: req.get('User-Agent'),
-          userId: req.user?.id
+          userAgent: req.get("User-Agent"),
+          userId: req.user?.id,
         });
       });
 
@@ -154,7 +163,7 @@ class APIGateway {
     // Global rate limiting
     this.app.use(this.rateLimiters.global);
 
-    logger.info('API Gateway middleware configured');
+    logger.info("API Gateway middleware configured");
   }
 
   /**
@@ -163,75 +172,75 @@ class APIGateway {
    */
   _registerServices() {
     // Register services with their configurations
-    this.registerService('auth', {
-      target: process.env.AUTH_SERVICE_URL || 'http://localhost:3001',
-      pathRewrite: { '^/api/auth': '' },
+    this.registerService("auth", {
+      target: process.env.AUTH_SERVICE_URL || "http://localhost:3001",
+      pathRewrite: { "^/api/auth": "" },
       timeout: 10000,
-      retries: 2
+      retries: 2,
     });
 
-    this.registerService('users', {
-      target: process.env.USER_SERVICE_URL || 'http://localhost:3002',
-      pathRewrite: { '^/api/users': '' },
+    this.registerService("users", {
+      target: process.env.USER_SERVICE_URL || "http://localhost:3002",
+      pathRewrite: { "^/api/users": "" },
       timeout: 15000,
       retries: 3,
-      requireAuth: true
+      requireAuth: true,
     });
 
-    this.registerService('loans', {
-      target: process.env.LOAN_SERVICE_URL || 'http://localhost:3003',
-      pathRewrite: { '^/api/loans': '' },
+    this.registerService("loans", {
+      target: process.env.LOAN_SERVICE_URL || "http://localhost:3003",
+      pathRewrite: { "^/api/loans": "" },
       timeout: 20000,
       retries: 3,
-      requireAuth: true
+      requireAuth: true,
     });
 
-    this.registerService('payments', {
-      target: process.env.PAYMENT_SERVICE_URL || 'http://localhost:3004',
-      pathRewrite: { '^/api/payments': '' },
+    this.registerService("payments", {
+      target: process.env.PAYMENT_SERVICE_URL || "http://localhost:3004",
+      pathRewrite: { "^/api/payments": "" },
       timeout: 30000,
       retries: 2,
-      requireAuth: true
+      requireAuth: true,
     });
 
-    this.registerService('ai', {
-      target: process.env.AI_SERVICE_URL || 'http://localhost:3005',
-      pathRewrite: { '^/api/ai': '' },
+    this.registerService("ai", {
+      target: process.env.AI_SERVICE_URL || "http://localhost:3005",
+      pathRewrite: { "^/api/ai": "" },
       timeout: 45000,
       retries: 2,
       requireAuth: true,
-      roles: ['admin', 'system']
+      roles: ["admin", "system"],
     });
 
-    this.registerService('blockchain', {
-      target: process.env.BLOCKCHAIN_SERVICE_URL || 'http://localhost:3006',
-      pathRewrite: { '^/api/blockchain': '' },
+    this.registerService("blockchain", {
+      target: process.env.BLOCKCHAIN_SERVICE_URL || "http://localhost:3006",
+      pathRewrite: { "^/api/blockchain": "" },
       timeout: 60000,
       retries: 1,
       requireAuth: true,
-      roles: ['admin', 'system']
+      roles: ["admin", "system"],
     });
 
-    this.registerService('compliance', {
-      target: process.env.COMPLIANCE_SERVICE_URL || 'http://localhost:3007',
-      pathRewrite: { '^/api/compliance': '' },
+    this.registerService("compliance", {
+      target: process.env.COMPLIANCE_SERVICE_URL || "http://localhost:3007",
+      pathRewrite: { "^/api/compliance": "" },
       timeout: 30000,
       retries: 2,
       requireAuth: true,
-      roles: ['admin', 'compliance']
+      roles: ["admin", "compliance"],
     });
 
-    this.registerService('notifications', {
-      target: process.env.NOTIFICATION_SERVICE_URL || 'http://localhost:3008',
-      pathRewrite: { '^/api/notifications': '' },
+    this.registerService("notifications", {
+      target: process.env.NOTIFICATION_SERVICE_URL || "http://localhost:3008",
+      pathRewrite: { "^/api/notifications": "" },
       timeout: 15000,
       retries: 3,
-      requireAuth: true
+      requireAuth: true,
     });
 
-    logger.info('Microservices registered', {
+    logger.info("Microservices registered", {
       serviceCount: this.services.size,
-      services: Array.from(this.services.keys())
+      services: Array.from(this.services.keys()),
     });
   }
 
@@ -250,16 +259,16 @@ class APIGateway {
       roles: config.roles || [],
       permissions: config.permissions || [],
       pathRewrite: config.pathRewrite || {},
-      ...config
+      ...config,
     };
 
     this.services.set(name, serviceConfig);
     this._initializeCircuitBreaker(name);
 
-    logger.info('Service registered', {
+    logger.info("Service registered", {
       service: name,
       target: config.target,
-      requireAuth: serviceConfig.requireAuth
+      requireAuth: serviceConfig.requireAuth,
     });
   }
 
@@ -269,37 +278,43 @@ class APIGateway {
    */
   _setupRoutes() {
     // Health check endpoint
-    this.app.get('/health', (req, res) => {
+    this.app.get("/health", (req, res) => {
       const health = this._getGatewayHealth();
-      const statusCode = health.status === 'healthy' ? 200 : 503;
+      const statusCode = health.status === "healthy" ? 200 : 503;
       res.status(statusCode).json(health);
     });
 
     // Detailed health check
-    this.app.get('/health/detailed', (req, res) => {
+    this.app.get("/health/detailed", (req, res) => {
       const health = this._getDetailedHealth();
-      const statusCode = health.overall === 'healthy' ? 200 : 503;
+      const statusCode = health.overall === "healthy" ? 200 : 503;
       res.status(statusCode).json(health);
     });
 
     // Metrics endpoint
-    this.app.get('/metrics', (req, res) => {
+    this.app.get("/metrics", (req, res) => {
       const metrics = this._getMetrics();
       res.json(metrics);
     });
 
     // Service discovery endpoint
-    this.app.get('/services', authMiddleware.authorize(['admin']), (req, res) => {
-      const services = Array.from(this.services.entries()).map(([name, config]) => ({
-        name,
-        target: config.target,
-        status: this._getServiceStatus(name),
-        requireAuth: config.requireAuth,
-        roles: config.roles
-      }));
+    this.app.get(
+      "/services",
+      authMiddleware.authorize(["admin"]),
+      (req, res) => {
+        const services = Array.from(this.services.entries()).map(
+          ([name, config]) => ({
+            name,
+            target: config.target,
+            status: this._getServiceStatus(name),
+            requireAuth: config.requireAuth,
+            roles: config.roles,
+          }),
+        );
 
-      res.json({ services });
-    });
+        res.json({ services });
+      },
+    );
 
     // Setup service routes
     for (const [serviceName, serviceConfig] of this.services) {
@@ -307,15 +322,15 @@ class APIGateway {
     }
 
     // Catch-all for undefined routes
-    this.app.use('*', (req, res) => {
+    this.app.use("*", (req, res) => {
       res.status(404).json({
-        error: 'Route not found',
-        code: 'ROUTE_NOT_FOUND',
-        path: req.originalUrl
+        error: "Route not found",
+        code: "ROUTE_NOT_FOUND",
+        path: req.originalUrl,
       });
     });
 
-    logger.info('API Gateway routes configured');
+    logger.info("API Gateway routes configured");
   }
 
   /**
@@ -329,7 +344,7 @@ class APIGateway {
     const middlewares = [];
 
     // Add rate limiting for specific services
-    if (serviceName === 'auth') {
+    if (serviceName === "auth") {
       middlewares.push(this.rateLimiters.auth);
     } else {
       middlewares.push(this.rateLimiters.api);
@@ -340,8 +355,16 @@ class APIGateway {
       middlewares.push(authMiddleware.authenticate);
 
       // Add authorization if roles/permissions specified
-      if (serviceConfig.roles.length > 0 || serviceConfig.permissions.length > 0) {
-        middlewares.push(authMiddleware.authorize(serviceConfig.roles, serviceConfig.permissions));
+      if (
+        serviceConfig.roles.length > 0 ||
+        serviceConfig.permissions.length > 0
+      ) {
+        middlewares.push(
+          authMiddleware.authorize(
+            serviceConfig.roles,
+            serviceConfig.permissions,
+          ),
+        );
       }
     }
 
@@ -349,16 +372,19 @@ class APIGateway {
     middlewares.push(this._circuitBreakerMiddleware(serviceName));
 
     // Create proxy middleware
-    const proxyMiddleware = this._createProxyMiddleware(serviceName, serviceConfig);
+    const proxyMiddleware = this._createProxyMiddleware(
+      serviceName,
+      serviceConfig,
+    );
     middlewares.push(proxyMiddleware);
 
     // Apply middleware chain
     this.app.use(routePath, ...middlewares);
 
-    logger.info('Service route configured', {
+    logger.info("Service route configured", {
       service: serviceName,
       path: routePath,
-      middlewareCount: middlewares.length
+      middlewareCount: middlewares.length,
     });
   }
 
@@ -377,45 +403,48 @@ class APIGateway {
       // Add headers
       onProxyReq: (proxyReq, req, res) => {
         // Add correlation headers
-        proxyReq.setHeader('X-Request-ID', req.id);
-        proxyReq.setHeader('X-Correlation-ID', req.correlationId);
-        proxyReq.setHeader('X-Gateway-Service', serviceName);
+        proxyReq.setHeader("X-Request-ID", req.id);
+        proxyReq.setHeader("X-Correlation-ID", req.correlationId);
+        proxyReq.setHeader("X-Gateway-Service", serviceName);
 
         // Add user context if authenticated
         if (req.user) {
-          proxyReq.setHeader('X-User-ID', req.user.id);
-          proxyReq.setHeader('X-User-Role', req.user.role);
-          proxyReq.setHeader('X-User-Permissions', JSON.stringify(req.user.permissions));
+          proxyReq.setHeader("X-User-ID", req.user.id);
+          proxyReq.setHeader("X-User-Role", req.user.role);
+          proxyReq.setHeader(
+            "X-User-Permissions",
+            JSON.stringify(req.user.permissions),
+          );
         }
 
-        logger.debug('Proxying request', {
+        logger.debug("Proxying request", {
           service: serviceName,
           target: serviceConfig.target,
           path: req.path,
-          requestId: req.id
+          requestId: req.id,
         });
       },
 
       // Handle responses
       onProxyRes: (proxyRes, req, res) => {
         // Add response headers
-        res.setHeader('X-Service', serviceName);
-        res.setHeader('X-Gateway', 'LendSmart-Gateway/1.0');
+        res.setHeader("X-Service", serviceName);
+        res.setHeader("X-Gateway", "LendSmart-Gateway/1.0");
 
-        logger.debug('Received response', {
+        logger.debug("Received response", {
           service: serviceName,
           statusCode: proxyRes.statusCode,
-          requestId: req.id
+          requestId: req.id,
         });
       },
 
       // Handle errors
       onError: (err, req, res) => {
-        logger.error('Proxy error', {
+        logger.error("Proxy error", {
           service: serviceName,
           error: err.message,
           requestId: req.id,
-          path: req.path
+          path: req.path,
         });
 
         // Update circuit breaker
@@ -424,13 +453,13 @@ class APIGateway {
         // Return error response
         if (!res.headersSent) {
           res.status(503).json({
-            error: 'Service temporarily unavailable',
-            code: 'SERVICE_UNAVAILABLE',
+            error: "Service temporarily unavailable",
+            code: "SERVICE_UNAVAILABLE",
             service: serviceName,
-            requestId: req.id
+            requestId: req.id,
           });
         }
-      }
+      },
     });
   }
 
@@ -440,10 +469,10 @@ class APIGateway {
    */
   _initializeCircuitBreaker(serviceName) {
     this.circuitBreakers.set(serviceName, {
-      state: 'CLOSED', // CLOSED, OPEN, HALF_OPEN
+      state: "CLOSED", // CLOSED, OPEN, HALF_OPEN
       failureCount: 0,
       lastFailureTime: null,
-      successCount: 0
+      successCount: 0,
     });
   }
 
@@ -462,32 +491,35 @@ class APIGateway {
       const now = Date.now();
 
       switch (circuitBreaker.state) {
-        case 'OPEN':
+        case "OPEN":
           // Check if timeout has passed
-          if (now - circuitBreaker.lastFailureTime > this.config.circuitBreakerTimeout) {
-            circuitBreaker.state = 'HALF_OPEN';
+          if (
+            now - circuitBreaker.lastFailureTime >
+            this.config.circuitBreakerTimeout
+          ) {
+            circuitBreaker.state = "HALF_OPEN";
             circuitBreaker.successCount = 0;
-            logger.info('Circuit breaker half-open', { service: serviceName });
+            logger.info("Circuit breaker half-open", { service: serviceName });
             return next();
           } else {
-            logger.warn('Circuit breaker open', { service: serviceName });
+            logger.warn("Circuit breaker open", { service: serviceName });
             return res.status(503).json({
-              error: 'Service circuit breaker is open',
-              code: 'CIRCUIT_BREAKER_OPEN',
-              service: serviceName
+              error: "Service circuit breaker is open",
+              code: "CIRCUIT_BREAKER_OPEN",
+              service: serviceName,
             });
           }
 
-        case 'HALF_OPEN':
+        case "HALF_OPEN":
           // Allow limited requests through
           if (circuitBreaker.successCount >= 3) {
-            circuitBreaker.state = 'CLOSED';
+            circuitBreaker.state = "CLOSED";
             circuitBreaker.failureCount = 0;
-            logger.info('Circuit breaker closed', { service: serviceName });
+            logger.info("Circuit breaker closed", { service: serviceName });
           }
           return next();
 
-        case 'CLOSED':
+        case "CLOSED":
         default:
           return next();
       }
@@ -506,10 +538,10 @@ class APIGateway {
       circuitBreaker.lastFailureTime = Date.now();
 
       if (circuitBreaker.failureCount >= this.config.circuitBreakerThreshold) {
-        circuitBreaker.state = 'OPEN';
-        logger.warn('Circuit breaker opened', {
+        circuitBreaker.state = "OPEN";
+        logger.warn("Circuit breaker opened", {
           service: serviceName,
-          failureCount: circuitBreaker.failureCount
+          failureCount: circuitBreaker.failureCount,
         });
       }
     }
@@ -523,10 +555,13 @@ class APIGateway {
     const circuitBreaker = this.circuitBreakers.get(serviceName);
 
     if (circuitBreaker) {
-      if (circuitBreaker.state === 'HALF_OPEN') {
+      if (circuitBreaker.state === "HALF_OPEN") {
         circuitBreaker.successCount++;
-      } else if (circuitBreaker.state === 'CLOSED') {
-        circuitBreaker.failureCount = Math.max(0, circuitBreaker.failureCount - 1);
+      } else if (circuitBreaker.state === "CLOSED") {
+        circuitBreaker.failureCount = Math.max(
+          0,
+          circuitBreaker.failureCount - 1,
+        );
       }
     }
   }
@@ -538,26 +573,26 @@ class APIGateway {
   _setupErrorHandling() {
     // Global error handler
     this.app.use((error, req, res, next) => {
-      logger.error('Gateway error', {
+      logger.error("Gateway error", {
         error: error.message,
         stack: error.stack,
         requestId: req.id,
         path: req.path,
-        method: req.method
+        method: req.method,
       });
 
       if (error instanceof AppError) {
         return res.status(error.statusCode).json({
           error: error.message,
           code: error.code,
-          requestId: req.id
+          requestId: req.id,
         });
       }
 
       res.status(500).json({
-        error: 'Internal gateway error',
-        code: 'GATEWAY_ERROR',
-        requestId: req.id
+        error: "Internal gateway error",
+        code: "GATEWAY_ERROR",
+        requestId: req.id,
       });
     });
   }
@@ -584,15 +619,15 @@ class APIGateway {
     for (const [serviceName, serviceConfig] of this.services) {
       try {
         const response = await fetch(`${serviceConfig.target}/health`, {
-          method: 'GET',
-          timeout: 5000
+          method: "GET",
+          timeout: 5000,
         });
 
         const isHealthy = response.ok;
         this.healthChecks.set(serviceName, {
-          status: isHealthy ? 'healthy' : 'unhealthy',
+          status: isHealthy ? "healthy" : "unhealthy",
           lastCheck: new Date().toISOString(),
-          responseTime: response.headers.get('x-response-time') || null
+          responseTime: response.headers.get("x-response-time") || null,
         });
 
         if (isHealthy) {
@@ -600,12 +635,11 @@ class APIGateway {
         } else {
           this._recordServiceFailure(serviceName);
         }
-
       } catch (error) {
         this.healthChecks.set(serviceName, {
-          status: 'unhealthy',
+          status: "unhealthy",
           lastCheck: new Date().toISOString(),
-          error: error.message
+          error: error.message,
         });
 
         this._recordServiceFailure(serviceName);
@@ -619,15 +653,15 @@ class APIGateway {
    */
   _getGatewayHealth() {
     const unhealthyServices = Array.from(this.healthChecks.entries())
-      .filter(([, health]) => health.status !== 'healthy')
+      .filter(([, health]) => health.status !== "healthy")
       .map(([name]) => name);
 
     return {
-      status: unhealthyServices.length === 0 ? 'healthy' : 'degraded',
+      status: unhealthyServices.length === 0 ? "healthy" : "degraded",
       timestamp: new Date().toISOString(),
       services: this.services.size,
       unhealthyServices: unhealthyServices.length,
-      uptime: process.uptime()
+      uptime: process.uptime(),
     };
   }
 
@@ -643,25 +677,26 @@ class APIGateway {
       const circuitBreaker = this.circuitBreakers.get(serviceName);
 
       serviceHealth[serviceName] = {
-        status: health?.status || 'unknown',
+        status: health?.status || "unknown",
         lastCheck: health?.lastCheck || null,
-        circuitBreakerState: circuitBreaker?.state || 'UNKNOWN',
-        failureCount: circuitBreaker?.failureCount || 0
+        circuitBreakerState: circuitBreaker?.state || "UNKNOWN",
+        failureCount: circuitBreaker?.failureCount || 0,
       };
     }
 
-    const healthyCount = Object.values(serviceHealth)
-      .filter(health => health.status === 'healthy').length;
+    const healthyCount = Object.values(serviceHealth).filter(
+      (health) => health.status === "healthy",
+    ).length;
 
     return {
-      overall: healthyCount === this.services.size ? 'healthy' : 'degraded',
+      overall: healthyCount === this.services.size ? "healthy" : "degraded",
       timestamp: new Date().toISOString(),
       gateway: {
         uptime: process.uptime(),
         memory: process.memoryUsage(),
-        version: process.env.npm_package_version || '1.0.0'
+        version: process.env.npm_package_version || "1.0.0",
       },
-      services: serviceHealth
+      services: serviceHealth,
     };
   }
 
@@ -674,9 +709,9 @@ class APIGateway {
     const circuitBreaker = this.circuitBreakers.get(serviceName);
 
     return {
-      health: health?.status || 'unknown',
-      circuitBreaker: circuitBreaker?.state || 'UNKNOWN',
-      lastCheck: health?.lastCheck || null
+      health: health?.status || "unknown",
+      circuitBreaker: circuitBreaker?.state || "UNKNOWN",
+      lastCheck: health?.lastCheck || null,
     };
   }
 
@@ -691,15 +726,16 @@ class APIGateway {
       memory: process.memoryUsage(),
       services: {
         total: this.services.size,
-        healthy: Array.from(this.healthChecks.values())
-          .filter(health => health.status === 'healthy').length
+        healthy: Array.from(this.healthChecks.values()).filter(
+          (health) => health.status === "healthy",
+        ).length,
       },
       circuitBreakers: Object.fromEntries(
         Array.from(this.circuitBreakers.entries()).map(([name, cb]) => [
           name,
-          { state: cb.state, failures: cb.failureCount }
-        ])
-      )
+          { state: cb.state, failures: cb.failureCount },
+        ]),
+      ),
     };
   }
 
@@ -708,17 +744,17 @@ class APIGateway {
    * @private
    */
   _rateLimitHandler(req, res) {
-    logger.warn('Rate limit exceeded', {
+    logger.warn("Rate limit exceeded", {
       ip: req.ip,
       path: req.path,
-      userAgent: req.get('User-Agent'),
-      userId: req.user?.id
+      userAgent: req.get("User-Agent"),
+      userId: req.user?.id,
     });
 
     res.status(429).json({
-      error: 'Rate limit exceeded',
-      code: 'RATE_LIMIT_EXCEEDED',
-      retryAfter: Math.round(req.rateLimit.resetTime / 1000)
+      error: "Rate limit exceeded",
+      code: "RATE_LIMIT_EXCEEDED",
+      retryAfter: Math.round(req.rateLimit.resetTime / 1000),
     });
   }
 
@@ -736,22 +772,21 @@ class APIGateway {
   start() {
     return new Promise((resolve, reject) => {
       try {
-        const server = this.app.listen(this.config.port, '0.0.0.0', () => {
-          logger.info('API Gateway started', {
+        const server = this.app.listen(this.config.port, "0.0.0.0", () => {
+          logger.info("API Gateway started", {
             port: this.config.port,
             services: this.services.size,
-            environment: process.env.NODE_ENV || 'development'
+            environment: process.env.NODE_ENV || "development",
           });
           resolve(server);
         });
 
-        server.on('error', (error) => {
-          logger.error('Gateway startup error', { error: error.message });
+        server.on("error", (error) => {
+          logger.error("Gateway startup error", { error: error.message });
           reject(error);
         });
-
       } catch (error) {
-        logger.error('Failed to start API Gateway', { error: error.message });
+        logger.error("Failed to start API Gateway", { error: error.message });
         reject(error);
       }
     });

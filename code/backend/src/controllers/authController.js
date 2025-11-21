@@ -1,10 +1,14 @@
-const crypto = require('crypto');
-const User = require('../models/UserModel');
-const authService = require('../security/authService');
-const { getAuditLogger } = require('../compliance/auditLogger');
-const { getGDPRCompliance } = require('../compliance/gdprCompliance');
-const { validateSchema, validateRules, validationRules } = require('../validators/inputValidator');
-const logger = require('../utils/logger');
+const crypto = require("crypto");
+const User = require("../models/UserModel");
+const authService = require("../security/authService");
+const { getAuditLogger } = require("../compliance/auditLogger");
+const { getGDPRCompliance } = require("../compliance/gdprCompliance");
+const {
+  validateSchema,
+  validateRules,
+  validationRules,
+} = require("../validators/inputValidator");
+const logger = require("../utils/logger");
 
 /**
  * Enhanced Authentication Controller
@@ -23,16 +27,24 @@ class AuthController {
    */
   async register(req, res) {
     try {
-      const { username, email, password, firstName, lastName, phoneNumber, consents } = req.body;
+      const {
+        username,
+        email,
+        password,
+        firstName,
+        lastName,
+        phoneNumber,
+        consents,
+      } = req.body;
       const ip = req.ip;
-      const userAgent = req.get('User-Agent');
+      const userAgent = req.get("User-Agent");
 
       // Validate GDPR consent
       if (!consents || !consents.essential || !consents.financial_services) {
         return res.status(400).json({
           success: false,
-          message: 'Essential consents are required for registration',
-          requiredConsents: ['essential', 'financial_services']
+          message: "Essential consents are required for registration",
+          requiredConsents: ["essential", "financial_services"],
         });
       }
 
@@ -45,7 +57,7 @@ class AuthController {
         lastName,
         phoneNumber,
         ip,
-        userAgent
+        userAgent,
       };
 
       const result = await authService.register(registrationData);
@@ -56,19 +68,19 @@ class AuthController {
           result.user._id,
           consents,
           ip,
-          userAgent
+          userAgent,
         );
 
         // Audit log
         await this.auditLogger.logAuthEvent({
-          action: 'user_registered',
+          action: "user_registered",
           userId: result.user._id,
           username: result.user.username,
           email: result.user.email,
           ip,
           userAgent,
           success: true,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
 
         // Remove sensitive data from response
@@ -76,12 +88,12 @@ class AuthController {
 
         res.status(201).json({
           success: true,
-          message: 'User registered successfully. Please verify your email.',
+          message: "User registered successfully. Please verify your email.",
           data: publicResult,
           nextSteps: {
             emailVerification: true,
-            mfaSetup: false
-          }
+            mfaSetup: false,
+          },
         });
 
         // Send verification email (implementation would be in email service)
@@ -89,33 +101,33 @@ class AuthController {
       } else {
         res.status(400).json({
           success: false,
-          message: result.message || 'Registration failed'
+          message: result.message || "Registration failed",
         });
       }
     } catch (error) {
-      logger.error('Registration error', {
+      logger.error("Registration error", {
         error: error.message,
         stack: error.stack,
-        body: { ...req.body, password: '[REDACTED]' },
-        ip: req.ip
+        body: { ...req.body, password: "[REDACTED]" },
+        ip: req.ip,
       });
 
       // Audit log for failed registration
       await this.auditLogger.logAuthEvent({
-        action: 'registration_failed',
+        action: "registration_failed",
         email: req.body.email,
         username: req.body.username,
         error: error.message,
         ip: req.ip,
-        userAgent: req.get('User-Agent'),
+        userAgent: req.get("User-Agent"),
         success: false,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
 
       res.status(500).json({
         success: false,
-        message: 'Registration failed. Please try again.',
-        errorCode: 'REGISTRATION_ERROR'
+        message: "Registration failed. Please try again.",
+        errorCode: "REGISTRATION_ERROR",
       });
     }
   }
@@ -129,14 +141,14 @@ class AuthController {
     try {
       const { email, password, mfaToken } = req.body;
       const ip = req.ip;
-      const userAgent = req.get('User-Agent');
+      const userAgent = req.get("User-Agent");
 
       const credentials = {
         email,
         password,
         mfaToken,
         ip,
-        userAgent
+        userAgent,
       };
 
       const result = await authService.login(credentials);
@@ -144,7 +156,7 @@ class AuthController {
       if (result.success) {
         // Audit log
         await this.auditLogger.logAuthEvent({
-          action: 'user_login',
+          action: "user_login",
           userId: result.user._id,
           username: result.user.username,
           email: result.user.email,
@@ -152,60 +164,60 @@ class AuthController {
           userAgent,
           mfaUsed: !!mfaToken,
           success: true,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
 
         // Set secure HTTP-only cookie for refresh token
-        res.cookie('refreshToken', result.tokens.refreshToken, {
+        res.cookie("refreshToken", result.tokens.refreshToken, {
           httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'strict',
-          maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "strict",
+          maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
         });
 
         res.json({
           success: true,
-          message: 'Login successful',
+          message: "Login successful",
           data: {
             user: result.user,
             accessToken: result.tokens.accessToken,
-            expiresIn: '15m'
-          }
+            expiresIn: "15m",
+          },
         });
       } else if (result.requiresMFA) {
         res.status(200).json({
           success: false,
           requiresMFA: true,
-          message: 'MFA token required',
-          tempToken: result.tempToken
+          message: "MFA token required",
+          tempToken: result.tempToken,
         });
       } else {
         res.status(401).json({
           success: false,
-          message: 'Invalid credentials'
+          message: "Invalid credentials",
         });
       }
     } catch (error) {
-      logger.error('Login error', {
+      logger.error("Login error", {
         error: error.message,
         email: req.body.email,
-        ip: req.ip
+        ip: req.ip,
       });
 
       // Audit log for failed login
       await this.auditLogger.logAuthEvent({
-        action: 'login_failed',
+        action: "login_failed",
         email: req.body.email,
         error: error.message,
         ip: req.ip,
-        userAgent: req.get('User-Agent'),
+        userAgent: req.get("User-Agent"),
         success: false,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
 
       res.status(401).json({
         success: false,
-        message: error.message || 'Login failed'
+        message: error.message || "Login failed",
       });
     }
   }
@@ -223,7 +235,7 @@ class AuthController {
       if (!refreshToken) {
         return res.status(401).json({
           success: false,
-          message: 'Refresh token not provided'
+          message: "Refresh token not provided",
         });
       }
 
@@ -231,35 +243,35 @@ class AuthController {
 
       if (result.success) {
         // Update refresh token cookie
-        res.cookie('refreshToken', result.tokens.refreshToken, {
+        res.cookie("refreshToken", result.tokens.refreshToken, {
           httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'strict',
-          maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "strict",
+          maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
         });
 
         res.json({
           success: true,
           data: {
             accessToken: result.tokens.accessToken,
-            expiresIn: '15m'
-          }
+            expiresIn: "15m",
+          },
         });
       } else {
         res.status(401).json({
           success: false,
-          message: 'Invalid refresh token'
+          message: "Invalid refresh token",
         });
       }
     } catch (error) {
-      logger.error('Token refresh error', {
+      logger.error("Token refresh error", {
         error: error.message,
-        ip: req.ip
+        ip: req.ip,
       });
 
       res.status(401).json({
         success: false,
-        message: 'Token refresh failed'
+        message: "Token refresh failed",
       });
     }
   }
@@ -279,34 +291,34 @@ class AuthController {
       }
 
       // Clear refresh token cookie
-      res.clearCookie('refreshToken');
+      res.clearCookie("refreshToken");
 
       // Audit log
       if (userId) {
         await this.auditLogger.logAuthEvent({
-          action: 'user_logout',
+          action: "user_logout",
           userId,
           ip: req.ip,
-          userAgent: req.get('User-Agent'),
+          userAgent: req.get("User-Agent"),
           success: true,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       }
 
       res.json({
         success: true,
-        message: 'Logout successful'
+        message: "Logout successful",
       });
     } catch (error) {
-      logger.error('Logout error', {
+      logger.error("Logout error", {
         error: error.message,
         userId: req.user?.id,
-        ip: req.ip
+        ip: req.ip,
       });
 
       res.status(500).json({
         success: false,
-        message: 'Logout failed'
+        message: "Logout failed",
       });
     }
   }
@@ -324,33 +336,34 @@ class AuthController {
 
       // Audit log
       await this.auditLogger.logAuthEvent({
-        action: 'mfa_setup_initiated',
+        action: "mfa_setup_initiated",
         userId,
         ip: req.ip,
-        userAgent: req.get('User-Agent'),
+        userAgent: req.get("User-Agent"),
         success: true,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
 
       res.json({
         success: true,
-        message: 'MFA setup initiated',
+        message: "MFA setup initiated",
         data: {
           qrCode: result.qrCode,
           backupCodes: result.backupCodes,
-          instructions: 'Scan the QR code with your authenticator app and verify with a token'
-        }
+          instructions:
+            "Scan the QR code with your authenticator app and verify with a token",
+        },
       });
     } catch (error) {
-      logger.error('MFA setup error', {
+      logger.error("MFA setup error", {
         error: error.message,
         userId: req.user?.id,
-        ip: req.ip
+        ip: req.ip,
       });
 
       res.status(500).json({
         success: false,
-        message: 'MFA setup failed'
+        message: "MFA setup failed",
       });
     }
   }
@@ -370,34 +383,34 @@ class AuthController {
       if (result.success) {
         // Audit log
         await this.auditLogger.logAuthEvent({
-          action: 'mfa_enabled',
+          action: "mfa_enabled",
           userId,
           ip: req.ip,
-          userAgent: req.get('User-Agent'),
+          userAgent: req.get("User-Agent"),
           success: true,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
 
         res.json({
           success: true,
-          message: 'MFA enabled successfully'
+          message: "MFA enabled successfully",
         });
       } else {
         res.status(400).json({
           success: false,
-          message: 'Invalid MFA token'
+          message: "Invalid MFA token",
         });
       }
     } catch (error) {
-      logger.error('MFA verification error', {
+      logger.error("MFA verification error", {
         error: error.message,
         userId: req.user?.id,
-        ip: req.ip
+        ip: req.ip,
       });
 
       res.status(400).json({
         success: false,
-        message: error.message || 'MFA verification failed'
+        message: error.message || "MFA verification failed",
       });
     }
   }
@@ -415,7 +428,7 @@ class AuthController {
       if (!user) {
         return res.status(404).json({
           success: false,
-          message: 'User not found'
+          message: "User not found",
         });
       }
 
@@ -424,30 +437,30 @@ class AuthController {
 
       // Audit log
       await this.auditLogger.logDataAccess({
-        action: 'profile_accessed',
+        action: "profile_accessed",
         userId,
         ip: req.ip,
-        userAgent: req.get('User-Agent'),
-        timestamp: new Date().toISOString()
+        userAgent: req.get("User-Agent"),
+        timestamp: new Date().toISOString(),
       });
 
       res.json({
         success: true,
         data: {
           user: authService.sanitizeUser(user),
-          consentStatus
-        }
+          consentStatus,
+        },
       });
     } catch (error) {
-      logger.error('Get profile error', {
+      logger.error("Get profile error", {
         error: error.message,
         userId: req.user?.id,
-        ip: req.ip
+        ip: req.ip,
       });
 
       res.status(500).json({
         success: false,
-        message: 'Failed to get profile'
+        message: "Failed to get profile",
       });
     }
   }

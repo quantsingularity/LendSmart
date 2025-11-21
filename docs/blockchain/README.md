@@ -212,43 +212,47 @@ The smart contracts interact in the following ways:
 ### Deployment Process
 
 1. **Compile Contracts**:
+
    ```bash
    truffle compile
    ```
 
 2. **Configure Deployment Networks**:
    Edit `truffle-config.js` to specify deployment networks:
+
    ```javascript
    module.exports = {
      networks: {
        development: {
          host: "127.0.0.1",
          port: 8545,
-         network_id: "*"
+         network_id: "*",
        },
        ropsten: {
-         provider: () => new HDWalletProvider(
-           process.env.MNEMONIC,
-           `https://ropsten.infura.io/v3/${process.env.INFURA_PROJECT_ID}`
-         ),
+         provider: () =>
+           new HDWalletProvider(
+             process.env.MNEMONIC,
+             `https://ropsten.infura.io/v3/${process.env.INFURA_PROJECT_ID}`,
+           ),
          network_id: 3,
          gas: 5500000,
          confirmations: 2,
          timeoutBlocks: 200,
-         skipDryRun: true
+         skipDryRun: true,
        },
        polygon: {
-         provider: () => new HDWalletProvider(
-           process.env.MNEMONIC,
-           `https://polygon-mainnet.infura.io/v3/${process.env.INFURA_PROJECT_ID}`
-         ),
+         provider: () =>
+           new HDWalletProvider(
+             process.env.MNEMONIC,
+             `https://polygon-mainnet.infura.io/v3/${process.env.INFURA_PROJECT_ID}`,
+           ),
          network_id: 137,
          gas: 5500000,
          gasPrice: 30000000000,
          confirmations: 2,
          timeoutBlocks: 200,
-         skipDryRun: true
-       }
+         skipDryRun: true,
+       },
      },
      compilers: {
        solc: {
@@ -256,22 +260,23 @@ The smart contracts interact in the following ways:
          settings: {
            optimizer: {
              enabled: true,
-             runs: 200
-           }
-         }
-       }
-     }
+             runs: 200,
+           },
+         },
+       },
+     },
    };
    ```
 
 3. **Create Migration Scripts**:
+
    ```javascript
    // migrations/2_deploy_contracts.js
    const LoanManager = artifacts.require("LoanManager");
    const ReputationSystem = artifacts.require("ReputationSystem");
    const LenderRegistry = artifacts.require("LenderRegistry");
 
-   module.exports = async function(deployer, network, accounts) {
+   module.exports = async function (deployer, network, accounts) {
      // Deploy ReputationSystem
      await deployer.deploy(ReputationSystem);
      const reputationSystem = await ReputationSystem.deployed();
@@ -284,7 +289,7 @@ The smart contracts interact in the following ways:
      await deployer.deploy(
        LoanManager,
        reputationSystem.address,
-       lenderRegistry.address
+       lenderRegistry.address,
      );
      const loanManager = await LoanManager.deployed();
 
@@ -295,6 +300,7 @@ The smart contracts interact in the following ways:
    ```
 
 4. **Deploy Contracts**:
+
    ```bash
    # For development
    truffle migrate --network development
@@ -326,23 +332,26 @@ The smart contracts interact in the following ways:
 Example of interacting with contracts using Web3.js:
 
 ```javascript
-const Web3 = require('web3');
-const LoanManagerABI = require('./abis/LoanManager.json');
+const Web3 = require("web3");
+const LoanManagerABI = require("./abis/LoanManager.json");
 
 // Connect to blockchain
-const web3 = new Web3('https://polygon-mainnet.infura.io/v3/YOUR_INFURA_KEY');
+const web3 = new Web3("https://polygon-mainnet.infura.io/v3/YOUR_INFURA_KEY");
 
 // Set up account
-const account = web3.eth.accounts.privateKeyToAccount('0x' + PRIVATE_KEY);
+const account = web3.eth.accounts.privateKeyToAccount("0x" + PRIVATE_KEY);
 web3.eth.accounts.wallet.add(account);
 
 // Contract instance
-const loanManagerAddress = '0x1234567890123456789012345678901234567890';
-const loanManager = new web3.eth.Contract(LoanManagerABI.abi, loanManagerAddress);
+const loanManagerAddress = "0x1234567890123456789012345678901234567890";
+const loanManager = new web3.eth.Contract(
+  LoanManagerABI.abi,
+  loanManagerAddress,
+);
 
 // Create loan
 async function createLoan(amount, term, interestRate) {
-  const amountWei = web3.utils.toWei(amount.toString(), 'ether');
+  const amountWei = web3.utils.toWei(amount.toString(), "ether");
 
   try {
     const tx = await loanManager.methods
@@ -350,35 +359,33 @@ async function createLoan(amount, term, interestRate) {
       .send({
         from: account.address,
         gas: 500000,
-        gasPrice: web3.utils.toWei('50', 'gwei')
+        gasPrice: web3.utils.toWei("50", "gwei"),
       });
 
-    console.log('Loan created:', tx.events.LoanCreated.returnValues);
+    console.log("Loan created:", tx.events.LoanCreated.returnValues);
     return tx.events.LoanCreated.returnValues.loanId;
   } catch (error) {
-    console.error('Error creating loan:', error);
+    console.error("Error creating loan:", error);
     throw error;
   }
 }
 
 // Fund loan
 async function fundLoan(loanId, amount) {
-  const amountWei = web3.utils.toWei(amount.toString(), 'ether');
+  const amountWei = web3.utils.toWei(amount.toString(), "ether");
 
   try {
-    const tx = await loanManager.methods
-      .fundLoan(loanId)
-      .send({
-        from: account.address,
-        value: amountWei,
-        gas: 500000,
-        gasPrice: web3.utils.toWei('50', 'gwei')
-      });
+    const tx = await loanManager.methods.fundLoan(loanId).send({
+      from: account.address,
+      value: amountWei,
+      gas: 500000,
+      gasPrice: web3.utils.toWei("50", "gwei"),
+    });
 
-    console.log('Loan funded:', tx.events.LoanFunded.returnValues);
+    console.log("Loan funded:", tx.events.LoanFunded.returnValues);
     return tx;
   } catch (error) {
-    console.error('Error funding loan:', error);
+    console.error("Error funding loan:", error);
     throw error;
   }
 }
@@ -389,20 +396,24 @@ async function fundLoan(loanId, amount) {
 Example of interacting with contracts using ethers.js:
 
 ```javascript
-const { ethers } = require('ethers');
-const LoanManagerABI = require('./abis/LoanManager.json');
+const { ethers } = require("ethers");
+const LoanManagerABI = require("./abis/LoanManager.json");
 
 // Connect to blockchain
 const provider = new ethers.providers.JsonRpcProvider(
-  'https://polygon-mainnet.infura.io/v3/YOUR_INFURA_KEY'
+  "https://polygon-mainnet.infura.io/v3/YOUR_INFURA_KEY",
 );
 
 // Set up signer
-const wallet = new ethers.Wallet('0x' + PRIVATE_KEY, provider);
+const wallet = new ethers.Wallet("0x" + PRIVATE_KEY, provider);
 
 // Contract instance
-const loanManagerAddress = '0x1234567890123456789012345678901234567890';
-const loanManager = new ethers.Contract(loanManagerAddress, LoanManagerABI.abi, wallet);
+const loanManagerAddress = "0x1234567890123456789012345678901234567890";
+const loanManager = new ethers.Contract(
+  loanManagerAddress,
+  LoanManagerABI.abi,
+  wallet,
+);
 
 // Create loan
 async function createLoan(amount, term, interestRate) {
@@ -412,11 +423,13 @@ async function createLoan(amount, term, interestRate) {
     const tx = await loanManager.createLoan(amountWei, term, interestRate);
     const receipt = await tx.wait();
 
-    const loanCreatedEvent = receipt.events.find(event => event.event === 'LoanCreated');
-    console.log('Loan created:', loanCreatedEvent.args);
+    const loanCreatedEvent = receipt.events.find(
+      (event) => event.event === "LoanCreated",
+    );
+    console.log("Loan created:", loanCreatedEvent.args);
     return loanCreatedEvent.args.loanId;
   } catch (error) {
-    console.error('Error creating loan:', error);
+    console.error("Error creating loan:", error);
     throw error;
   }
 }
@@ -429,11 +442,13 @@ async function fundLoan(loanId, amount) {
     const tx = await loanManager.fundLoan(loanId, { value: amountWei });
     const receipt = await tx.wait();
 
-    const loanFundedEvent = receipt.events.find(event => event.event === 'LoanFunded');
-    console.log('Loan funded:', loanFundedEvent.args);
+    const loanFundedEvent = receipt.events.find(
+      (event) => event.event === "LoanFunded",
+    );
+    console.log("Loan funded:", loanFundedEvent.args);
     return receipt;
   } catch (error) {
-    console.error('Error funding loan:', error);
+    console.error("Error funding loan:", error);
     throw error;
   }
 }
@@ -447,37 +462,42 @@ Example of listening to contract events:
 // Using Web3.js
 function listenToEvents() {
   // Listen for loan creation events
-  loanManager.events.LoanCreated({
-    fromBlock: 'latest'
-  })
-  .on('data', event => {
-    console.log('New loan created:', {
-      loanId: event.returnValues.loanId,
-      borrower: event.returnValues.borrower,
-      amount: web3.utils.fromWei(event.returnValues.amount, 'ether'),
-      term: event.returnValues.term,
-      interestRate: event.returnValues.interestRate
+  loanManager.events
+    .LoanCreated({
+      fromBlock: "latest",
+    })
+    .on("data", (event) => {
+      console.log("New loan created:", {
+        loanId: event.returnValues.loanId,
+        borrower: event.returnValues.borrower,
+        amount: web3.utils.fromWei(event.returnValues.amount, "ether"),
+        term: event.returnValues.term,
+        interestRate: event.returnValues.interestRate,
+      });
+    })
+    .on("error", (error) => {
+      console.error("Error in event listener:", error);
     });
-  })
-  .on('error', error => {
-    console.error('Error in event listener:', error);
-  });
 
   // Listen for repayment events
-  loanManager.events.RepaymentMade({
-    fromBlock: 'latest'
-  })
-  .on('data', event => {
-    console.log('Repayment made:', {
-      loanId: event.returnValues.loanId,
-      borrower: event.returnValues.borrower,
-      amount: web3.utils.fromWei(event.returnValues.amount, 'ether'),
-      remainingBalance: web3.utils.fromWei(event.returnValues.remainingBalance, 'ether')
+  loanManager.events
+    .RepaymentMade({
+      fromBlock: "latest",
+    })
+    .on("data", (event) => {
+      console.log("Repayment made:", {
+        loanId: event.returnValues.loanId,
+        borrower: event.returnValues.borrower,
+        amount: web3.utils.fromWei(event.returnValues.amount, "ether"),
+        remainingBalance: web3.utils.fromWei(
+          event.returnValues.remainingBalance,
+          "ether",
+        ),
+      });
+    })
+    .on("error", (error) => {
+      console.error("Error in event listener:", error);
     });
-  })
-  .on('error', error => {
-    console.error('Error in event listener:', error);
-  });
 }
 ```
 
@@ -488,6 +508,7 @@ function listenToEvents() {
 1. **Reentrancy Attacks**:
    - Use the Checks-Effects-Interactions pattern
    - Implement reentrancy guards
+
    ```solidity
    // Reentrancy guard implementation
    bool private _notEntered;
@@ -502,6 +523,7 @@ function listenToEvents() {
 
 2. **Integer Overflow/Underflow**:
    - Use SafeMath library for arithmetic operations
+
    ```solidity
    using SafeMath for uint256;
 
@@ -513,6 +535,7 @@ function listenToEvents() {
 
 3. **Access Control Issues**:
    - Implement proper access control modifiers
+
    ```solidity
    modifier onlyBorrower(uint256 _loanId) {
        require(loans[_loanId].borrower == msg.sender, "Not the borrower");
@@ -550,6 +573,7 @@ function listenToEvents() {
 
 4. **Emergency Mechanisms**:
    - Implement circuit breakers (pause functionality)
+
    ```solidity
    bool public paused;
 
@@ -569,6 +593,7 @@ function listenToEvents() {
 
 5. **Rate Limiting**:
    - Implement rate limiting for sensitive operations
+
    ```solidity
    mapping(address => uint256) public lastOperationTime;
    uint256 public constant OPERATION_DELAY = 1 days;
@@ -592,6 +617,7 @@ function listenToEvents() {
 2. **Computation Optimization**:
    - Move complex calculations off-chain when possible
    - Cache frequently accessed storage variables in memory
+
    ```solidity
    function processLoan(uint256 _loanId) external {
        Loan storage loan = loans[_loanId];
@@ -616,14 +642,14 @@ function listenToEvents() {
 
 Estimated gas costs for common operations:
 
-| Operation | Approximate Gas Cost |
-|-----------|---------------------|
-| Contract Deployment | 1,500,000 - 3,000,000 |
-| Loan Creation | 150,000 - 250,000 |
-| Loan Funding | 80,000 - 120,000 |
-| Loan Disbursement | 100,000 - 150,000 |
-| Repayment Processing | 80,000 - 120,000 |
-| Loan Completion | 60,000 - 100,000 |
+| Operation            | Approximate Gas Cost  |
+| -------------------- | --------------------- |
+| Contract Deployment  | 1,500,000 - 3,000,000 |
+| Loan Creation        | 150,000 - 250,000     |
+| Loan Funding         | 80,000 - 120,000      |
+| Loan Disbursement    | 100,000 - 150,000     |
+| Repayment Processing | 80,000 - 120,000      |
+| Loan Completion      | 60,000 - 100,000      |
 
 ## Testing and Verification
 
@@ -637,7 +663,7 @@ const LoanManager = artifacts.require("LoanManager");
 const ReputationSystem = artifacts.require("ReputationSystem");
 const LenderRegistry = artifacts.require("LenderRegistry");
 
-contract("LoanManager", accounts => {
+contract("LoanManager", (accounts) => {
   const [owner, borrower, lender1, lender2] = accounts;
   let loanManager, reputationSystem, lenderRegistry;
 
@@ -646,7 +672,7 @@ contract("LoanManager", accounts => {
     lenderRegistry = await LenderRegistry.new();
     loanManager = await LoanManager.new(
       reputationSystem.address,
-      lenderRegistry.address
+      lenderRegistry.address,
     );
 
     await reputationSystem.setLoanManager(loanManager.address);
@@ -659,7 +685,9 @@ contract("LoanManager", accounts => {
       const term = 12; // 12 months
       const interestRate = 500; // 5.00%
 
-      const tx = await loanManager.createLoan(amount, term, interestRate, { from: borrower });
+      const tx = await loanManager.createLoan(amount, term, interestRate, {
+        from: borrower,
+      });
       const loanId = tx.logs[0].args.loanId.toNumber();
 
       const loan = await loanManager.loans(loanId);
@@ -676,7 +704,9 @@ contract("LoanManager", accounts => {
       const interestRate = 500;
 
       try {
-        await loanManager.createLoan(amount, term, interestRate, { from: borrower });
+        await loanManager.createLoan(amount, term, interestRate, {
+          from: borrower,
+        });
         assert.fail("Should have thrown an error");
       } catch (error) {
         assert(error.message.includes("Amount must be greater than 0"));
@@ -692,7 +722,9 @@ contract("LoanManager", accounts => {
       const term = 12;
       const interestRate = 500;
 
-      const tx = await loanManager.createLoan(amount, term, interestRate, { from: borrower });
+      const tx = await loanManager.createLoan(amount, term, interestRate, {
+        from: borrower,
+      });
       loanId = tx.logs[0].args.loanId.toNumber();
     });
 
@@ -701,7 +733,10 @@ contract("LoanManager", accounts => {
 
       await loanManager.fundLoan(loanId, { from: lender1, value: fundAmount });
 
-      const lenderContribution = await loanManager.getLenderContribution(loanId, lender1);
+      const lenderContribution = await loanManager.getLenderContribution(
+        loanId,
+        lender1,
+      );
       assert.equal(lenderContribution.toString(), fundAmount);
     });
 
@@ -715,7 +750,9 @@ contract("LoanManager", accounts => {
       assert.equal(loan.status, 1); // Active status
 
       const newBalance = await web3.eth.getBalance(borrower);
-      const expectedBalance = web3.utils.toBN(initialBalance).add(web3.utils.toBN(fundAmount));
+      const expectedBalance = web3.utils
+        .toBN(initialBalance)
+        .add(web3.utils.toBN(fundAmount));
 
       assert.equal(newBalance.toString(), expectedBalance.toString());
     });
@@ -735,6 +772,7 @@ truffle run coverage
 ```
 
 Aim for at least 95% test coverage across all contracts, with particular focus on:
+
 - Fund transfer functions
 - Access control mechanisms
 - State transitions
@@ -763,6 +801,7 @@ For critical contracts, consider formal verification:
 LendSmart implements the proxy pattern for contract upgradeability:
 
 1. **Proxy Contract**:
+
    ```solidity
    // SPDX-License-Identifier: MIT
    pragma solidity ^0.8.0;
@@ -806,6 +845,7 @@ LendSmart implements the proxy pattern for contract upgradeability:
    ```
 
 2. **Implementation Contract**:
+
    ```solidity
    // SPDX-License-Identifier: MIT
    pragma solidity ^0.8.0;
@@ -818,6 +858,7 @@ LendSmart implements the proxy pattern for contract upgradeability:
    ```
 
 3. **Storage Contract**:
+
    ```solidity
    // SPDX-License-Identifier: MIT
    pragma solidity ^0.8.0;
@@ -838,12 +879,14 @@ LendSmart implements the proxy pattern for contract upgradeability:
 ### Upgrade Process
 
 1. **Deploy New Implementation**:
+
    ```javascript
    const LoanManagerV2 = artifacts.require("LoanManagerV2");
    const newImplementation = await LoanManagerV2.new();
    ```
 
 2. **Update Proxy**:
+
    ```javascript
    const LoanManagerProxy = artifacts.require("LoanManagerProxy");
    const proxy = await LoanManagerProxy.at(proxyAddress);
@@ -871,10 +914,11 @@ LendSmart implements the proxy pattern for contract upgradeability:
 The LendSmart backend integrates with blockchain through:
 
 1. **Web3 Service**:
+
    ```javascript
    // services/blockchainService.js
-   const Web3 = require('web3');
-   const LoanManagerABI = require('../contracts/LoanManager.json');
+   const Web3 = require("web3");
+   const LoanManagerABI = require("../contracts/LoanManager.json");
 
    class BlockchainService {
      constructor() {
@@ -882,36 +926,36 @@ The LendSmart backend integrates with blockchain through:
        this.loanManagerAddress = process.env.LOAN_MANAGER_ADDRESS;
        this.loanManager = new this.web3.eth.Contract(
          LoanManagerABI.abi,
-         this.loanManagerAddress
+         this.loanManagerAddress,
        );
 
        // Set up wallet
        this.account = this.web3.eth.accounts.privateKeyToAccount(
-         '0x' + process.env.WALLET_PRIVATE_KEY
+         "0x" + process.env.WALLET_PRIVATE_KEY,
        );
        this.web3.eth.accounts.wallet.add(this.account);
      }
 
      async createLoan(borrowerId, amount, term, interestRate) {
        try {
-         const amountWei = this.web3.utils.toWei(amount.toString(), 'ether');
+         const amountWei = this.web3.utils.toWei(amount.toString(), "ether");
 
          const tx = await this.loanManager.methods
            .createLoan(amountWei, term, interestRate)
            .send({
              from: this.account.address,
              gas: 500000,
-             gasPrice: this.web3.utils.toWei('50', 'gwei')
+             gasPrice: this.web3.utils.toWei("50", "gwei"),
            });
 
          return {
            loanId: tx.events.LoanCreated.returnValues.loanId,
            transactionHash: tx.transactionHash,
-           blockNumber: tx.blockNumber
+           blockNumber: tx.blockNumber,
          };
        } catch (error) {
-         console.error('Blockchain error:', error);
-         throw new Error('Failed to create loan on blockchain');
+         console.error("Blockchain error:", error);
+         throw new Error("Failed to create loan on blockchain");
        }
      }
 
@@ -922,11 +966,12 @@ The LendSmart backend integrates with blockchain through:
    ```
 
 2. **Event Listeners**:
+
    ```javascript
    // services/blockchainEventService.js
-   const BlockchainService = require('./blockchainService');
-   const LoanService = require('./loanService');
-   const NotificationService = require('./notificationService');
+   const BlockchainService = require("./blockchainService");
+   const LoanService = require("./loanService");
+   const NotificationService = require("./notificationService");
 
    class BlockchainEventService {
      constructor() {
@@ -943,34 +988,36 @@ The LendSmart backend integrates with blockchain through:
      }
 
      listenForLoanCreated() {
-       this.loanManager.events.LoanCreated({
-         fromBlock: 'latest'
-       })
-       .on('data', async event => {
-         try {
-           const { loanId, borrower, amount, term, interestRate } = event.returnValues;
+       this.loanManager.events
+         .LoanCreated({
+           fromBlock: "latest",
+         })
+         .on("data", async (event) => {
+           try {
+             const { loanId, borrower, amount, term, interestRate } =
+               event.returnValues;
 
-           // Update database
-           await LoanService.updateLoanBlockchainStatus(loanId, {
-             contractAddress: this.loanManager.options.address,
-             transactionHash: event.transactionHash,
-             blockNumber: event.blockNumber,
-             status: 'pending'
-           });
+             // Update database
+             await LoanService.updateLoanBlockchainStatus(loanId, {
+               contractAddress: this.loanManager.options.address,
+               transactionHash: event.transactionHash,
+               blockNumber: event.blockNumber,
+               status: "pending",
+             });
 
-           // Send notification
-           await NotificationService.sendNotification(borrower, {
-             type: 'loan_created',
-             title: 'Loan Created',
-             message: `Your loan #${loanId} has been created on the blockchain.`
-           });
-         } catch (error) {
-           console.error('Error processing LoanCreated event:', error);
-         }
-       })
-       .on('error', error => {
-         console.error('Error in LoanCreated event listener:', error);
-       });
+             // Send notification
+             await NotificationService.sendNotification(borrower, {
+               type: "loan_created",
+               title: "Loan Created",
+               message: `Your loan #${loanId} has been created on the blockchain.`,
+             });
+           } catch (error) {
+             console.error("Error processing LoanCreated event:", error);
+           }
+         })
+         .on("error", (error) => {
+           console.error("Error in LoanCreated event listener:", error);
+         });
      }
 
      // Other event listeners
@@ -984,10 +1031,11 @@ The LendSmart backend integrates with blockchain through:
 The frontend integrates with blockchain through:
 
 1. **Wallet Connection**:
+
    ```javascript
    // hooks/useWallet.js
-   import { useState, useEffect } from 'react';
-   import Web3 from 'web3';
+   import { useState, useEffect } from "react";
+   import Web3 from "web3";
 
    export function useWallet() {
      const [account, setAccount] = useState(null);
@@ -1001,7 +1049,7 @@ The frontend integrates with blockchain through:
          try {
            // Request account access
            const accounts = await window.ethereum.request({
-             method: 'eth_requestAccounts'
+             method: "eth_requestAccounts",
            });
 
            const web3Instance = new Web3(window.ethereum);
@@ -1015,12 +1063,12 @@ The frontend integrates with blockchain through:
 
            return { account: accounts[0], web3: web3Instance };
          } catch (error) {
-           setError('User denied account access');
+           setError("User denied account access");
            throw error;
          }
        } else {
-         setError('No Ethereum browser extension detected');
-         throw new Error('No Ethereum browser extension detected');
+         setError("No Ethereum browser extension detected");
+         throw new Error("No Ethereum browser extension detected");
        }
      };
 
@@ -1034,7 +1082,7 @@ The frontend integrates with blockchain through:
      // Listen for account changes
      useEffect(() => {
        if (window.ethereum) {
-         window.ethereum.on('accountsChanged', accounts => {
+         window.ethereum.on("accountsChanged", (accounts) => {
            if (accounts.length > 0) {
              setAccount(accounts[0]);
            } else {
@@ -1042,7 +1090,7 @@ The frontend integrates with blockchain through:
            }
          });
 
-         window.ethereum.on('chainChanged', chainId => {
+         window.ethereum.on("chainChanged", (chainId) => {
            setChainId(chainId);
            window.location.reload();
          });
@@ -1062,16 +1110,17 @@ The frontend integrates with blockchain through:
        chainId,
        error,
        connectWallet,
-       disconnectWallet
+       disconnectWallet,
      };
    }
    ```
 
 2. **Contract Interaction**:
+
    ```javascript
    // hooks/useLoanContract.js
-   import { useState, useEffect } from 'react';
-   import LoanManagerABI from '../contracts/LoanManager.json';
+   import { useState, useEffect } from "react";
+   import LoanManagerABI from "../contracts/LoanManager.json";
 
    export function useLoanContract(web3, account) {
      const [contract, setContract] = useState(null);
@@ -1081,17 +1130,18 @@ The frontend integrates with blockchain through:
      useEffect(() => {
        if (web3 && account) {
          try {
-           const loanManagerAddress = process.env.REACT_APP_LOAN_MANAGER_ADDRESS;
+           const loanManagerAddress =
+             process.env.REACT_APP_LOAN_MANAGER_ADDRESS;
            const contractInstance = new web3.eth.Contract(
              LoanManagerABI.abi,
-             loanManagerAddress
+             loanManagerAddress,
            );
 
            setContract(contractInstance);
            setLoading(false);
            setError(null);
          } catch (err) {
-           setError('Failed to load contract');
+           setError("Failed to load contract");
            setLoading(false);
          }
        }
@@ -1099,11 +1149,11 @@ The frontend integrates with blockchain through:
 
      const createLoan = async (amount, term, interestRate) => {
        if (!contract || !account) {
-         throw new Error('Contract or account not available');
+         throw new Error("Contract or account not available");
        }
 
        try {
-         const amountWei = web3.utils.toWei(amount.toString(), 'ether');
+         const amountWei = web3.utils.toWei(amount.toString(), "ether");
 
          const tx = await contract.methods
            .createLoan(amountWei, term, interestRate)
@@ -1111,34 +1161,32 @@ The frontend integrates with blockchain through:
 
          return {
            loanId: tx.events.LoanCreated.returnValues.loanId,
-           transactionHash: tx.transactionHash
+           transactionHash: tx.transactionHash,
          };
        } catch (error) {
-         console.error('Error creating loan:', error);
+         console.error("Error creating loan:", error);
          throw error;
        }
      };
 
      const fundLoan = async (loanId, amount) => {
        if (!contract || !account) {
-         throw new Error('Contract or account not available');
+         throw new Error("Contract or account not available");
        }
 
        try {
-         const amountWei = web3.utils.toWei(amount.toString(), 'ether');
+         const amountWei = web3.utils.toWei(amount.toString(), "ether");
 
-         const tx = await contract.methods
-           .fundLoan(loanId)
-           .send({
-             from: account,
-             value: amountWei
-           });
+         const tx = await contract.methods.fundLoan(loanId).send({
+           from: account,
+           value: amountWei,
+         });
 
          return {
-           transactionHash: tx.transactionHash
+           transactionHash: tx.transactionHash,
          };
        } catch (error) {
-         console.error('Error funding loan:', error);
+         console.error("Error funding loan:", error);
          throw error;
        }
      };
@@ -1150,19 +1198,20 @@ The frontend integrates with blockchain through:
        loading,
        error,
        createLoan,
-       fundLoan
+       fundLoan,
        // Other methods
      };
    }
    ```
 
 3. **Transaction Monitoring**:
+
    ```javascript
    // hooks/useTransactionMonitor.js
-   import { useState, useEffect } from 'react';
+   import { useState, useEffect } from "react";
 
    export function useTransactionMonitor(web3, txHash) {
-     const [status, setStatus] = useState('pending');
+     const [status, setStatus] = useState("pending");
      const [receipt, setReceipt] = useState(null);
      const [confirmations, setConfirmations] = useState(0);
      const [error, setError] = useState(null);
@@ -1182,10 +1231,10 @@ The frontend integrates with blockchain through:
                setReceipt(receipt);
 
                if (receipt.status) {
-                 setStatus('confirmed');
+                 setStatus("confirmed");
                } else {
-                 setStatus('failed');
-                 setError('Transaction failed');
+                 setStatus("failed");
+                 setError("Transaction failed");
                }
              }
 
@@ -1230,36 +1279,37 @@ The frontend integrates with blockchain through:
 LendSmart supports multiple blockchain networks:
 
 1. **Network Configuration**:
+
    ```javascript
    // config/blockchainConfig.js
    const networks = {
      1: {
-       name: 'Ethereum Mainnet',
-       rpcUrl: 'https://mainnet.infura.io/v3/YOUR_INFURA_KEY',
-       explorerUrl: 'https://etherscan.io',
+       name: "Ethereum Mainnet",
+       rpcUrl: "https://mainnet.infura.io/v3/YOUR_INFURA_KEY",
+       explorerUrl: "https://etherscan.io",
        contracts: {
-         loanManager: '0x1234567890123456789012345678901234567890',
-         reputationSystem: '0x1234567890123456789012345678901234567891'
+         loanManager: "0x1234567890123456789012345678901234567890",
+         reputationSystem: "0x1234567890123456789012345678901234567891",
        },
        nativeCurrency: {
-         name: 'Ether',
-         symbol: 'ETH',
-         decimals: 18
-       }
+         name: "Ether",
+         symbol: "ETH",
+         decimals: 18,
+       },
      },
      137: {
-       name: 'Polygon Mainnet',
-       rpcUrl: 'https://polygon-rpc.com',
-       explorerUrl: 'https://polygonscan.com',
+       name: "Polygon Mainnet",
+       rpcUrl: "https://polygon-rpc.com",
+       explorerUrl: "https://polygonscan.com",
        contracts: {
-         loanManager: '0x2345678901234567890123456789012345678901',
-         reputationSystem: '0x2345678901234567890123456789012345678902'
+         loanManager: "0x2345678901234567890123456789012345678901",
+         reputationSystem: "0x2345678901234567890123456789012345678902",
        },
        nativeCurrency: {
-         name: 'MATIC',
-         symbol: 'MATIC',
-         decimals: 18
-       }
+         name: "MATIC",
+         symbol: "MATIC",
+         decimals: 18,
+       },
      },
      // Other networks
    };
@@ -1270,25 +1320,26 @@ LendSmart supports multiple blockchain networks:
 
    module.exports = {
      networks,
-     getNetworkConfig
+     getNetworkConfig,
    };
    ```
 
 2. **Network Switching**:
+
    ```javascript
    // utils/networkUtils.js
-   import { networks } from '../config/blockchainConfig';
+   import { networks } from "../config/blockchainConfig";
 
    export async function switchNetwork(ethereum, targetChainId) {
-     if (!ethereum) throw new Error('No Ethereum provider');
+     if (!ethereum) throw new Error("No Ethereum provider");
 
      const targetNetwork = networks[targetChainId];
-     if (!targetNetwork) throw new Error('Unsupported network');
+     if (!targetNetwork) throw new Error("Unsupported network");
 
      try {
        await ethereum.request({
-         method: 'wallet_switchEthereumChain',
-         params: [{ chainId: `0x${targetChainId.toString(16)}` }]
+         method: "wallet_switchEthereumChain",
+         params: [{ chainId: `0x${targetChainId.toString(16)}` }],
        });
        return true;
      } catch (error) {
@@ -1296,14 +1347,16 @@ LendSmart supports multiple blockchain networks:
        if (error.code === 4902) {
          try {
            await ethereum.request({
-             method: 'wallet_addEthereumChain',
-             params: [{
-               chainId: `0x${targetChainId.toString(16)}`,
-               chainName: targetNetwork.name,
-               nativeCurrency: targetNetwork.nativeCurrency,
-               rpcUrls: [targetNetwork.rpcUrl],
-               blockExplorerUrls: [targetNetwork.explorerUrl]
-             }]
+             method: "wallet_addEthereumChain",
+             params: [
+               {
+                 chainId: `0x${targetChainId.toString(16)}`,
+                 chainName: targetNetwork.name,
+                 nativeCurrency: targetNetwork.nativeCurrency,
+                 rpcUrls: [targetNetwork.rpcUrl],
+                 blockExplorerUrls: [targetNetwork.explorerUrl],
+               },
+             ],
            });
            return true;
          } catch (addError) {

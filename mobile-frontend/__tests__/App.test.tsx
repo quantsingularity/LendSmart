@@ -33,13 +33,18 @@ describe('App (React Native Template Entry Point)', () => {
     expect(appString).toContain('Learn More');
 
     // Basic structure check: the root element should be a View.
-    if (jsonTree) { // Ensure jsonTree is not null before accessing properties
-        expect(jsonTree.type).toBe('View');
-        // Check for the ScrollView which is a direct child in the template App.tsx
-        const scrollView = Array.isArray(jsonTree.children) ? jsonTree.children.find(child => child.type === 'ScrollView') : null;
-        expect(scrollView).toBeDefined();
+    if (jsonTree) {
+      // Ensure jsonTree is not null before accessing properties
+      expect(jsonTree.type).toBe('View');
+      // Check for the ScrollView which is a direct child in the template App.tsx
+      const scrollView = Array.isArray(jsonTree.children)
+        ? jsonTree.children.find(child => child.type === 'ScrollView')
+        : null;
+      expect(scrollView).toBeDefined();
     } else {
-        throw new Error("jsonTree is null, component did not render as expected.");
+      throw new Error(
+        'jsonTree is null, component did not render as expected.',
+      );
     }
   });
 });

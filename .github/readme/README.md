@@ -14,6 +14,7 @@ The LendSmart CI/CD pipeline (`ci-cd.yml`) automates the following processes:
 ### Linting
 
 Runs code quality checks on:
+
 - Smart contracts using Solhint
 - Backend code using ESLint
 - Frontend code using ESLint
@@ -21,6 +22,7 @@ Runs code quality checks on:
 ### Testing
 
 Executes comprehensive test suites for:
+
 - Smart contracts using Hardhat
 - Backend services
 - Frontend components
@@ -29,6 +31,7 @@ Executes comprehensive test suites for:
 ### Deployment
 
 For branches `main` and `develop`, the pipeline:
+
 1. Deploys smart contracts to the Sepolia testnet
 2. Verifies contracts on Etherscan
 3. Updates deployment information
@@ -45,6 +48,7 @@ The workflow requires the following secrets to be configured in the repository s
 ## Usage
 
 The workflow triggers automatically on:
+
 - Push events to `main` and `develop` branches
 - Pull requests targeting `main` and `develop` branches
 

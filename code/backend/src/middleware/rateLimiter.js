@@ -1,7 +1,7 @@
-const rateLimit = require('express-rate-limit');
-const slowDown = require('express-slow-down');
-const { getAuditLogger } = require('../compliance/auditLogger');
-const logger = require('../utils/logger');
+const rateLimit = require("express-rate-limit");
+const slowDown = require("express-slow-down");
+const { getAuditLogger } = require("../compliance/auditLogger");
+const logger = require("../utils/logger");
 
 /**
  * Enhanced Rate Limiting Middleware
@@ -14,14 +14,14 @@ class RateLimiter {
     // Redis store for distributed rate limiting (fallback to memory store)
     let store;
     try {
-      const RedisStore = require('rate-limit-redis');
-      const redisClient = require('../config/redis');
+      const RedisStore = require("rate-limit-redis");
+      const redisClient = require("../config/redis");
       store = new RedisStore({
         client: redisClient,
-        prefix: 'rl:'
+        prefix: "rl:",
       });
     } catch (error) {
-      logger.warn('Redis not available for rate limiting, using memory store');
+      logger.warn("Redis not available for rate limiting, using memory store");
       store = undefined; // Use default memory store
     }
 
@@ -38,9 +38,9 @@ class RateLimiter {
       message: {
         success: false,
         error: {
-          code: 'RATE_LIMIT_EXCEEDED',
-          message: 'Too many requests from this IP, please try again later'
-        }
+          code: "RATE_LIMIT_EXCEEDED",
+          message: "Too many requests from this IP, please try again later",
+        },
       },
       standardHeaders: true,
       legacyHeaders: false,
@@ -50,8 +50,8 @@ class RateLimiter {
         return req.user?.id || req.ip;
       },
       onLimitReached: (req, res, options) => {
-        this.logRateLimitViolation(req, 'global', options.max);
-      }
+        this.logRateLimitViolation(req, "global", options.max);
+      },
     });
   }
 
@@ -65,18 +65,18 @@ class RateLimiter {
       message: {
         success: false,
         error: {
-          code: 'RATE_LIMIT_EXCEEDED',
-          message: 'Too many authentication attempts, please try again later'
-        }
+          code: "RATE_LIMIT_EXCEEDED",
+          message: "Too many authentication attempts, please try again later",
+        },
       },
       standardHeaders: true,
       legacyHeaders: false,
       store: this.store,
       keyGenerator: (req) => `auth:${req.ip}`,
       onLimitReached: (req, res, options) => {
-        this.logRateLimitViolation(req, 'authentication', options.max);
-        this.auditSecurityEvent(req, 'auth_rate_limit_exceeded');
-      }
+        this.logRateLimitViolation(req, "authentication", options.max);
+        this.auditSecurityEvent(req, "auth_rate_limit_exceeded");
+      },
     });
   }
 
@@ -90,18 +90,18 @@ class RateLimiter {
       message: {
         success: false,
         error: {
-          code: 'RATE_LIMIT_EXCEEDED',
-          message: 'Too many password reset attempts, please try again later'
-        }
+          code: "RATE_LIMIT_EXCEEDED",
+          message: "Too many password reset attempts, please try again later",
+        },
       },
       standardHeaders: true,
       legacyHeaders: false,
       store: this.store,
       keyGenerator: (req) => `pwd_reset:${req.ip}`,
       onLimitReached: (req, res, options) => {
-        this.logRateLimitViolation(req, 'password_reset', options.max);
-        this.auditSecurityEvent(req, 'password_reset_rate_limit_exceeded');
-      }
+        this.logRateLimitViolation(req, "password_reset", options.max);
+        this.auditSecurityEvent(req, "password_reset_rate_limit_exceeded");
+      },
     });
   }
 
@@ -115,17 +115,18 @@ class RateLimiter {
       message: {
         success: false,
         error: {
-          code: 'RATE_LIMIT_EXCEEDED',
-          message: 'Too many loan applications today, please try again tomorrow'
-        }
+          code: "RATE_LIMIT_EXCEEDED",
+          message:
+            "Too many loan applications today, please try again tomorrow",
+        },
       },
       standardHeaders: true,
       legacyHeaders: false,
       store: this.store,
       keyGenerator: (req) => `loan_app:${req.user?.id || req.ip}`,
       onLimitReached: (req, res, options) => {
-        this.logRateLimitViolation(req, 'loan_application', options.max);
-      }
+        this.logRateLimitViolation(req, "loan_application", options.max);
+      },
     });
   }
 
@@ -139,17 +140,17 @@ class RateLimiter {
       message: {
         success: false,
         error: {
-          code: 'RATE_LIMIT_EXCEEDED',
-          message: 'Too many file uploads, please try again later'
-        }
+          code: "RATE_LIMIT_EXCEEDED",
+          message: "Too many file uploads, please try again later",
+        },
       },
       standardHeaders: true,
       legacyHeaders: false,
       store: this.store,
       keyGenerator: (req) => `file_upload:${req.user?.id || req.ip}`,
       onLimitReached: (req, res, options) => {
-        this.logRateLimitViolation(req, 'file_upload', options.max);
-      }
+        this.logRateLimitViolation(req, "file_upload", options.max);
+      },
     });
   }
 
@@ -163,17 +164,17 @@ class RateLimiter {
       message: {
         success: false,
         error: {
-          code: 'RATE_LIMIT_EXCEEDED',
-          message: 'API rate limit exceeded'
-        }
+          code: "RATE_LIMIT_EXCEEDED",
+          message: "API rate limit exceeded",
+        },
       },
       standardHeaders: true,
       legacyHeaders: false,
       store: this.store,
       keyGenerator: (req) => `api_key:${req.apiKey || req.ip}`,
       onLimitReached: (req, res, options) => {
-        this.logRateLimitViolation(req, 'api_key', options.max);
-      }
+        this.logRateLimitViolation(req, "api_key", options.max);
+      },
     });
   }
 
@@ -190,7 +191,7 @@ class RateLimiter {
       keyGenerator: (req) => req.user?.id || req.ip,
       onLimitReached: (req, res, options) => {
         this.logSlowDownActivation(req, options);
-      }
+      },
     });
   }
 
@@ -202,12 +203,12 @@ class RateLimiter {
       ...baseConfig,
       max: (req) => {
         // Increase limits for verified users
-        if (req.user?.kycStatus === 'verified') {
+        if (req.user?.kycStatus === "verified") {
           return Math.floor(baseConfig.max * 1.5);
         }
 
         // Decrease limits for suspicious users
-        if (req.user?.accountStatus === 'suspended') {
+        if (req.user?.accountStatus === "suspended") {
           return Math.floor(baseConfig.max * 0.5);
         }
 
@@ -215,11 +216,11 @@ class RateLimiter {
       },
       keyGenerator: (req) => {
         // Different keys for different user types
-        const userType = req.user?.role || 'anonymous';
+        const userType = req.user?.role || "anonymous";
         const identifier = req.user?.id || req.ip;
         return `adaptive:${userType}:${identifier}`;
       },
-      store: this.store
+      store: this.store,
     });
   }
 
@@ -233,17 +234,17 @@ class RateLimiter {
       message: {
         success: false,
         error: {
-          code: 'RATE_LIMIT_EXCEEDED',
-          message: 'Request rate too high, please slow down'
-        }
+          code: "RATE_LIMIT_EXCEEDED",
+          message: "Request rate too high, please slow down",
+        },
       },
       standardHeaders: true,
       legacyHeaders: false,
       store: this.store,
       keyGenerator: (req) => `burst:${req.user?.id || req.ip}`,
       onLimitReached: (req, res, options) => {
-        this.logRateLimitViolation(req, 'burst_protection', options.max);
-      }
+        this.logRateLimitViolation(req, "burst_protection", options.max);
+      },
     });
   }
 
@@ -259,24 +260,24 @@ class RateLimiter {
       message: {
         success: false,
         error: {
-          code: 'RATE_LIMIT_EXCEEDED',
-          message: 'Rate limit exceeded'
-        }
+          code: "RATE_LIMIT_EXCEEDED",
+          message: "Rate limit exceeded",
+        },
       },
       standardHeaders: true,
       legacyHeaders: false,
-      store: this.store
+      store: this.store,
     };
 
     return rateLimit({
       ...defaultConfig,
       ...config,
       onLimitReached: (req, res, options) => {
-        this.logRateLimitViolation(req, config.name || 'custom', options.max);
+        this.logRateLimitViolation(req, config.name || "custom", options.max);
         if (config.onLimitReached) {
           config.onLimitReached(req, res, options);
         }
-      }
+      },
     });
   }
 
@@ -313,19 +314,23 @@ class RateLimiter {
    * @returns {boolean} True if IP is in range
    */
   isIPInRange(ip, range) {
-    if (!range.includes('/')) {
+    if (!range.includes("/")) {
       return ip === range;
     }
 
     try {
-      const [rangeIP, prefixLength] = range.split('/');
+      const [rangeIP, prefixLength] = range.split("/");
       const ipInt = this.ipToInt(ip);
       const rangeInt = this.ipToInt(rangeIP);
       const mask = (0xffffffff << (32 - parseInt(prefixLength))) >>> 0;
 
       return (ipInt & mask) === (rangeInt & mask);
     } catch (error) {
-      logger.error('Error checking IP range', { error: error.message, ip, range });
+      logger.error("Error checking IP range", {
+        error: error.message,
+        ip,
+        range,
+      });
       return false;
     }
   }
@@ -336,7 +341,10 @@ class RateLimiter {
    * @returns {number} IP as integer
    */
   ipToInt(ip) {
-    return ip.split('.').reduce((acc, octet) => (acc << 8) + parseInt(octet), 0) >>> 0;
+    return (
+      ip.split(".").reduce((acc, octet) => (acc << 8) + parseInt(octet), 0) >>>
+      0
+    );
   }
 
   /**
@@ -346,15 +354,15 @@ class RateLimiter {
    * @param {number} limit - Rate limit that was exceeded
    */
   logRateLimitViolation(req, limiterType, limit) {
-    logger.warn('Rate limit exceeded', {
+    logger.warn("Rate limit exceeded", {
       limiterType,
       limit,
       ip: req.ip,
-      userAgent: req.get('User-Agent'),
+      userAgent: req.get("User-Agent"),
       userId: req.user?.id,
       method: req.method,
       url: req.originalUrl,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 
@@ -364,13 +372,13 @@ class RateLimiter {
    * @param {Object} options - Slow down options
    */
   logSlowDownActivation(req, options) {
-    logger.info('Slow down activated', {
+    logger.info("Slow down activated", {
       delay: options.delay,
       ip: req.ip,
       userId: req.user?.id,
       method: req.method,
       url: req.originalUrl,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 
@@ -384,16 +392,16 @@ class RateLimiter {
       await this.auditLogger.logSecurityEvent({
         action: eventType,
         ip: req.ip,
-        userAgent: req.get('User-Agent'),
+        userAgent: req.get("User-Agent"),
         userId: req.user?.id,
         method: req.method,
         url: req.originalUrl,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     } catch (error) {
-      logger.error('Failed to audit security event', {
+      logger.error("Failed to audit security event", {
         error: error.message,
-        eventType
+        eventType,
       });
     }
   }
@@ -405,21 +413,21 @@ class RateLimiter {
    */
   async getRateLimitStatus(key) {
     if (!this.store || !this.store.get) {
-      return { remaining: 'unknown', reset: 'unknown' };
+      return { remaining: "unknown", reset: "unknown" };
     }
 
     try {
       const result = await this.store.get(key);
       return {
-        remaining: result ? result.remaining : 'unknown',
-        reset: result ? result.reset : 'unknown'
+        remaining: result ? result.remaining : "unknown",
+        reset: result ? result.reset : "unknown",
       };
     } catch (error) {
-      logger.error('Error getting rate limit status', {
+      logger.error("Error getting rate limit status", {
         error: error.message,
-        key
+        key,
       });
-      return { remaining: 'error', reset: 'error' };
+      return { remaining: "error", reset: "error" };
     }
   }
 
@@ -435,12 +443,12 @@ class RateLimiter {
 
     try {
       await this.store.reset(key);
-      logger.info('Rate limit reset', { key });
+      logger.info("Rate limit reset", { key });
       return true;
     } catch (error) {
-      logger.error('Error resetting rate limit', {
+      logger.error("Error resetting rate limit", {
         error: error.message,
-        key
+        key,
       });
       return false;
     }

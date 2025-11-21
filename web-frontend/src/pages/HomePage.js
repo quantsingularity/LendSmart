@@ -6,11 +6,16 @@ const HomePage = () => {
     <div className="page-container">
       <h1>Welcome to LendSmart</h1>
       <p>
-        Your trusted platform for peer-to-peer lending. Connect with borrowers and lenders seamlessly and securely.
+        Your trusted platform for peer-to-peer lending. Connect with borrowers
+        and lenders seamlessly and securely.
       </p>
       <div className="cta-buttons">
-        <Link to="/register" className="button button-primary">Get Started as a Borrower</Link>
-        <Link to="/loans" className="button button-secondary">Explore Loan Marketplace</Link>
+        <Link to="/register" className="button button-primary">
+          Get Started as a Borrower
+        </Link>
+        <Link to="/loans" className="button button-secondary">
+          Explore Loan Marketplace
+        </Link>
       </div>
 
       <section className="features">
@@ -70,7 +75,7 @@ const HomePage = () => {
           border: 1px solid #eee;
           border-radius: 8px;
           background-color: #fff;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
         .feature-item h3 {
           color: #007bff;

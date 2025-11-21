@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Typography,
   Box,
@@ -14,17 +14,18 @@ import {
   ListItem,
   ListItemText,
   Tabs,
-  Tab
-} from '@mui/material';
-import { useApi } from '../contexts/ApiContext';
-import { useBlockchain } from '../contexts/BlockchainContext';
-import { useNavigate } from 'react-router-dom';
-import { ethers } from 'ethers';
+  Tab,
+} from "@mui/material";
+import { useApi } from "../contexts/ApiContext";
+import { useBlockchain } from "../contexts/BlockchainContext";
+import { useNavigate } from "react-router-dom";
+import { ethers } from "ethers";
 
 const MyLoans = () => {
   const navigate = useNavigate();
   const { getMyLoans } = useApi();
-  const { getUserLoans, getLoanDetails, isConnected, connectWallet, account } = useBlockchain();
+  const { getUserLoans, getLoanDetails, isConnected, connectWallet, account } =
+    useBlockchain();
 
   const [loans, setLoans] = useState([]);
   const [blockchainLoans, setBlockchainLoans] = useState([]);
@@ -50,16 +51,18 @@ const MyLoans = () => {
         const blockchainLoanIds = await getUserLoans(account);
 
         // Fetch details for each loan
-        const loanDetailsPromises = blockchainLoanIds.map(id => getLoanDetails(id));
+        const loanDetailsPromises = blockchainLoanIds.map((id) =>
+          getLoanDetails(id),
+        );
         const loanDetails = await Promise.all(loanDetailsPromises);
 
-        setBlockchainLoans(loanDetails.filter(loan => loan !== null));
+        setBlockchainLoans(loanDetails.filter((loan) => loan !== null));
       }
 
       setLoading(false);
     } catch (err) {
-      console.error('Error fetching loans:', err);
-      setError('Failed to fetch your loans');
+      console.error("Error fetching loans:", err);
+      setError("Failed to fetch your loans");
       setLoading(false);
     }
   };
@@ -68,7 +71,7 @@ const MyLoans = () => {
     try {
       await connectWallet();
     } catch (err) {
-      setError('Failed to connect wallet');
+      setError("Failed to connect wallet");
     }
   };
 
@@ -82,46 +85,48 @@ const MyLoans = () => {
 
   const getLoanStatusColor = (status) => {
     switch (status) {
-      case 'Active':
-        return 'success.main';
-      case 'Requested':
-        return 'primary.main';
-      case 'Funded':
-        return 'info.main';
-      case 'Repaid':
-        return 'success.main';
-      case 'Defaulted':
-        return 'error.main';
-      case 'Cancelled':
-        return 'text.secondary';
+      case "Active":
+        return "success.main";
+      case "Requested":
+        return "primary.main";
+      case "Funded":
+        return "info.main";
+      case "Repaid":
+        return "success.main";
+      case "Defaulted":
+        return "error.main";
+      case "Cancelled":
+        return "text.secondary";
       default:
-        return 'text.primary';
+        return "text.primary";
     }
   };
 
   const renderLoanCard = (loan, isBlockchain = false) => {
     const loanData = isBlockchain ? loan.loan : loan;
-    const loanId = isBlockchain ? loanData.id : (loan._id || loan.blockchainId);
+    const loanId = isBlockchain ? loanData.id : loan._id || loan.blockchainId;
     const status = isBlockchain ? loanData.status : loan.status;
 
     return (
       <Grid item xs={12} md={6} key={loanId}>
         <Card elevation={2}>
           <CardContent>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+            <Box
+              sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}
+            >
               <Typography variant="h6" component="div" noWrap>
-                {loanData.purpose || 'Loan'}
+                {loanData.purpose || "Loan"}
               </Typography>
               <Typography
                 variant="body2"
                 sx={{
                   color: getLoanStatusColor(status),
-                  fontWeight: 'bold',
+                  fontWeight: "bold",
                   border: 1,
                   borderColor: getLoanStatusColor(status),
                   borderRadius: 1,
                   px: 1,
-                  py: 0.5
+                  py: 0.5,
                 }}
               >
                 {status}
@@ -142,7 +147,8 @@ const MyLoans = () => {
                 <Typography variant="body1" fontWeight="medium">
                   {isBlockchain
                     ? ethers.formatUnits(loanData.principal.toString(), 18)
-                    : loanData.principal} Tokens
+                    : loanData.principal}{" "}
+                  Tokens
                 </Typography>
               </Grid>
               <Grid item xs={6}>
@@ -167,7 +173,9 @@ const MyLoans = () => {
                 </Typography>
                 <Typography variant="body1" fontWeight="medium">
                   {isBlockchain
-                    ? new Date(parseInt(loanData.requestedTime) * 1000).toLocaleDateString()
+                    ? new Date(
+                        parseInt(loanData.requestedTime) * 1000,
+                      ).toLocaleDateString()
                     : new Date(loan.createdAt).toLocaleDateString()}
                 </Typography>
               </Grid>
@@ -190,14 +198,14 @@ const MyLoans = () => {
   const renderBackendLoans = () => {
     if (loans.length === 0) {
       return (
-        <Paper elevation={2} sx={{ p: 4, textAlign: 'center' }}>
+        <Paper elevation={2} sx={{ p: 4, textAlign: "center" }}>
           <Typography variant="h6" color="text.secondary">
             You don't have any loans yet
           </Typography>
           <Button
             variant="contained"
             sx={{ mt: 2 }}
-            onClick={() => navigate('/apply')}
+            onClick={() => navigate("/apply")}
           >
             Apply for a Loan
           </Button>
@@ -207,7 +215,7 @@ const MyLoans = () => {
 
     return (
       <Grid container spacing={3}>
-        {loans.map(loan => renderLoanCard(loan))}
+        {loans.map((loan) => renderLoanCard(loan))}
       </Grid>
     );
   };
@@ -215,7 +223,7 @@ const MyLoans = () => {
   const renderBlockchainLoans = () => {
     if (!isConnected) {
       return (
-        <Paper elevation={2} sx={{ p: 4, textAlign: 'center' }}>
+        <Paper elevation={2} sx={{ p: 4, textAlign: "center" }}>
           <Typography variant="h6" color="text.secondary">
             Connect your wallet to view blockchain loans
           </Typography>
@@ -232,14 +240,14 @@ const MyLoans = () => {
 
     if (blockchainLoans.length === 0) {
       return (
-        <Paper elevation={2} sx={{ p: 4, textAlign: 'center' }}>
+        <Paper elevation={2} sx={{ p: 4, textAlign: "center" }}>
           <Typography variant="h6" color="text.secondary">
             No blockchain loans found for your address
           </Typography>
           <Button
             variant="contained"
             sx={{ mt: 2 }}
-            onClick={() => navigate('/apply')}
+            onClick={() => navigate("/apply")}
           >
             Apply for a Loan
           </Button>
@@ -249,14 +257,14 @@ const MyLoans = () => {
 
     return (
       <Grid container spacing={3}>
-        {blockchainLoans.map(loan => renderLoanCard(loan, true))}
+        {blockchainLoans.map((loan) => renderLoanCard(loan, true))}
       </Grid>
     );
   };
 
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
+      <Box sx={{ display: "flex", justifyContent: "center", my: 4 }}>
         <CircularProgress />
       </Box>
     );
@@ -274,8 +282,12 @@ const MyLoans = () => {
         </Alert>
       )}
 
-      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
-        <Tabs value={tabValue} onChange={handleTabChange} aria-label="loan tabs">
+      <Box sx={{ borderBottom: 1, borderColor: "divider", mb: 3 }}>
+        <Tabs
+          value={tabValue}
+          onChange={handleTabChange}
+          aria-label="loan tabs"
+        >
           <Tab label="Backend Loans" />
           <Tab label="Blockchain Loans" />
         </Tabs>
@@ -283,19 +295,16 @@ const MyLoans = () => {
 
       {tabValue === 0 ? renderBackendLoans() : renderBlockchainLoans()}
 
-      <Box sx={{ mt: 4, display: 'flex', justifyContent: 'center' }}>
+      <Box sx={{ mt: 4, display: "flex", justifyContent: "center" }}>
         <Button
           variant="contained"
           color="primary"
-          onClick={() => navigate('/apply')}
+          onClick={() => navigate("/apply")}
           sx={{ mr: 2 }}
         >
           Apply for New Loan
         </Button>
-        <Button
-          variant="outlined"
-          onClick={() => navigate('/marketplace')}
-        >
+        <Button variant="outlined" onClick={() => navigate("/marketplace")}>
           Browse Marketplace
         </Button>
       </Box>

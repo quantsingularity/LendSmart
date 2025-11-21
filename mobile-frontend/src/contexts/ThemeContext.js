@@ -1,8 +1,14 @@
-import React, { createContext, useState, useMemo, useCallback, useEffect } from 'react';
-import { useColorScheme } from 'react-native';
+import React, {
+  createContext,
+  useState,
+  useMemo,
+  useCallback,
+  useEffect,
+} from 'react';
+import {useColorScheme} from 'react-native';
 import PropTypes from 'prop-types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { CombinedLightTheme, CombinedDarkTheme } from '../theme/theme';
+import {CombinedLightTheme, CombinedDarkTheme} from '../theme/theme';
 
 // Theme preference storage key
 const THEME_PREFERENCE_KEY = 'themePreference';
@@ -23,7 +29,7 @@ export const ThemeContext = createContext({
   fonts: CombinedLightTheme.fonts,
 });
 
-export const ThemeProvider = ({ children }) => {
+export const ThemeProvider = ({children}) => {
   const systemColorScheme = useColorScheme(); // 'light', 'dark', or null
   const [themeMode, setThemeModeState] = useState(THEME_MODES.SYSTEM);
   const [isLoading, setIsLoading] = useState(true);
@@ -33,7 +39,10 @@ export const ThemeProvider = ({ children }) => {
     const loadThemePreference = async () => {
       try {
         const savedThemeMode = await AsyncStorage.getItem(THEME_PREFERENCE_KEY);
-        if (savedThemeMode && Object.values(THEME_MODES).includes(savedThemeMode)) {
+        if (
+          savedThemeMode &&
+          Object.values(THEME_MODES).includes(savedThemeMode)
+        ) {
           setThemeModeState(savedThemeMode);
         }
       } catch (error) {
@@ -55,9 +64,10 @@ export const ThemeProvider = ({ children }) => {
   }, [themeMode, systemColorScheme]);
 
   // Get the appropriate theme object based on dark mode state
-  const theme = useMemo(() =>
-    isDark ? CombinedDarkTheme : CombinedLightTheme,
-  [isDark]);
+  const theme = useMemo(
+    () => (isDark ? CombinedDarkTheme : CombinedLightTheme),
+    [isDark],
+  );
 
   // Toggle between light and dark mode
   const toggleTheme = useCallback(() => {
@@ -66,7 +76,7 @@ export const ThemeProvider = ({ children }) => {
   }, [isDark]);
 
   // Set theme mode and persist to storage
-  const setThemeMode = useCallback(async (mode) => {
+  const setThemeMode = useCallback(async mode => {
     if (!Object.values(THEME_MODES).includes(mode)) {
       console.error(`Invalid theme mode: ${mode}`);
       return;
@@ -81,29 +91,32 @@ export const ThemeProvider = ({ children }) => {
   }, []);
 
   // Extract colors and fonts for easier access
-  const { colors, fonts } = theme;
+  const {colors, fonts} = theme;
 
   // Create context value with memoization for performance
-  const contextValue = useMemo(() => ({
-    isDark,
-    theme,
-    themeMode,
-    toggleTheme,
-    setThemeMode,
-    colors,
-    fonts,
-    isLoading,
-    THEME_MODES,
-  }), [
-    isDark,
-    theme,
-    themeMode,
-    toggleTheme,
-    setThemeMode,
-    colors,
-    fonts,
-    isLoading
-  ]);
+  const contextValue = useMemo(
+    () => ({
+      isDark,
+      theme,
+      themeMode,
+      toggleTheme,
+      setThemeMode,
+      colors,
+      fonts,
+      isLoading,
+      THEME_MODES,
+    }),
+    [
+      isDark,
+      theme,
+      themeMode,
+      toggleTheme,
+      setThemeMode,
+      colors,
+      fonts,
+      isLoading,
+    ],
+  );
 
   return (
     <ThemeContext.Provider value={contextValue}>

@@ -15,7 +15,8 @@ describe("LendSmartLoan", function () {
 
   beforeEach(async function () {
     // Get signers
-    [owner, feeRecipient, riskAssessor, borrower, lender, otherAccount] = await ethers.getSigners();
+    [owner, feeRecipient, riskAssessor, borrower, lender, otherAccount] =
+      await ethers.getSigners();
 
     // Deploy mock ERC20 tokens
     const MockToken = await ethers.getContractFactory("MockERC20");
@@ -28,16 +29,23 @@ describe("LendSmartLoan", function () {
       owner.address,
       PLATFORM_FEE,
       feeRecipient.address,
-      riskAssessor.address
+      riskAssessor.address,
     );
 
     // Mint tokens to borrower and lender
     await mockToken.mint(lender.address, ethers.parseUnits("10000", 18));
-    await mockCollateralToken.mint(borrower.address, ethers.parseUnits("10000", 18));
+    await mockCollateralToken.mint(
+      borrower.address,
+      ethers.parseUnits("10000", 18),
+    );
 
     // Approve contract to spend tokens
-    await mockToken.connect(lender).approve(lendSmartLoan.target, ethers.parseUnits("10000", 18));
-    await mockCollateralToken.connect(borrower).approve(lendSmartLoan.target, ethers.parseUnits("10000", 18));
+    await mockToken
+      .connect(lender)
+      .approve(lendSmartLoan.target, ethers.parseUnits("10000", 18));
+    await mockCollateralToken
+      .connect(borrower)
+      .approve(lendSmartLoan.target, ethers.parseUnits("10000", 18));
   });
 
   describe("Deployment", function () {
@@ -68,7 +76,7 @@ describe("LendSmartLoan", function () {
         "Business expansion",
         false, // not collateralized
         ethers.ZeroAddress,
-        0
+        0,
       );
 
       const receipt = await tx.wait();
@@ -76,7 +84,7 @@ describe("LendSmartLoan", function () {
 
       // Check event emission
       const event = receipt.logs.find(
-        log => log.fragment && log.fragment.name === 'LoanRequested'
+        (log) => log.fragment && log.fragment.name === "LoanRequested",
       );
       expect(event).to.not.be.undefined;
 
@@ -99,7 +107,7 @@ describe("LendSmartLoan", function () {
         "Home renovation",
         true, // collateralized
         mockCollateralToken.target,
-        COLLATERAL_AMOUNT
+        COLLATERAL_AMOUNT,
       );
 
       const receipt = await tx.wait();
@@ -115,73 +123,89 @@ describe("LendSmartLoan", function () {
     it("Should reject loan requests with invalid parameters", async function () {
       // Zero token address
       await expect(
-        lendSmartLoan.connect(borrower).requestLoan(
-          ethers.ZeroAddress,
-          LOAN_AMOUNT,
-          INTEREST_RATE,
-          LOAN_DURATION,
-          "Invalid loan",
-          false,
-          ethers.ZeroAddress,
-          0
-        )
+        lendSmartLoan
+          .connect(borrower)
+          .requestLoan(
+            ethers.ZeroAddress,
+            LOAN_AMOUNT,
+            INTEREST_RATE,
+            LOAN_DURATION,
+            "Invalid loan",
+            false,
+            ethers.ZeroAddress,
+            0,
+          ),
       ).to.be.revertedWith("LendSmartLoan: Token address cannot be zero");
 
       // Zero principal
       await expect(
-        lendSmartLoan.connect(borrower).requestLoan(
-          mockToken.target,
-          0,
-          INTEREST_RATE,
-          LOAN_DURATION,
-          "Invalid loan",
-          false,
-          ethers.ZeroAddress,
-          0
-        )
-      ).to.be.revertedWith("LendSmartLoan: Principal must be greater than zero");
+        lendSmartLoan
+          .connect(borrower)
+          .requestLoan(
+            mockToken.target,
+            0,
+            INTEREST_RATE,
+            LOAN_DURATION,
+            "Invalid loan",
+            false,
+            ethers.ZeroAddress,
+            0,
+          ),
+      ).to.be.revertedWith(
+        "LendSmartLoan: Principal must be greater than zero",
+      );
 
       // Zero duration
       await expect(
-        lendSmartLoan.connect(borrower).requestLoan(
-          mockToken.target,
-          LOAN_AMOUNT,
-          INTEREST_RATE,
-          0,
-          "Invalid loan",
-          false,
-          ethers.ZeroAddress,
-          0
-        )
+        lendSmartLoan
+          .connect(borrower)
+          .requestLoan(
+            mockToken.target,
+            LOAN_AMOUNT,
+            INTEREST_RATE,
+            0,
+            "Invalid loan",
+            false,
+            ethers.ZeroAddress,
+            0,
+          ),
       ).to.be.revertedWith("LendSmartLoan: Duration must be greater than zero");
 
       // Collateralized loan with zero collateral token
       await expect(
-        lendSmartLoan.connect(borrower).requestLoan(
-          mockToken.target,
-          LOAN_AMOUNT,
-          INTEREST_RATE,
-          LOAN_DURATION,
-          "Invalid loan",
-          true,
-          ethers.ZeroAddress,
-          COLLATERAL_AMOUNT
-        )
-      ).to.be.revertedWith("LendSmartLoan: Collateral token cannot be zero address");
+        lendSmartLoan
+          .connect(borrower)
+          .requestLoan(
+            mockToken.target,
+            LOAN_AMOUNT,
+            INTEREST_RATE,
+            LOAN_DURATION,
+            "Invalid loan",
+            true,
+            ethers.ZeroAddress,
+            COLLATERAL_AMOUNT,
+          ),
+      ).to.be.revertedWith(
+        "LendSmartLoan: Collateral token cannot be zero address",
+      );
 
       // Collateralized loan with zero collateral amount
       await expect(
-        lendSmartLoan.connect(borrower).requestLoan(
-          mockToken.target,
-          LOAN_AMOUNT,
-          INTEREST_RATE,
-          LOAN_DURATION,
-          "Invalid loan",
-          true,
-          mockCollateralToken.target,
-          0
-        )
-      ).to.be.revertedWith("LendSmartLoan: Collateral amount must be greater than zero");
+        lendSmartLoan
+          .connect(borrower)
+          .requestLoan(
+            mockToken.target,
+            LOAN_AMOUNT,
+            INTEREST_RATE,
+            LOAN_DURATION,
+            "Invalid loan",
+            true,
+            mockCollateralToken.target,
+            0,
+          ),
+      ).to.be.revertedWith(
+        "LendSmartLoan: Collateral amount must be greater than zero",
+      );
     });
   });
 
@@ -190,16 +214,18 @@ describe("LendSmartLoan", function () {
 
     beforeEach(async function () {
       // Create a loan request
-      const tx = await lendSmartLoan.connect(borrower).requestLoan(
-        mockToken.target,
-        LOAN_AMOUNT,
-        INTEREST_RATE,
-        LOAN_DURATION,
-        "Business expansion",
-        false,
-        ethers.ZeroAddress,
-        0
-      );
+      const tx = await lendSmartLoan
+        .connect(borrower)
+        .requestLoan(
+          mockToken.target,
+          LOAN_AMOUNT,
+          INTEREST_RATE,
+          LOAN_DURATION,
+          "Business expansion",
+          false,
+          ethers.ZeroAddress,
+          0,
+        );
 
       const receipt = await tx.wait();
       loanId = 1; // First loan ID should be 1
@@ -211,14 +237,14 @@ describe("LendSmartLoan", function () {
       const tx = await lendSmartLoan.connect(riskAssessor).setLoanRiskScore(
         loanId,
         riskScore,
-        false // don't reject
+        false, // don't reject
       );
 
       const receipt = await tx.wait();
 
       // Check event emission
       const event = receipt.logs.find(
-        log => log.fragment && log.fragment.name === 'RiskScoreAssigned'
+        (log) => log.fragment && log.fragment.name === "RiskScoreAssigned",
       );
       expect(event).to.not.be.undefined;
 
@@ -234,14 +260,14 @@ describe("LendSmartLoan", function () {
       const tx = await lendSmartLoan.connect(riskAssessor).setLoanRiskScore(
         loanId,
         riskScore,
-        true // reject
+        true, // reject
       );
 
       const receipt = await tx.wait();
 
       // Check event emission
       const rejectEvent = receipt.logs.find(
-        log => log.fragment && log.fragment.name === 'LoanRejected'
+        (log) => log.fragment && log.fragment.name === "LoanRejected",
       );
       expect(rejectEvent).to.not.be.undefined;
 
@@ -252,11 +278,7 @@ describe("LendSmartLoan", function () {
 
     it("Should prevent non-risk assessors from setting risk scores", async function () {
       await expect(
-        lendSmartLoan.connect(otherAccount).setLoanRiskScore(
-          loanId,
-          50,
-          false
-        )
+        lendSmartLoan.connect(otherAccount).setLoanRiskScore(loanId, 50, false),
       ).to.be.revertedWith("LendSmartLoan: Caller is not the risk assessor");
     });
   });
@@ -266,39 +288,45 @@ describe("LendSmartLoan", function () {
 
     beforeEach(async function () {
       // Create a collateralized loan request
-      const tx = await lendSmartLoan.connect(borrower).requestLoan(
-        mockToken.target,
-        LOAN_AMOUNT,
-        INTEREST_RATE,
-        LOAN_DURATION,
-        "Home renovation",
-        true,
-        mockCollateralToken.target,
-        COLLATERAL_AMOUNT
-      );
+      const tx = await lendSmartLoan
+        .connect(borrower)
+        .requestLoan(
+          mockToken.target,
+          LOAN_AMOUNT,
+          INTEREST_RATE,
+          LOAN_DURATION,
+          "Home renovation",
+          true,
+          mockCollateralToken.target,
+          COLLATERAL_AMOUNT,
+        );
 
       const receipt = await tx.wait();
       loanId = 1; // First loan ID should be 1
     });
 
     it("Should allow borrower to deposit collateral", async function () {
-      const tx = await lendSmartLoan.connect(borrower).depositCollateral(loanId);
+      const tx = await lendSmartLoan
+        .connect(borrower)
+        .depositCollateral(loanId);
       const receipt = await tx.wait();
 
       // Check event emission
       const event = receipt.logs.find(
-        log => log.fragment && log.fragment.name === 'CollateralDeposited'
+        (log) => log.fragment && log.fragment.name === "CollateralDeposited",
       );
       expect(event).to.not.be.undefined;
 
       // Check collateral token balance of contract
-      const contractBalance = await mockCollateralToken.balanceOf(lendSmartLoan.target);
+      const contractBalance = await mockCollateralToken.balanceOf(
+        lendSmartLoan.target,
+      );
       expect(contractBalance).to.equal(COLLATERAL_AMOUNT);
     });
 
     it("Should prevent non-borrowers from depositing collateral", async function () {
       await expect(
-        lendSmartLoan.connect(otherAccount).depositCollateral(loanId)
+        lendSmartLoan.connect(otherAccount).depositCollateral(loanId),
       ).to.be.revertedWith("LendSmartLoan: Caller is not the borrower");
     });
   });
@@ -308,16 +336,18 @@ describe("LendSmartLoan", function () {
 
     beforeEach(async function () {
       // Create a loan request
-      await lendSmartLoan.connect(borrower).requestLoan(
-        mockToken.target,
-        LOAN_AMOUNT,
-        INTEREST_RATE,
-        LOAN_DURATION,
-        "Business expansion",
-        false,
-        ethers.ZeroAddress,
-        0
-      );
+      await lendSmartLoan
+        .connect(borrower)
+        .requestLoan(
+          mockToken.target,
+          LOAN_AMOUNT,
+          INTEREST_RATE,
+          LOAN_DURATION,
+          "Business expansion",
+          false,
+          ethers.ZeroAddress,
+          0,
+        );
 
       loanId = 1; // First loan ID should be 1
 
@@ -325,7 +355,7 @@ describe("LendSmartLoan", function () {
       await lendSmartLoan.connect(riskAssessor).setLoanRiskScore(
         loanId,
         50, // Medium risk
-        false // don't reject
+        false, // don't reject
       );
     });
 
@@ -335,7 +365,7 @@ describe("LendSmartLoan", function () {
 
       // Check event emission
       const event = receipt.logs.find(
-        log => log.fragment && log.fragment.name === 'LoanFunded'
+        (log) => log.fragment && log.fragment.name === "LoanFunded",
       );
       expect(event).to.not.be.undefined;
 
@@ -352,35 +382,43 @@ describe("LendSmartLoan", function () {
     it("Should prevent borrower from funding their own loan", async function () {
       // First mint tokens to borrower
       await mockToken.mint(borrower.address, LOAN_AMOUNT);
-      await mockToken.connect(borrower).approve(lendSmartLoan.target, LOAN_AMOUNT);
+      await mockToken
+        .connect(borrower)
+        .approve(lendSmartLoan.target, LOAN_AMOUNT);
 
       await expect(
-        lendSmartLoan.connect(borrower).fundLoan(loanId)
-      ).to.be.revertedWith("LendSmartLoan: Borrower cannot fund their own loan");
+        lendSmartLoan.connect(borrower).fundLoan(loanId),
+      ).to.be.revertedWith(
+        "LendSmartLoan: Borrower cannot fund their own loan",
+      );
     });
 
     it("Should require collateral deposit for collateralized loans", async function () {
       // Create a collateralized loan
-      await lendSmartLoan.connect(borrower).requestLoan(
-        mockToken.target,
-        LOAN_AMOUNT,
-        INTEREST_RATE,
-        LOAN_DURATION,
-        "Home renovation",
-        true,
-        mockCollateralToken.target,
-        COLLATERAL_AMOUNT
-      );
+      await lendSmartLoan
+        .connect(borrower)
+        .requestLoan(
+          mockToken.target,
+          LOAN_AMOUNT,
+          INTEREST_RATE,
+          LOAN_DURATION,
+          "Home renovation",
+          true,
+          mockCollateralToken.target,
+          COLLATERAL_AMOUNT,
+        );
 
       const collateralizedLoanId = 2;
 
       // Try to fund without collateral deposited
       await expect(
-        lendSmartLoan.connect(lender).fundLoan(collateralizedLoanId)
+        lendSmartLoan.connect(lender).fundLoan(collateralizedLoanId),
       ).to.be.revertedWith("LendSmartLoan: Collateral not deposited");
 
       // Deposit collateral
-      await lendSmartLoan.connect(borrower).depositCollateral(collateralizedLoanId);
+      await lendSmartLoan
+        .connect(borrower)
+        .depositCollateral(collateralizedLoanId);
 
       // Now funding should succeed
       await lendSmartLoan.connect(lender).fundLoan(collateralizedLoanId);
@@ -395,36 +433,40 @@ describe("LendSmartLoan", function () {
 
     beforeEach(async function () {
       // Create and fund a loan
-      await lendSmartLoan.connect(borrower).requestLoan(
-        mockToken.target,
-        LOAN_AMOUNT,
-        INTEREST_RATE,
-        LOAN_DURATION,
-        "Business expansion",
-        false,
-        ethers.ZeroAddress,
-        0
-      );
+      await lendSmartLoan
+        .connect(borrower)
+        .requestLoan(
+          mockToken.target,
+          LOAN_AMOUNT,
+          INTEREST_RATE,
+          LOAN_DURATION,
+          "Business expansion",
+          false,
+          ethers.ZeroAddress,
+          0,
+        );
 
       loanId = 1;
 
-      await lendSmartLoan.connect(riskAssessor).setLoanRiskScore(loanId, 50, false);
+      await lendSmartLoan
+        .connect(riskAssessor)
+        .setLoanRiskScore(loanId, 50, false);
       await lendSmartLoan.connect(lender).fundLoan(loanId);
     });
 
     it("Should create a valid repayment schedule", async function () {
       const numberOfPayments = 3;
 
-      const tx = await lendSmartLoan.connect(borrower).createRepaymentSchedule(
-        loanId,
-        numberOfPayments
-      );
+      const tx = await lendSmartLoan
+        .connect(borrower)
+        .createRepaymentSchedule(loanId, numberOfPayments);
 
       const receipt = await tx.wait();
 
       // Check event emission
       const event = receipt.logs.find(
-        log => log.fragment && log.fragment.name === 'RepaymentScheduleCreated'
+        (log) =>
+          log.fragment && log.fragment.name === "RepaymentScheduleCreated",
       );
       expect(event).to.not.be.undefined;
 
@@ -436,7 +478,7 @@ describe("LendSmartLoan", function () {
       // Verify schedule intervals
       const expectedInterval = LOAN_DURATION / numberOfPayments;
       for (let i = 1; i < numberOfPayments; i++) {
-        const timeDiff = loanDetails.schedule[i] - loanDetails.schedule[i-1];
+        const timeDiff = loanDetails.schedule[i] - loanDetails.schedule[i - 1];
         expect(timeDiff).to.equal(expectedInterval);
       }
     });
@@ -444,15 +486,19 @@ describe("LendSmartLoan", function () {
     it("Should reject invalid repayment schedules", async function () {
       // Try to create schedule with zero payments
       await expect(
-        lendSmartLoan.connect(borrower).createRepaymentSchedule(loanId, 0)
-      ).to.be.revertedWith("LendSmartLoan: Number of payments must be greater than zero");
+        lendSmartLoan.connect(borrower).createRepaymentSchedule(loanId, 0),
+      ).to.be.revertedWith(
+        "LendSmartLoan: Number of payments must be greater than zero",
+      );
 
       // Try to create schedule with too many payments (causing interval to be too short)
       const tooManyPayments = 1000; // This would make intervals very small
       await lendSmartLoan.setMinRepaymentInterval(SECONDS_IN_DAY); // Set min interval to 1 day
 
       await expect(
-        lendSmartLoan.connect(borrower).createRepaymentSchedule(loanId, tooManyPayments)
+        lendSmartLoan
+          .connect(borrower)
+          .createRepaymentSchedule(loanId, tooManyPayments),
       ).to.be.revertedWith("LendSmartLoan: Payment interval too short");
     });
   });
@@ -462,20 +508,24 @@ describe("LendSmartLoan", function () {
 
     beforeEach(async function () {
       // Create and fund a loan
-      await lendSmartLoan.connect(borrower).requestLoan(
-        mockToken.target,
-        LOAN_AMOUNT,
-        INTEREST_RATE,
-        LOAN_DURATION,
-        "Business expansion",
-        false,
-        ethers.ZeroAddress,
-        0
-      );
+      await lendSmartLoan
+        .connect(borrower)
+        .requestLoan(
+          mockToken.target,
+          LOAN_AMOUNT,
+          INTEREST_RATE,
+          LOAN_DURATION,
+          "Business expansion",
+          false,
+          ethers.ZeroAddress,
+          0,
+        );
 
       loanId = 1;
 
-      await lendSmartLoan.connect(riskAssessor).setLoanRiskScore(loanId, 50, false);
+      await lendSmartLoan
+        .connect(riskAssessor)
+        .setLoanRiskScore(loanId, 50, false);
       await lendSmartLoan.connect(lender).fundLoan(loanId);
     });
 
@@ -487,7 +537,7 @@ describe("LendSmartLoan", function () {
 
       // Check event emission
       const event = receipt.logs.find(
-        log => log.fragment && log.fragment.name === 'LoanDisbursed'
+        (log) => log.fragment && log.fragment.name === "LoanDisbursed",
       );
       expect(event).to.not.be.undefined;
 
@@ -498,10 +548,14 @@ describe("LendSmartLoan", function () {
 
       // Check token balances
       const borrowerBalanceAfter = await mockToken.balanceOf(borrower.address);
-      expect(borrowerBalanceAfter - borrowerBalanceBefore).to.equal(LOAN_AMOUNT);
+      expect(borrowerBalanceAfter - borrowerBalanceBefore).to.equal(
+        LOAN_AMOUNT,
+      );
 
       // Check reputation score update
-      const borrowerScore = await lendSmartLoan.getUserReputationScore(borrower.address);
+      const borrowerScore = await lendSmartLoan.getUserReputationScore(
+        borrower.address,
+      );
       expect(borrowerScore).to.be.gt(0);
     });
 
@@ -514,7 +568,7 @@ describe("LendSmartLoan", function () {
 
     it("Should prevent unauthorized accounts from disbursing funds", async function () {
       await expect(
-        lendSmartLoan.connect(otherAccount).disburseLoan(loanId)
+        lendSmartLoan.connect(otherAccount).disburseLoan(loanId),
       ).to.be.revertedWith("LendSmartLoan: Not authorized to disburse");
     });
   });
@@ -525,20 +579,24 @@ describe("LendSmartLoan", function () {
 
     beforeEach(async function () {
       // Create, fund, and disburse a loan
-      await lendSmartLoan.connect(borrower).requestLoan(
-        mockToken.target,
-        LOAN_AMOUNT,
-        INTEREST_RATE,
-        LOAN_DURATION,
-        "Business expansion",
-        false,
-        ethers.ZeroAddress,
-        0
-      );
+      await lendSmartLoan
+        .connect(borrower)
+        .requestLoan(
+          mockToken.target,
+          LOAN_AMOUNT,
+          INTEREST_RATE,
+          LOAN_DURATION,
+          "Business expansion",
+          false,
+          ethers.ZeroAddress,
+          0,
+        );
 
       loanId = 1;
 
-      await lendSmartLoan.connect(riskAssessor).setLoanRiskScore(loanId, 50, false);
+      await lendSmartLoan
+        .connect(riskAssessor)
+        .setLoanRiskScore(loanId, 50, false);
       await lendSmartLoan.connect(lender).fundLoan(loanId);
       await lendSmartLoan.connect(borrower).disburseLoan(loanId);
 
@@ -548,18 +606,22 @@ describe("LendSmartLoan", function () {
 
       // Mint repayment tokens to borrower
       await mockToken.mint(borrower.address, repaymentAmount);
-      await mockToken.connect(borrower).approve(lendSmartLoan.target, repaymentAmount);
+      await mockToken
+        .connect(borrower)
+        .approve(lendSmartLoan.target, repaymentAmount);
     });
 
     it("Should allow borrower to make partial repayment", async function () {
       const partialAmount = repaymentAmount / 2n;
 
-      const tx = await lendSmartLoan.connect(borrower).repayLoan(loanId, partialAmount);
+      const tx = await lendSmartLoan
+        .connect(borrower)
+        .repayLoan(loanId, partialAmount);
       const receipt = await tx.wait();
 
       // Check event emission
       const event = receipt.logs.find(
-        log => log.fragment && log.fragment.name === 'LoanRepaid'
+        (log) => log.fragment && log.fragment.name === "LoanRepaid",
       );
       expect(event).to.not.be.undefined;
 
@@ -570,7 +632,9 @@ describe("LendSmartLoan", function () {
     });
 
     it("Should allow borrower to fully repay loan", async function () {
-      const tx = await lendSmartLoan.connect(borrower).repayLoan(loanId, repaymentAmount);
+      const tx = await lendSmartLoan
+        .connect(borrower)
+        .repayLoan(loanId, repaymentAmount);
       const receipt = await tx.wait();
 
       // Check loan status
@@ -579,7 +643,9 @@ describe("LendSmartLoan", function () {
       expect(loan.amountRepaid).to.equal(repaymentAmount);
 
       // Check reputation score update
-      const borrowerScore = await lendSmartLoan.getUserReputationScore(borrower.address);
+      const borrowerScore = await lendSmartLoan.getUserReputationScore(
+        borrower.address,
+      );
       expect(borrowerScore).to.be.gt(1); // Should be higher after repayment
     });
 
@@ -588,9 +654,13 @@ describe("LendSmartLoan", function () {
 
       // Mint extra tokens for overpayment
       await mockToken.mint(borrower.address, overpaymentAmount);
-      await mockToken.connect(borrower).approve(lendSmartLoan.target, overpaymentAmount);
+      await mockToken
+        .connect(borrower)
+        .approve(lendSmartLoan.target, overpaymentAmount);
 
-      await lendSmartLoan.connect(borrower).repayLoan(loanId, overpaymentAmount);
+      await lendSmartLoan
+        .connect(borrower)
+        .repayLoan(loanId, overpaymentAmount);
 
       // Check loan status and repayment amount
       const loan = await lendSmartLoan.loans(loanId);
@@ -599,11 +669,15 @@ describe("LendSmartLoan", function () {
     });
 
     it("Should distribute platform fees correctly", async function () {
-      const feeRecipientBalanceBefore = await mockToken.balanceOf(feeRecipient.address);
+      const feeRecipientBalanceBefore = await mockToken.balanceOf(
+        feeRecipient.address,
+      );
 
       await lendSmartLoan.connect(borrower).repayLoan(loanId, repaymentAmount);
 
-      const feeRecipientBalanceAfter = await mockToken.balanceOf(feeRecipient.address);
+      const feeRecipientBalanceAfter = await mockToken.balanceOf(
+        feeRecipient.address,
+      );
       expect(feeRecipientBalanceAfter).to.be.gt(feeRecipientBalanceBefore);
 
       // Calculate expected fee
@@ -611,7 +685,9 @@ describe("LendSmartLoan", function () {
       const interest = repaymentAmount - LOAN_AMOUNT;
       const expectedFee = (interest * BigInt(PLATFORM_FEE)) / 10000n;
 
-      expect(feeRecipientBalanceAfter - feeRecipientBalanceBefore).to.equal(expectedFee);
+      expect(feeRecipientBalanceAfter - feeRecipientBalanceBefore).to.equal(
+        expectedFee,
+      );
     });
   });
 
@@ -621,24 +697,30 @@ describe("LendSmartLoan", function () {
 
     beforeEach(async function () {
       // Create a collateralized loan
-      await lendSmartLoan.connect(borrower).requestLoan(
-        mockToken.target,
-        LOAN_AMOUNT,
-        INTEREST_RATE,
-        LOAN_DURATION,
-        "Home renovation",
-        true,
-        mockCollateralToken.target,
-        COLLATERAL_AMOUNT
-      );
+      await lendSmartLoan
+        .connect(borrower)
+        .requestLoan(
+          mockToken.target,
+          LOAN_AMOUNT,
+          INTEREST_RATE,
+          LOAN_DURATION,
+          "Home renovation",
+          true,
+          mockCollateralToken.target,
+          COLLATERAL_AMOUNT,
+        );
 
       collateralizedLoanId = 1;
 
       // Deposit collateral
-      await lendSmartLoan.connect(borrower).depositCollateral(collateralizedLoanId);
+      await lendSmartLoan
+        .connect(borrower)
+        .depositCollateral(collateralizedLoanId);
 
       // Fund and disburse loan
-      await lendSmartLoan.connect(riskAssessor).setLoanRiskScore(collateralizedLoanId, 50, false);
+      await lendSmartLoan
+        .connect(riskAssessor)
+        .setLoanRiskScore(collateralizedLoanId, 50, false);
       await lendSmartLoan.connect(lender).fundLoan(collateralizedLoanId);
       await lendSmartLoan.connect(borrower).disburseLoan(collateralizedLoanId);
 
@@ -648,44 +730,68 @@ describe("LendSmartLoan", function () {
 
       // Mint repayment tokens to borrower
       await mockToken.mint(borrower.address, repaymentAmount);
-      await mockToken.connect(borrower).approve(lendSmartLoan.target, repaymentAmount);
+      await mockToken
+        .connect(borrower)
+        .approve(lendSmartLoan.target, repaymentAmount);
     });
 
     it("Should release collateral to borrower after full repayment", async function () {
-      const borrowerCollateralBefore = await mockCollateralToken.balanceOf(borrower.address);
+      const borrowerCollateralBefore = await mockCollateralToken.balanceOf(
+        borrower.address,
+      );
 
       // Repay loan
-      await lendSmartLoan.connect(borrower).repayLoan(collateralizedLoanId, repaymentAmount);
+      await lendSmartLoan
+        .connect(borrower)
+        .repayLoan(collateralizedLoanId, repaymentAmount);
 
       // Check collateral release
-      const borrowerCollateralAfter = await mockCollateralToken.balanceOf(borrower.address);
-      expect(borrowerCollateralAfter - borrowerCollateralBefore).to.equal(COLLATERAL_AMOUNT);
+      const borrowerCollateralAfter = await mockCollateralToken.balanceOf(
+        borrower.address,
+      );
+      expect(borrowerCollateralAfter - borrowerCollateralBefore).to.equal(
+        COLLATERAL_AMOUNT,
+      );
 
       // Check contract collateral balance
-      const contractCollateralBalance = await mockCollateralToken.balanceOf(lendSmartLoan.target);
+      const contractCollateralBalance = await mockCollateralToken.balanceOf(
+        lendSmartLoan.target,
+      );
       expect(contractCollateralBalance).to.equal(0);
     });
 
     it("Should transfer collateral to lender on default", async function () {
-      const lenderCollateralBefore = await mockCollateralToken.balanceOf(lender.address);
+      const lenderCollateralBefore = await mockCollateralToken.balanceOf(
+        lender.address,
+      );
 
       // Advance time past loan duration + grace period
-      await ethers.provider.send("evm_increaseTime", [LOAN_DURATION + 4 * SECONDS_IN_DAY]);
+      await ethers.provider.send("evm_increaseTime", [
+        LOAN_DURATION + 4 * SECONDS_IN_DAY,
+      ]);
       await ethers.provider.send("evm_mine");
 
       // Mark loan as defaulted
-      await lendSmartLoan.connect(lender).markLoanAsDefaulted(collateralizedLoanId);
+      await lendSmartLoan
+        .connect(lender)
+        .markLoanAsDefaulted(collateralizedLoanId);
 
       // Check collateral transfer to lender
-      const lenderCollateralAfter = await mockCollateralToken.balanceOf(lender.address);
-      expect(lenderCollateralAfter - lenderCollateralBefore).to.equal(COLLATERAL_AMOUNT);
+      const lenderCollateralAfter = await mockCollateralToken.balanceOf(
+        lender.address,
+      );
+      expect(lenderCollateralAfter - lenderCollateralBefore).to.equal(
+        COLLATERAL_AMOUNT,
+      );
 
       // Check loan status
       const loan = await lendSmartLoan.loans(collateralizedLoanId);
       expect(loan.status).to.equal(4); // LoanStatus.Defaulted
 
       // Check borrower reputation score decrease
-      const borrowerScore = await lendSmartLoan.getUserReputationScore(borrower.address);
+      const borrowerScore = await lendSmartLoan.getUserReputationScore(
+        borrower.address,
+      );
       expect(borrowerScore).to.equal(0); // Should be reduced to 0 after default
     });
   });
@@ -695,27 +801,31 @@ describe("LendSmartLoan", function () {
 
     beforeEach(async function () {
       // Create a loan request
-      await lendSmartLoan.connect(borrower).requestLoan(
-        mockToken.target,
-        LOAN_AMOUNT,
-        INTEREST_RATE,
-        LOAN_DURATION,
-        "Business expansion",
-        false,
-        ethers.ZeroAddress,
-        0
-      );
+      await lendSmartLoan
+        .connect(borrower)
+        .requestLoan(
+          mockToken.target,
+          LOAN_AMOUNT,
+          INTEREST_RATE,
+          LOAN_DURATION,
+          "Business expansion",
+          false,
+          ethers.ZeroAddress,
+          0,
+        );
 
       loanId = 1;
     });
 
     it("Should allow borrower to cancel unfunded loan", async function () {
-      const tx = await lendSmartLoan.connect(borrower).cancelLoanRequest(loanId);
+      const tx = await lendSmartLoan
+        .connect(borrower)
+        .cancelLoanRequest(loanId);
       const receipt = await tx.wait();
 
       // Check event emission
       const event = receipt.logs.find(
-        log => log.fragment && log.fragment.name === 'LoanCancelled'
+        (log) => log.fragment && log.fragment.name === "LoanCancelled",
       );
       expect(event).to.not.be.undefined;
 
@@ -726,41 +836,57 @@ describe("LendSmartLoan", function () {
 
     it("Should prevent cancellation of funded loans", async function () {
       // Fund the loan
-      await lendSmartLoan.connect(riskAssessor).setLoanRiskScore(loanId, 50, false);
+      await lendSmartLoan
+        .connect(riskAssessor)
+        .setLoanRiskScore(loanId, 50, false);
       await lendSmartLoan.connect(lender).fundLoan(loanId);
 
       // Try to cancel
       await expect(
-        lendSmartLoan.connect(borrower).cancelLoanRequest(loanId)
-      ).to.be.revertedWith("LendSmartLoan: Loan not in Requested state or already funded");
+        lendSmartLoan.connect(borrower).cancelLoanRequest(loanId),
+      ).to.be.revertedWith(
+        "LendSmartLoan: Loan not in Requested state or already funded",
+      );
     });
 
     it("Should return collateral when cancelling collateralized loan", async function () {
       // Create a collateralized loan
-      await lendSmartLoan.connect(borrower).requestLoan(
-        mockToken.target,
-        LOAN_AMOUNT,
-        INTEREST_RATE,
-        LOAN_DURATION,
-        "Home renovation",
-        true,
-        mockCollateralToken.target,
-        COLLATERAL_AMOUNT
-      );
+      await lendSmartLoan
+        .connect(borrower)
+        .requestLoan(
+          mockToken.target,
+          LOAN_AMOUNT,
+          INTEREST_RATE,
+          LOAN_DURATION,
+          "Home renovation",
+          true,
+          mockCollateralToken.target,
+          COLLATERAL_AMOUNT,
+        );
 
       const collateralizedLoanId = 2;
 
       // Deposit collateral
-      await lendSmartLoan.connect(borrower).depositCollateral(collateralizedLoanId);
+      await lendSmartLoan
+        .connect(borrower)
+        .depositCollateral(collateralizedLoanId);
 
-      const borrowerCollateralBefore = await mockCollateralToken.balanceOf(borrower.address);
+      const borrowerCollateralBefore = await mockCollateralToken.balanceOf(
+        borrower.address,
+      );
 
       // Cancel loan
-      await lendSmartLoan.connect(borrower).cancelLoanRequest(collateralizedLoanId);
+      await lendSmartLoan
+        .connect(borrower)
+        .cancelLoanRequest(collateralizedLoanId);
 
       // Check collateral return
-      const borrowerCollateralAfter = await mockCollateralToken.balanceOf(borrower.address);
-      expect(borrowerCollateralAfter - borrowerCollateralBefore).to.equal(COLLATERAL_AMOUNT);
+      const borrowerCollateralAfter = await mockCollateralToken.balanceOf(
+        borrower.address,
+      );
+      expect(borrowerCollateralAfter - borrowerCollateralBefore).to.equal(
+        COLLATERAL_AMOUNT,
+      );
     });
   });
 
@@ -788,13 +914,33 @@ describe("LendSmartLoan", function () {
 
       expect(await lendSmartLoan.riskAssessor()).to.equal(newRiskAssessor);
     });
-        it("Should allow owner to pause and unpause the contract", async function () {
+    it("Should allow owner to pause and unpause the contract", async function () {
       // Pause contract
       await lendSmartLoan.connect(owner).pause();
 
       // Try to request loan while paused
       await expect(
-        lendSmartLoan.connect(borrower).requestLoan(
+        lendSmartLoan
+          .connect(borrower)
+          .requestLoan(
+            mockToken.target,
+            LOAN_AMOUNT,
+            INTEREST_RATE,
+            LOAN_DURATION,
+            "Business expansion",
+            false,
+            ethers.ZeroAddress,
+            0,
+          ),
+      ).to.be.revertedWithCustomError(lendSmartLoan, "EnforcedPause");
+
+      // Unpause contract
+      await lendSmartLoan.connect(owner).unpause();
+
+      // Should work now
+      await lendSmartLoan
+        .connect(borrower)
+        .requestLoan(
           mockToken.target,
           LOAN_AMOUNT,
           INTEREST_RATE,
@@ -802,38 +948,33 @@ describe("LendSmartLoan", function () {
           "Business expansion",
           false,
           ethers.ZeroAddress,
-          0
-        )
-      ).to.be.revertedWithCustomError(lendSmartLoan, "EnforcedPause");
-
-      // Unpause contract
-      await lendSmartLoan.connect(owner).unpause();
-
-      // Should work now
-      await lendSmartLoan.connect(borrower).requestLoan(
-        mockToken.target,
-        LOAN_AMOUNT,
-        INTEREST_RATE,
-        LOAN_DURATION,
-        "Business expansion",
-        false,
-        ethers.ZeroAddress,
-        0
-      );
-    });;
+          0,
+        );
+    });
 
     it("Should prevent non-owners from calling admin functions", async function () {
       await expect(
-        lendSmartLoan.connect(otherAccount).setPlatformFeeRate(200)
-      ).to.be.revertedWithCustomError(lendSmartLoan, "OwnableUnauthorizedAccount");
+        lendSmartLoan.connect(otherAccount).setPlatformFeeRate(200),
+      ).to.be.revertedWithCustomError(
+        lendSmartLoan,
+        "OwnableUnauthorizedAccount",
+      );
 
       await expect(
-        lendSmartLoan.connect(otherAccount).setFeeRecipient(otherAccount.address)
-      ).to.be.revertedWithCustomError(lendSmartLoan, "OwnableUnauthorizedAccount");
+        lendSmartLoan
+          .connect(otherAccount)
+          .setFeeRecipient(otherAccount.address),
+      ).to.be.revertedWithCustomError(
+        lendSmartLoan,
+        "OwnableUnauthorizedAccount",
+      );
 
       await expect(
-        lendSmartLoan.connect(otherAccount).pause()
-      ).to.be.revertedWithCustomError(lendSmartLoan, "OwnableUnauthorizedAccount");
+        lendSmartLoan.connect(otherAccount).pause(),
+      ).to.be.revertedWithCustomError(
+        lendSmartLoan,
+        "OwnableUnauthorizedAccount",
+      );
     });
   });
 });

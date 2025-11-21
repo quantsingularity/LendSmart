@@ -18,19 +18,19 @@ const LoanCard = ({ loan, currentUser, onFundClick }) => {
     let maturityDate;
 
     switch (loan.termUnit.toLowerCase()) {
-      case 'days':
+      case "days":
         maturityDate = new Date(fundingDate);
         maturityDate.setDate(maturityDate.getDate() + loan.term);
         break;
-      case 'weeks':
+      case "weeks":
         maturityDate = new Date(fundingDate);
-        maturityDate.setDate(maturityDate.getDate() + (loan.term * 7));
+        maturityDate.setDate(maturityDate.getDate() + loan.term * 7);
         break;
-      case 'months':
+      case "months":
         maturityDate = new Date(fundingDate);
         maturityDate.setMonth(maturityDate.getMonth() + loan.term);
         break;
-      case 'years':
+      case "years":
         maturityDate = new Date(fundingDate);
         maturityDate.setFullYear(maturityDate.getFullYear() + loan.term);
         break;
@@ -48,11 +48,11 @@ const LoanCard = ({ loan, currentUser, onFundClick }) => {
     if (diffDays < 30) return `${diffDays} days`;
     if (diffDays < 365) {
       const months = Math.floor(diffDays / 30);
-      return `${months} month${months > 1 ? 's' : ''}`;
+      return `${months} month${months > 1 ? "s" : ""}`;
     }
 
     const years = Math.floor(diffDays / 365);
-    return `${years} year${years > 1 ? 's' : ''}`;
+    return `${years} year${years > 1 ? "s" : ""}`;
   };
 
   // Calculate expected return
@@ -61,16 +61,16 @@ const LoanCard = ({ loan, currentUser, onFundClick }) => {
 
     let termInYears;
     switch (loan.termUnit.toLowerCase()) {
-      case 'days':
+      case "days":
         termInYears = loan.term / 365;
         break;
-      case 'weeks':
+      case "weeks":
         termInYears = loan.term / 52;
         break;
-      case 'months':
+      case "months":
         termInYears = loan.term / 12;
         break;
-      case 'years':
+      case "years":
         termInYears = loan.term;
         break;
       default:
@@ -87,7 +87,9 @@ const LoanCard = ({ loan, currentUser, onFundClick }) => {
     <div className="loan-card">
       <div className="loan-header">
         <h3>{loan.purpose || "General Loan"}</h3>
-        <span className={`status status-${loan.status.toLowerCase().replace("_", "-")}`}>
+        <span
+          className={`status status-${loan.status.toLowerCase().replace("_", "-")}`}
+        >
           {loan.status.replace("_", " ")}
         </span>
       </div>
@@ -95,7 +97,9 @@ const LoanCard = ({ loan, currentUser, onFundClick }) => {
       <div className="loan-details">
         <div className="detail-row">
           <span className="detail-label">Amount:</span>
-          <span className="detail-value">${loan.amountRequested?.toLocaleString()}</span>
+          <span className="detail-value">
+            ${loan.amountRequested?.toLocaleString()}
+          </span>
         </div>
 
         <div className="detail-row">
@@ -105,7 +109,9 @@ const LoanCard = ({ loan, currentUser, onFundClick }) => {
 
         <div className="detail-row">
           <span className="detail-label">Term:</span>
-          <span className="detail-value">{loan.term} {loan.termUnit}</span>
+          <span className="detail-value">
+            {loan.term} {loan.termUnit}
+          </span>
         </div>
 
         {loan.status === "marketplace" && (
@@ -118,9 +124,7 @@ const LoanCard = ({ loan, currentUser, onFundClick }) => {
                   style={{ width: `${fundingProgress}%` }}
                 ></div>
               </div>
-              <span className="progress-text">
-                {fundingProgress}%
-              </span>
+              <span className="progress-text">{fundingProgress}%</span>
             </div>
           </div>
         )}
@@ -151,7 +155,12 @@ const LoanCard = ({ loan, currentUser, onFundClick }) => {
         {expectedReturn && (
           <div className="detail-row">
             <span className="detail-label">Expected Return:</span>
-            <span className="detail-value">${expectedReturn.toLocaleString(undefined, {maximumFractionDigits: 2})}</span>
+            <span className="detail-value">
+              $
+              {expectedReturn.toLocaleString(undefined, {
+                maximumFractionDigits: 2,
+              })}
+            </span>
           </div>
         )}
       </div>
@@ -161,14 +170,16 @@ const LoanCard = ({ loan, currentUser, onFundClick }) => {
           View Details
         </Link>
 
-        {loan.status === "marketplace" && currentUser && currentUser.role === "lender" && (
-          <button
-            className="button button-primary"
-            onClick={() => onFundClick(loan)}
-          >
-            Fund Loan
-          </button>
-        )}
+        {loan.status === "marketplace" &&
+          currentUser &&
+          currentUser.role === "lender" && (
+            <button
+              className="button button-primary"
+              onClick={() => onFundClick(loan)}
+            >
+              Fund Loan
+            </button>
+          )}
       </div>
     </div>
   );
@@ -191,7 +202,9 @@ const FundingModal = ({ loan, onClose, onSubmit }) => {
     const amountToFund = parseFloat(fundAmount);
 
     if (amountToFund > remainingAmount) {
-      toast.error(`Maximum funding amount is $${remainingAmount.toLocaleString()}`);
+      toast.error(
+        `Maximum funding amount is $${remainingAmount.toLocaleString()}`,
+      );
       return;
     }
 
@@ -206,12 +219,26 @@ const FundingModal = ({ loan, onClose, onSubmit }) => {
         <h3>Fund This Loan</h3>
 
         <div className="loan-summary">
-          <p><strong>Purpose:</strong> {loan.purpose}</p>
-          <p><strong>Amount Requested:</strong> ${loan.amountRequested.toLocaleString()}</p>
-          <p><strong>Already Funded:</strong> ${(loan.amountFunded || 0).toLocaleString()}</p>
-          <p><strong>Remaining:</strong> ${remainingAmount.toLocaleString()}</p>
-          <p><strong>Interest Rate:</strong> {loan.interestRate}%</p>
-          <p><strong>Term:</strong> {loan.term} {loan.termUnit}</p>
+          <p>
+            <strong>Purpose:</strong> {loan.purpose}
+          </p>
+          <p>
+            <strong>Amount Requested:</strong> $
+            {loan.amountRequested.toLocaleString()}
+          </p>
+          <p>
+            <strong>Already Funded:</strong> $
+            {(loan.amountFunded || 0).toLocaleString()}
+          </p>
+          <p>
+            <strong>Remaining:</strong> ${remainingAmount.toLocaleString()}
+          </p>
+          <p>
+            <strong>Interest Rate:</strong> {loan.interestRate}%
+          </p>
+          <p>
+            <strong>Term:</strong> {loan.term} {loan.termUnit}
+          </p>
         </div>
 
         <form onSubmit={handleSubmit}>
@@ -256,7 +283,7 @@ const FundingModal = ({ loan, onClose, onSubmit }) => {
 const FilterPanel = ({ filters, setFilters, applyFilters }) => {
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFilters(prev => ({ ...prev, [name]: value }));
+    setFilters((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleReset = () => {
@@ -267,7 +294,7 @@ const FilterPanel = ({ filters, setFilters, applyFilters }) => {
       minInterest: "",
       maxInterest: "",
       term: "",
-      purpose: ""
+      purpose: "",
     });
     applyFilters({
       status: [],
@@ -276,7 +303,7 @@ const FilterPanel = ({ filters, setFilters, applyFilters }) => {
       minInterest: "",
       maxInterest: "",
       term: "",
-      purpose: ""
+      purpose: "",
     });
   };
 
@@ -301,11 +328,11 @@ const FilterPanel = ({ filters, setFilters, applyFilters }) => {
                 checked={filters.status.includes("marketplace")}
                 onChange={(e) => {
                   const value = e.target.value;
-                  setFilters(prev => ({
+                  setFilters((prev) => ({
                     ...prev,
                     status: e.target.checked
                       ? [...prev.status, value]
-                      : prev.status.filter(s => s !== value)
+                      : prev.status.filter((s) => s !== value),
                   }));
                 }}
               />
@@ -320,11 +347,11 @@ const FilterPanel = ({ filters, setFilters, applyFilters }) => {
                 checked={filters.status.includes("funded")}
                 onChange={(e) => {
                   const value = e.target.value;
-                  setFilters(prev => ({
+                  setFilters((prev) => ({
                     ...prev,
                     status: e.target.checked
                       ? [...prev.status, value]
-                      : prev.status.filter(s => s !== value)
+                      : prev.status.filter((s) => s !== value),
                   }));
                 }}
               />
@@ -339,11 +366,11 @@ const FilterPanel = ({ filters, setFilters, applyFilters }) => {
                 checked={filters.status.includes("active")}
                 onChange={(e) => {
                   const value = e.target.value;
-                  setFilters(prev => ({
+                  setFilters((prev) => ({
                     ...prev,
                     status: e.target.checked
                       ? [...prev.status, value]
-                      : prev.status.filter(s => s !== value)
+                      : prev.status.filter((s) => s !== value),
                   }));
                 }}
               />
@@ -442,7 +469,11 @@ const FilterPanel = ({ filters, setFilters, applyFilters }) => {
         </div>
 
         <div className="filter-actions">
-          <button type="button" className="button button-secondary" onClick={handleReset}>
+          <button
+            type="button"
+            className="button button-secondary"
+            onClick={handleReset}
+          >
             Reset
           </button>
           <button type="submit" className="button button-primary">
@@ -474,7 +505,7 @@ const LoansMarketplacePage = () => {
     minInterest: "",
     maxInterest: "",
     term: "",
-    purpose: ""
+    purpose: "",
   });
   const [appliedFilters, setAppliedFilters] = useState({
     status: ["marketplace"],
@@ -483,7 +514,7 @@ const LoansMarketplacePage = () => {
     minInterest: "",
     maxInterest: "",
     term: "",
-    purpose: ""
+    purpose: "",
   });
   const [showFilters, setShowFilters] = useState(false);
 
@@ -496,8 +527,8 @@ const LoansMarketplacePage = () => {
 
     if (statusParam) {
       const statusValues = statusParam.split(",");
-      setFilters(prev => ({ ...prev, status: statusValues }));
-      setAppliedFilters(prev => ({ ...prev, status: statusValues }));
+      setFilters((prev) => ({ ...prev, status: statusValues }));
+      setAppliedFilters((prev) => ({ ...prev, status: statusValues }));
     }
 
     fetchLoans();
@@ -511,7 +542,7 @@ const LoansMarketplacePage = () => {
       // Prepare filter parameters
       const params = {
         page,
-        limit: loansPerPage
+        limit: loansPerPage,
       };
 
       // Add filters if they exist
@@ -521,8 +552,10 @@ const LoansMarketplacePage = () => {
 
       if (filterParams.minAmount) params.minAmount = filterParams.minAmount;
       if (filterParams.maxAmount) params.maxAmount = filterParams.maxAmount;
-      if (filterParams.minInterest) params.minInterest = filterParams.minInterest;
-      if (filterParams.maxInterest) params.maxInterest = filterParams.maxInterest;
+      if (filterParams.minInterest)
+        params.minInterest = filterParams.minInterest;
+      if (filterParams.maxInterest)
+        params.maxInterest = filterParams.maxInterest;
 
       if (filterParams.term) {
         switch (filterParams.term) {
@@ -582,17 +615,17 @@ const LoansMarketplacePage = () => {
       setShowFundingModal(false);
 
       // Update the loan in the list
-      setLoans(prevLoans =>
-        prevLoans.map(loan =>
-          loan._id === loanId ? response.data : loan
-        )
+      setLoans((prevLoans) =>
+        prevLoans.map((loan) => (loan._id === loanId ? response.data : loan)),
       );
 
       // If the loan is now fully funded, it might need to be filtered out
       // depending on the current filters
       applyFilters(appliedFilters);
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to fund loan. Please try again.");
+      toast.error(
+        err.response?.data?.message || "Failed to fund loan. Please try again.",
+      );
       console.error("Fund loan error:", err);
     }
   };
@@ -607,10 +640,13 @@ const LoansMarketplacePage = () => {
       queryParams.set("status", filterParams.status.join(","));
     }
 
-    navigate({
-      pathname: location.pathname,
-      search: queryParams.toString()
-    }, { replace: true });
+    navigate(
+      {
+        pathname: location.pathname,
+        search: queryParams.toString(),
+      },
+      { replace: true },
+    );
   };
 
   const handlePageChange = (page) => {
@@ -627,7 +663,10 @@ const LoansMarketplacePage = () => {
     <div className="page-container loans-marketplace">
       <div className="marketplace-header">
         <h2>Loan Marketplace</h2>
-        <p>Browse available loans to invest in or find inspiration for your own application.</p>
+        <p>
+          Browse available loans to invest in or find inspiration for your own
+          application.
+        </p>
 
         <div className="header-actions">
           <button
@@ -683,7 +722,7 @@ const LoansMarketplacePage = () => {
                     minInterest: "",
                     maxInterest: "",
                     term: "",
-                    purpose: ""
+                    purpose: "",
                   };
                   setFilters(resetFilters);
                   applyFilters(resetFilters);
@@ -695,7 +734,7 @@ const LoansMarketplacePage = () => {
           ) : (
             <>
               <div className="loans-grid">
-                {filteredLoans.map(loan => (
+                {filteredLoans.map((loan) => (
                   <LoanCard
                     key={loan._id}
                     loan={loan}
@@ -783,7 +822,7 @@ const LoansMarketplacePage = () => {
           background-color: #fff;
           padding: 20px;
           border-radius: 8px;
-          box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+          box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
           align-self: flex-start;
           position: sticky;
           top: 20px;
@@ -864,14 +903,16 @@ const LoansMarketplacePage = () => {
         .loan-card {
           background-color: #fff;
           border-radius: 8px;
-          box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+          box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
           overflow: hidden;
-          transition: transform 0.3s ease, box-shadow 0.3s ease;
+          transition:
+            transform 0.3s ease,
+            box-shadow 0.3s ease;
         }
 
         .loan-card:hover {
           transform: translateY(-5px);
-          box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+          box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
         }
 
         .loan-header {
@@ -1050,8 +1091,12 @@ const LoansMarketplacePage = () => {
         }
 
         @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
+          0% {
+            transform: rotate(0deg);
+          }
+          100% {
+            transform: rotate(360deg);
+          }
         }
 
         .error-message {

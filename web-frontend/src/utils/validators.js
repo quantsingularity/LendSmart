@@ -4,10 +4,10 @@
  * @returns {boolean} True if the email is valid, false otherwise.
  */
 export const isValidEmail = (email) => {
-    if (!email) return false;
-    // Basic email regex, consider a more robust one for production
-    const emailRegex = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/;
-    return emailRegex.test(email);
+  if (!email) return false;
+  // Basic email regex, consider a more robust one for production
+  const emailRegex = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/;
+  return emailRegex.test(email);
 };
 
 /**
@@ -17,8 +17,8 @@ export const isValidEmail = (email) => {
  * @returns {boolean} True if the password meets the minimum length, false otherwise.
  */
 export const isValidPassword = (password, minLength = 8) => {
-    if (!password) return false;
-    return password.length >= minLength;
+  if (!password) return false;
+  return password.length >= minLength;
 };
 
 /**
@@ -27,11 +27,16 @@ export const isValidPassword = (password, minLength = 8) => {
  * @returns {boolean} True if the value is empty, false otherwise.
  */
 export const isEmpty = (value) => {
-    if (value === null || value === undefined) return true;
-    if (typeof value === "string" && value.trim() === "") return true;
-    if (Array.isArray(value) && value.length === 0) return true;
-    if (typeof value === "object" && Object.keys(value).length === 0 && value.constructor === Object) return true;
-    return false;
+  if (value === null || value === undefined) return true;
+  if (typeof value === "string" && value.trim() === "") return true;
+  if (Array.isArray(value) && value.length === 0) return true;
+  if (
+    typeof value === "object" &&
+    Object.keys(value).length === 0 &&
+    value.constructor === Object
+  )
+    return true;
+  return false;
 };
 
 /**
@@ -42,8 +47,13 @@ export const isEmpty = (value) => {
  * @returns {boolean} True if the number is within the range, false otherwise.
  */
 export const isNumberInRange = (number, min, max) => {
-    if (typeof number !== "number" || typeof min !== "number" || typeof max !== "number") return false;
-    return number >= min && number <= max;
+  if (
+    typeof number !== "number" ||
+    typeof min !== "number" ||
+    typeof max !== "number"
+  )
+    return false;
+  return number >= min && number <= max;
 };
 
 /**
@@ -53,8 +63,8 @@ export const isNumberInRange = (number, min, max) => {
  * @returns {boolean} True if the string matches the pattern, false otherwise.
  */
 export const matchesPattern = (text, regex) => {
-    if (typeof text !== "string" || !(regex instanceof RegExp)) return false;
-    return regex.test(text);
+  if (typeof text !== "string" || !(regex instanceof RegExp)) return false;
+  return regex.test(text);
 };
 
 // Add more specific validators as needed, e.g.:

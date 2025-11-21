@@ -1,18 +1,26 @@
-import React, { useContext, useState } from 'react';
-import { View, StyleSheet, ScrollView, Alert } from 'react-native';
+import React, {useContext, useState} from 'react';
+import {View, StyleSheet, ScrollView, Alert} from 'react-native';
 // Removed unused useTheme import from react-native-paper, as theme comes from ThemeContext
-import { Avatar, Text, Button, List, Divider, TextInput, Switch } from 'react-native-paper';
+import {
+  Avatar,
+  Text,
+  Button,
+  List,
+  Divider,
+  TextInput,
+  Switch,
+} from 'react-native-paper';
 import PropTypes from 'prop-types'; // Import PropTypes
-import { AuthContext } from '../../../contexts/AuthContext';
-import { ThemeContext } from '../../../contexts/ThemeContext';
-import { spacing } from '../../../theme/theme';
+import {AuthContext} from '../../../contexts/AuthContext';
+import {ThemeContext} from '../../../contexts/ThemeContext';
+import {spacing} from '../../../theme/theme';
 // Removed unused Keychain import
 
 // Removed unused navigation prop
 const ProfileScreen = () => {
-  const { user, logout } = useContext(AuthContext);
+  const {user, logout} = useContext(AuthContext);
   // theme is correctly obtained from ThemeContext
-  const { isDark, toggleTheme, theme } = useContext(ThemeContext);
+  const {isDark, toggleTheme, theme} = useContext(ThemeContext);
   const styles = createStyles(theme);
 
   // Example state for editable fields
@@ -24,7 +32,8 @@ const ProfileScreen = () => {
     try {
       await logout();
       // Navigation to Auth screens happens automatically in AppNavigator
-    } catch (err) { // Changed variable name from error to err
+    } catch (err) {
+      // Changed variable name from error to err
       console.error('Logout failed:', err); // Log the error
       Alert.alert('Logout Failed', 'An error occurred during logout.');
     }
@@ -32,7 +41,7 @@ const ProfileScreen = () => {
 
   const handleSaveChanges = async () => {
     // TODO: Implement API call to update user profile
-    console.log('Saving changes:', { name, email });
+    console.log('Saving changes:', {name, email});
     try {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1000));
@@ -41,7 +50,8 @@ const ProfileScreen = () => {
       setIsEditing(false);
       // Optionally update user context if API returns updated user data
       // Example: updateUser({ ...user, name, email }); // Assuming an updateUser function exists in AuthContext
-    } catch (err) { // Changed variable name from error to err
+    } catch (err) {
+      // Changed variable name from error to err
       console.error('Profile update failed:', err); // Log the error
       Alert.alert('Update Failed', 'Could not update profile.');
     }
@@ -50,9 +60,15 @@ const ProfileScreen = () => {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.profileHeader}>
-        <Avatar.Text size={80} label={user?.name?.charAt(0)?.toUpperCase() || 'U'} style={styles.avatar} />
+        <Avatar.Text
+          size={80}
+          label={user?.name?.charAt(0)?.toUpperCase() || 'U'}
+          style={styles.avatar}
+        />
         <Text style={styles.userName}>{user?.name || 'User Name'}</Text>
-        <Text style={styles.userEmail}>{user?.email || 'user@example.com'}</Text>
+        <Text style={styles.userEmail}>
+          {user?.email || 'user@example.com'}
+        </Text>
       </View>
 
       <List.Section title="Account Settings">
@@ -74,8 +90,17 @@ const ProfileScreen = () => {
               // Consider adding validation or disabling email editing
             />
             <View style={styles.buttonRow}>
-              <Button onPress={() => setIsEditing(false)} style={styles.editButton}>Cancel</Button>
-              <Button mode="contained" onPress={handleSaveChanges} style={styles.editButton}>Save Changes</Button>
+              <Button
+                onPress={() => setIsEditing(false)}
+                style={styles.editButton}>
+                Cancel
+              </Button>
+              <Button
+                mode="contained"
+                onPress={handleSaveChanges}
+                style={styles.editButton}>
+                Save Changes
+              </Button>
             </View>
           </View>
         ) : (
@@ -88,7 +113,12 @@ const ProfileScreen = () => {
         <List.Item
           title="Change Password"
           left={() => <List.Icon icon="lock-reset" />}
-          onPress={() => Alert.alert('Not Implemented', 'Change password functionality is not yet available.')}
+          onPress={() =>
+            Alert.alert(
+              'Not Implemented',
+              'Change password functionality is not yet available.',
+            )
+          }
         />
       </List.Section>
 
@@ -97,13 +127,20 @@ const ProfileScreen = () => {
       <List.Section title="Preferences">
         <List.Item
           title="Dark Mode"
-          left={() => <List.Icon icon={isDark ? "weather-night" : "weather-sunny"} />}
+          left={() => (
+            <List.Icon icon={isDark ? 'weather-night' : 'weather-sunny'} />
+          )}
           right={() => <Switch value={isDark} onValueChange={toggleTheme} />}
         />
         <List.Item
           title="Notifications"
           left={() => <List.Icon icon="bell-outline" />}
-          onPress={() => Alert.alert('Not Implemented', 'Notification settings are not yet available.')}
+          onPress={() =>
+            Alert.alert(
+              'Not Implemented',
+              'Notification settings are not yet available.',
+            )
+          }
         />
       </List.Section>
 
@@ -124,54 +161,55 @@ const ProfileScreen = () => {
 // Add prop types validation (currently no props)
 ProfileScreen.propTypes = {};
 
-const createStyles = (theme) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  profileHeader: {
-    alignItems: 'center',
-    paddingVertical: spacing.lg,
-    backgroundColor: theme.colors.surface, // Or primary color
-    borderBottomLeftRadius: theme.borderRadius.xl,
-    borderBottomRightRadius: theme.borderRadius.xl,
-    marginBottom: spacing.md,
-    elevation: 4,
-  },
-  avatar: {
-    marginBottom: spacing.md,
-    backgroundColor: theme.colors.primary,
-  },
-  userName: {
-    fontSize: theme.fontSizes.h5,
-    fontWeight: 'bold',
-    color: theme.colors.textPrimary,
-    marginBottom: spacing.xs,
-  },
-  userEmail: {
-    fontSize: theme.fontSizes.body1,
-    color: theme.colors.textSecondary,
-  },
-  editSection: {
-    paddingHorizontal: spacing.md,
-    paddingBottom: spacing.md,
-  },
-  input: {
-    marginBottom: spacing.sm,
-    backgroundColor: theme.colors.background, // Adjust background for visibility
-  },
-  buttonRow: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    marginTop: spacing.sm,
-  },
-  editButton: {
-    marginLeft: spacing.sm,
-  },
-  logoutText: {
-    color: theme.colors.error,
-    fontWeight: 'bold',
-  },
-});
+const createStyles = theme =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+    },
+    profileHeader: {
+      alignItems: 'center',
+      paddingVertical: spacing.lg,
+      backgroundColor: theme.colors.surface, // Or primary color
+      borderBottomLeftRadius: theme.borderRadius.xl,
+      borderBottomRightRadius: theme.borderRadius.xl,
+      marginBottom: spacing.md,
+      elevation: 4,
+    },
+    avatar: {
+      marginBottom: spacing.md,
+      backgroundColor: theme.colors.primary,
+    },
+    userName: {
+      fontSize: theme.fontSizes.h5,
+      fontWeight: 'bold',
+      color: theme.colors.textPrimary,
+      marginBottom: spacing.xs,
+    },
+    userEmail: {
+      fontSize: theme.fontSizes.body1,
+      color: theme.colors.textSecondary,
+    },
+    editSection: {
+      paddingHorizontal: spacing.md,
+      paddingBottom: spacing.md,
+    },
+    input: {
+      marginBottom: spacing.sm,
+      backgroundColor: theme.colors.background, // Adjust background for visibility
+    },
+    buttonRow: {
+      flexDirection: 'row',
+      justifyContent: 'flex-end',
+      marginTop: spacing.sm,
+    },
+    editButton: {
+      marginLeft: spacing.sm,
+    },
+    logoutText: {
+      color: theme.colors.error,
+      fontWeight: 'bold',
+    },
+  });
 
 export default ProfileScreen;

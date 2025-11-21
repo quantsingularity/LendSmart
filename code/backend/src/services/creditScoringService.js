@@ -1,7 +1,7 @@
-const User = require('../models/UserModel');
-const Loan = require('../models/LoanModel');
-const { getAuditLogger } = require('../compliance/auditLogger');
-const logger = require('../utils/logger');
+const User = require("../models/UserModel");
+const Loan = require("../models/LoanModel");
+const { getAuditLogger } = require("../compliance/auditLogger");
+const logger = require("../utils/logger");
 
 /**
  * Credit Scoring Service
@@ -14,17 +14,17 @@ class CreditScoringService {
     // Credit scoring weights and thresholds
     this.scoringWeights = {
       creditHistory: 0.35,
-      paymentHistory: 0.30,
-      debtToIncomeRatio: 0.20,
-      employmentStability: 0.10,
-      accountAge: 0.05
+      paymentHistory: 0.3,
+      debtToIncomeRatio: 0.2,
+      employmentStability: 0.1,
+      accountAge: 0.05,
     };
 
     this.riskThresholds = {
       excellent: 750,
       good: 650,
       fair: 550,
-      poor: 450
+      poor: 450,
     };
 
     this.maxDebtToIncomeRatio = 0.43; // 43% DTI ratio limit
@@ -44,13 +44,13 @@ class CreditScoringService {
         requestedAmount,
         income,
         employmentStatus,
-        existingLoans = []
+        existingLoans = [],
       } = assessmentData;
 
       // Get user data
       const user = await User.findById(userId);
       if (!user) {
-        throw new Error('User not found');
+        throw new Error("User not found");
       }
 
       // Calculate base credit score
@@ -61,14 +61,15 @@ class CreditScoringService {
         userId,
         income,
         requestedAmount,
-        existingLoans
+        existingLoans,
       );
 
       // Assess employment stability
       const employmentScore = this.assessEmploymentStability(employmentStatus);
 
       // Calculate payment history score
-      const paymentHistoryScore = await this.calculatePaymentHistoryScore(userId);
+      const paymentHistoryScore =
+        await this.calculatePaymentHistoryScore(userId);
 
       // Calculate account age score
       const accountAgeScore = this.calculateAccountAgeScore(user.createdAt);
@@ -79,7 +80,7 @@ class CreditScoringService {
         dtiRatio,
         employmentScore,
         paymentHistoryScore,
-        accountAgeScore
+        accountAgeScore,
       });
 
       // Determine risk level
@@ -91,14 +92,14 @@ class CreditScoringService {
         dtiRatio,
         requestedAmount,
         income,
-        riskLevel
+        riskLevel,
       });
 
       // Calculate recommended interest rate
       const recommendedRate = this.calculateRecommendedInterestRate(
         finalCreditScore,
         riskLevel,
-        requestedAmount
+        requestedAmount,
       );
 
       // Generate recommendations
@@ -106,7 +107,7 @@ class CreditScoringService {
         creditScore: finalCreditScore,
         dtiRatio,
         riskLevel,
-        approved: approvalResult.approved
+        approved: approvalResult.approved,
       });
 
       const assessment = {
@@ -121,31 +122,31 @@ class CreditScoringService {
           dtiRatio: Math.round(dtiRatio * 100) / 100,
           employmentScore: Math.round(employmentScore),
           paymentHistoryScore: Math.round(paymentHistoryScore),
-          accountAgeScore: Math.round(accountAgeScore)
-        }
+          accountAgeScore: Math.round(accountAgeScore),
+        },
       };
 
       // Audit log
       await this.auditLogger.logCreditAssessment({
-        action: 'credit_assessment_completed',
+        action: "credit_assessment_completed",
         userId,
         requestedAmount,
         creditScore: assessment.creditScore,
         riskLevel,
         approved: assessment.approved,
         dtiRatio,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
 
       return assessment;
     } catch (error) {
-      logger.error('Credit assessment error', {
+      logger.error("Credit assessment error", {
         error: error.message,
         userId: assessmentData.userId,
-        requestedAmount: assessmentData.requestedAmount
+        requestedAmount: assessmentData.requestedAmount,
       });
 
-      throw new Error('Credit assessment failed');
+      throw new Error("Credit assessment failed");
     }
   }
 
@@ -159,9 +160,9 @@ class CreditScoringService {
     let baseScore = user.creditScore || 600;
 
     // Adjust based on KYC verification
-    if (user.kycStatus === 'verified') {
+    if (user.kycStatus === "verified") {
       baseScore += 50;
-    } else if (user.kycStatus === 'pending') {
+    } else if (user.kycStatus === "pending") {
       baseScore += 20;
     }
 
@@ -175,7 +176,10 @@ class CreditScoringService {
     }
 
     // Ensure score is within valid range
-    return Math.max(this.minCreditScore, Math.min(this.maxCreditScore, baseScore));
+    return Math.max(
+      this.minCreditScore,
+      Math.min(this.maxCreditScore, baseScore),
+    );
   }
 
   /**
@@ -186,7 +190,12 @@ class CreditScoringService {
    * @param {Array} existingLoans - Existing loans
    * @returns {number} DTI ratio
    */
-  async calculateDebtToIncomeRatio(userId, income, requestedAmount, existingLoans) {
+  async calculateDebtToIncomeRatio(
+    userId,
+    income,
+    requestedAmount,
+    existingLoans,
+  ) {
     if (!income || income <= 0) {
       return 1; // 100% DTI if no income provided
     }
@@ -195,13 +204,13 @@ class CreditScoringService {
     let existingMonthlyDebt = 0;
 
     for (const loan of existingLoans) {
-      if (loan.status === 'active' || loan.status === 'funded') {
+      if (loan.status === "active" || loan.status === "funded") {
         // Estimate monthly payment (simplified calculation)
         const monthlyPayment = this.estimateMonthlyPayment(
           loan.amount,
           loan.interestRate,
           loan.term,
-          loan.termUnit
+          loan.termUnit,
         );
         existingMonthlyDebt += monthlyPayment;
       }
@@ -212,7 +221,7 @@ class CreditScoringService {
       requestedAmount,
       12, // Default 12% APR for estimation
       12,
-      'months'
+      "months",
     );
 
     const totalMonthlyDebt = existingMonthlyDebt + estimatedNewPayment;
@@ -230,15 +239,15 @@ class CreditScoringService {
    * @returns {number} Monthly payment
    */
   estimateMonthlyPayment(principal, annualRate, term, termUnit) {
-    const monthlyRate = (annualRate / 100) / 12;
-    const termInMonths = termUnit === 'years' ? term * 12 : term;
+    const monthlyRate = annualRate / 100 / 12;
+    const termInMonths = termUnit === "years" ? term * 12 : term;
 
     if (monthlyRate === 0) {
       return principal / termInMonths;
     }
 
-    const monthlyPayment = principal *
-      (monthlyRate * Math.pow(1 + monthlyRate, termInMonths)) /
+    const monthlyPayment =
+      (principal * (monthlyRate * Math.pow(1 + monthlyRate, termInMonths))) /
       (Math.pow(1 + monthlyRate, termInMonths) - 1);
 
     return monthlyPayment;
@@ -251,13 +260,13 @@ class CreditScoringService {
    */
   assessEmploymentStability(employmentStatus) {
     const employmentScores = {
-      'full-time': 100,
-      'part-time': 70,
-      'contract': 60,
-      'self-employed': 50,
-      'unemployed': 0,
-      'student': 40,
-      'retired': 80
+      "full-time": 100,
+      "part-time": 70,
+      contract: 60,
+      "self-employed": 50,
+      unemployed: 0,
+      student: 40,
+      retired: 80,
     };
 
     return employmentScores[employmentStatus] || 30;
@@ -273,7 +282,7 @@ class CreditScoringService {
       // Get user's loan history
       const loans = await Loan.find({
         $or: [{ borrower: userId }, { lender: userId }],
-        status: { $in: ['repaid', 'active', 'defaulted'] }
+        status: { $in: ["repaid", "active", "defaulted"] },
       });
 
       if (loans.length === 0) {
@@ -289,17 +298,17 @@ class CreditScoringService {
         if (loan.borrower.toString() === userId) {
           totalLoans++;
 
-          if (loan.status === 'repaid') {
+          if (loan.status === "repaid") {
             // Check if repaid on time (simplified - would need more detailed payment tracking)
             onTimePayments++;
-          } else if (loan.status === 'defaulted') {
+          } else if (loan.status === "defaulted") {
             defaults++;
           }
 
           // Analyze repayment patterns if available
           if (loan.repayments && loan.repayments.length > 0) {
             // Count late payments (simplified logic)
-            const lateCount = loan.repayments.filter(payment => {
+            const lateCount = loan.repayments.filter((payment) => {
               // Would implement actual late payment detection logic
               return false; // Placeholder
             }).length;
@@ -317,15 +326,15 @@ class CreditScoringService {
       const defaultRatio = defaults / totalLoans;
 
       let score = 600; // Base score
-      score += (onTimeRatio * 200); // Up to 200 points for on-time payments
-      score -= (defaultRatio * 300); // Penalty for defaults
-      score -= (latePayments * 10); // Penalty for late payments
+      score += onTimeRatio * 200; // Up to 200 points for on-time payments
+      score -= defaultRatio * 300; // Penalty for defaults
+      score -= latePayments * 10; // Penalty for late payments
 
       return Math.max(300, Math.min(850, score));
     } catch (error) {
-      logger.error('Payment history calculation error', {
+      logger.error("Payment history calculation error", {
         error: error.message,
-        userId
+        userId,
       });
       return 600; // Default neutral score
     }
@@ -345,7 +354,7 @@ class CreditScoringService {
     const maxMonths = 24;
     const scoreMultiplier = Math.min(ageInMonths / maxMonths, 1);
 
-    return 50 + (scoreMultiplier * 50); // 50-100 points based on age
+    return 50 + scoreMultiplier * 50; // 50-100 points based on age
   }
 
   /**
@@ -359,7 +368,7 @@ class CreditScoringService {
       dtiRatio,
       employmentScore,
       paymentHistoryScore,
-      accountAgeScore
+      accountAgeScore,
     } = scores;
 
     // Apply weights to different factors
@@ -378,7 +387,10 @@ class CreditScoringService {
       finalScore += bonus;
     }
 
-    return Math.max(this.minCreditScore, Math.min(this.maxCreditScore, finalScore));
+    return Math.max(
+      this.minCreditScore,
+      Math.min(this.maxCreditScore, finalScore),
+    );
   }
 
   /**
@@ -388,13 +400,13 @@ class CreditScoringService {
    */
   determineRiskLevel(creditScore) {
     if (creditScore >= this.riskThresholds.excellent) {
-      return 'low';
+      return "low";
     } else if (creditScore >= this.riskThresholds.good) {
-      return 'medium';
+      return "medium";
     } else if (creditScore >= this.riskThresholds.fair) {
-      return 'high';
+      return "high";
     } else {
-      return 'very-high';
+      return "very-high";
     }
   }
 
@@ -404,19 +416,14 @@ class CreditScoringService {
    * @returns {Object} Approval result
    */
   checkApprovalCriteria(criteria) {
-    const {
-      creditScore,
-      dtiRatio,
-      requestedAmount,
-      income,
-      riskLevel
-    } = criteria;
+    const { creditScore, dtiRatio, requestedAmount, income, riskLevel } =
+      criteria;
 
     // Minimum credit score requirement
     if (creditScore < this.riskThresholds.poor) {
       return {
         approved: false,
-        reason: 'Credit score below minimum requirement'
+        reason: "Credit score below minimum requirement",
       };
     }
 
@@ -424,7 +431,7 @@ class CreditScoringService {
     if (dtiRatio > this.maxDebtToIncomeRatio) {
       return {
         approved: false,
-        reason: 'Debt-to-income ratio too high'
+        reason: "Debt-to-income ratio too high",
       };
     }
 
@@ -432,7 +439,7 @@ class CreditScoringService {
     if (!income || income <= 0) {
       return {
         approved: false,
-        reason: 'Income verification required'
+        reason: "Income verification required",
       };
     }
 
@@ -441,21 +448,21 @@ class CreditScoringService {
     if (requestedAmount > maxLoanAmount) {
       return {
         approved: false,
-        reason: 'Requested amount exceeds income-based limit'
+        reason: "Requested amount exceeds income-based limit",
       };
     }
 
     // Risk-based approval
-    if (riskLevel === 'very-high') {
+    if (riskLevel === "very-high") {
       return {
         approved: false,
-        reason: 'Risk level too high for approval'
+        reason: "Risk level too high for approval",
       };
     }
 
     return {
       approved: true,
-      reason: 'Application meets all approval criteria'
+      reason: "Application meets all approval criteria",
     };
   }
 
@@ -469,20 +476,20 @@ class CreditScoringService {
   calculateRecommendedInterestRate(creditScore, riskLevel, requestedAmount) {
     // Base rates by risk level
     const baseRates = {
-      'low': 8.0,
-      'medium': 12.0,
-      'high': 18.0,
-      'very-high': 25.0
+      low: 8.0,
+      medium: 12.0,
+      high: 18.0,
+      "very-high": 25.0,
     };
 
     let rate = baseRates[riskLevel] || 15.0;
 
     // Adjust based on credit score within risk level
-    if (riskLevel === 'low' && creditScore >= 800) {
+    if (riskLevel === "low" && creditScore >= 800) {
       rate -= 1.0;
-    } else if (riskLevel === 'medium' && creditScore >= 700) {
+    } else if (riskLevel === "medium" && creditScore >= 700) {
       rate -= 1.5;
-    } else if (riskLevel === 'high' && creditScore >= 600) {
+    } else if (riskLevel === "high" && creditScore >= 600) {
       rate -= 2.0;
     }
 
@@ -508,33 +515,37 @@ class CreditScoringService {
     if (!approved) {
       if (creditScore < this.riskThresholds.fair) {
         recommendations.push({
-          type: 'credit_improvement',
-          message: 'Focus on building credit history through smaller loans or secured credit products',
-          priority: 'high'
+          type: "credit_improvement",
+          message:
+            "Focus on building credit history through smaller loans or secured credit products",
+          priority: "high",
         });
       }
 
       if (dtiRatio > this.maxDebtToIncomeRatio) {
         recommendations.push({
-          type: 'debt_reduction',
-          message: 'Reduce existing debt or increase income to improve debt-to-income ratio',
-          priority: 'high'
+          type: "debt_reduction",
+          message:
+            "Reduce existing debt or increase income to improve debt-to-income ratio",
+          priority: "high",
         });
       }
     } else {
-      if (riskLevel === 'high') {
+      if (riskLevel === "high") {
         recommendations.push({
-          type: 'rate_improvement',
-          message: 'Consider a smaller loan amount to qualify for better interest rates',
-          priority: 'medium'
+          type: "rate_improvement",
+          message:
+            "Consider a smaller loan amount to qualify for better interest rates",
+          priority: "medium",
         });
       }
 
       if (creditScore < this.riskThresholds.good) {
         recommendations.push({
-          type: 'future_improvement',
-          message: 'Continue building credit history for better rates on future loans',
-          priority: 'low'
+          type: "future_improvement",
+          message:
+            "Continue building credit history for better rates on future loans",
+          priority: "low",
         });
       }
     }
@@ -552,25 +563,25 @@ class CreditScoringService {
     try {
       const user = await User.findById(userId);
       if (!user) {
-        throw new Error('User not found');
+        throw new Error("User not found");
       }
 
       let scoreChange = 0;
 
       switch (action) {
-        case 'on_time_payment':
+        case "on_time_payment":
           scoreChange = 5;
           break;
-        case 'late_payment':
+        case "late_payment":
           scoreChange = -10;
           break;
-        case 'loan_repaid':
+        case "loan_repaid":
           scoreChange = 15;
           break;
-        case 'loan_defaulted':
+        case "loan_defaulted":
           scoreChange = -100;
           break;
-        case 'new_loan_funded':
+        case "new_loan_funded":
           scoreChange = 10;
           break;
         default:
@@ -580,7 +591,7 @@ class CreditScoringService {
       // Apply score change
       const newScore = Math.max(
         this.minCreditScore,
-        Math.min(this.maxCreditScore, (user.creditScore || 600) + scoreChange)
+        Math.min(this.maxCreditScore, (user.creditScore || 600) + scoreChange),
       );
 
       user.creditScore = newScore;
@@ -589,28 +600,27 @@ class CreditScoringService {
 
       // Audit log
       await this.auditLogger.logCreditScoreUpdate({
-        action: 'credit_score_updated',
+        action: "credit_score_updated",
         userId,
         oldScore: user.creditScore - scoreChange,
         newScore,
         scoreChange,
         reason: action,
         details,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
 
-      logger.info('Credit score updated', {
+      logger.info("Credit score updated", {
         userId,
         action,
         scoreChange,
-        newScore
+        newScore,
       });
-
     } catch (error) {
-      logger.error('Credit score update error', {
+      logger.error("Credit score update error", {
         error: error.message,
         userId,
-        action
+        action,
       });
     }
   }

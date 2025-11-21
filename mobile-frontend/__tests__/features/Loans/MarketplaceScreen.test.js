@@ -1,26 +1,62 @@
 import React from 'react';
-import { render, fireEvent, waitFor, act } from '@testing-library/react-native';
-import { PaperProvider, DefaultTheme } from 'react-native-paper';
+import {render, fireEvent, waitFor, act} from '@testing-library/react-native';
+import {PaperProvider, DefaultTheme} from 'react-native-paper';
 import MarketplaceScreen from '../MarketplaceScreen';
 
 // Mock navigation
 const mockNavigate = jest.fn();
-const mockNavigation = { navigate: mockNavigate };
+const mockNavigation = {navigate: mockNavigate};
 
 // Mock setTimeout and clearTimeout for fetchLoans and onRefresh
 jest.useFakeTimers();
 
 // Custom wrapper to provide necessary theme
-const AllTheProviders = ({ children }) => (
+const AllTheProviders = ({children}) => (
   <PaperProvider theme={DefaultTheme}>{children}</PaperProvider>
 );
 
 // Placeholder loans from the component for consistent testing
 const placeholderLoans = [
-  { id: '1', amount: 1500, interestRate: 8.5, term: 12, purpose: 'Debt Consolidation', creditScoreRange: '650-700', status: 'Available', fundedAmount: 0 },
-  { id: '2', amount: 500, interestRate: 12.0, term: 6, purpose: 'Small Business', creditScoreRange: '600-650', status: 'Available', fundedAmount: 100 },
-  { id: '3', amount: 3000, interestRate: 7.0, term: 24, purpose: 'Home Improvement', creditScoreRange: '700+', status: 'Available', fundedAmount: 0 },
-  { id: '4', amount: 1000, interestRate: 9.0, term: 9, purpose: 'Education', creditScoreRange: '680-720', status: 'Funded', fundedAmount: 1000 },
+  {
+    id: '1',
+    amount: 1500,
+    interestRate: 8.5,
+    term: 12,
+    purpose: 'Debt Consolidation',
+    creditScoreRange: '650-700',
+    status: 'Available',
+    fundedAmount: 0,
+  },
+  {
+    id: '2',
+    amount: 500,
+    interestRate: 12.0,
+    term: 6,
+    purpose: 'Small Business',
+    creditScoreRange: '600-650',
+    status: 'Available',
+    fundedAmount: 100,
+  },
+  {
+    id: '3',
+    amount: 3000,
+    interestRate: 7.0,
+    term: 24,
+    purpose: 'Home Improvement',
+    creditScoreRange: '700+',
+    status: 'Available',
+    fundedAmount: 0,
+  },
+  {
+    id: '4',
+    amount: 1000,
+    interestRate: 9.0,
+    term: 9,
+    purpose: 'Education',
+    creditScoreRange: '680-720',
+    status: 'Funded',
+    fundedAmount: 1000,
+  },
 ];
 
 describe('MarketplaceScreen', () => {
@@ -31,9 +67,9 @@ describe('MarketplaceScreen', () => {
   });
 
   it('renders correctly with search bar and initially loads loans', async () => {
-    const { getByPlaceholderText, findByText } = render(
+    const {getByPlaceholderText, findByText} = render(
       <MarketplaceScreen navigation={mockNavigation} />,
-      { wrapper: AllTheProviders }
+      {wrapper: AllTheProviders},
     );
 
     expect(getByPlaceholderText('Search loans...')).toBeTruthy();
@@ -43,17 +79,17 @@ describe('MarketplaceScreen', () => {
 
     // Check if loans are rendered (using data from placeholderLoans)
     await waitFor(() => {
-        expect(findByText('$1,500')).toBeTruthy(); // Loan 1 amount
-        expect(findByText('Debt Consolidation')).toBeTruthy(); // Loan 1 purpose
-        expect(findByText('$500')).toBeTruthy(); // Loan 2 amount
-        expect(findByText('Small Business')).toBeTruthy(); // Loan 2 purpose
+      expect(findByText('$1,500')).toBeTruthy(); // Loan 1 amount
+      expect(findByText('Debt Consolidation')).toBeTruthy(); // Loan 1 purpose
+      expect(findByText('$500')).toBeTruthy(); // Loan 2 amount
+      expect(findByText('Small Business')).toBeTruthy(); // Loan 2 purpose
     });
   });
 
   it('filters loans based on search query', async () => {
-    const { getByPlaceholderText, queryByText, findByText } = render(
+    const {getByPlaceholderText, queryByText, findByText} = render(
       <MarketplaceScreen navigation={mockNavigation} />,
-      { wrapper: AllTheProviders }
+      {wrapper: AllTheProviders},
     );
 
     // Initial load
@@ -75,15 +111,15 @@ describe('MarketplaceScreen', () => {
     fireEvent.changeText(searchInput, '1500');
     act(() => jest.runAllTimers());
     await waitFor(() => {
-        expect(findByText('Debt Consolidation')).toBeTruthy();
-        expect(queryByText('Small Business')).toBeNull();
+      expect(findByText('Debt Consolidation')).toBeTruthy();
+      expect(queryByText('Small Business')).toBeNull();
     });
   });
 
   it('navigates to LoanDetails when a loan card is pressed or Details button is clicked', async () => {
-    const { findAllByText, findByText } = render(
+    const {findAllByText, findByText} = render(
       <MarketplaceScreen navigation={mockNavigation} />,
-      { wrapper: AllTheProviders }
+      {wrapper: AllTheProviders},
     );
     act(() => jest.runAllTimers()); // Load loans
 
@@ -93,30 +129,33 @@ describe('MarketplaceScreen', () => {
 
     const detailsButtons = await findAllByText('Details');
     fireEvent.press(detailsButtons[0]); // Click details for the first loan (ID '1')
-    expect(mockNavigate).toHaveBeenCalledWith('LoanDetails', { loanId: '1' });
+    expect(mockNavigate).toHaveBeenCalledWith('LoanDetails', {loanId: '1'});
 
     mockNavigate.mockClear();
     fireEvent.press(detailsButtons[1]); // Click details for the second loan (ID '2')
-    expect(mockNavigate).toHaveBeenCalledWith('LoanDetails', { loanId: '2' });
+    expect(mockNavigate).toHaveBeenCalledWith('LoanDetails', {loanId: '2'});
   });
 
   it('navigates to LoanDetails with focusFund when Fund button is clicked for an available loan', async () => {
-    const { findAllByText } = render(
+    const {findAllByText} = render(
       <MarketplaceScreen navigation={mockNavigation} />,
-      { wrapper: AllTheProviders }
+      {wrapper: AllTheProviders},
     );
     act(() => jest.runAllTimers()); // Load loans
 
     const fundButtons = await findAllByText('Fund');
     // First loan (ID '1') is 'Available'
     fireEvent.press(fundButtons[0]);
-    expect(mockNavigate).toHaveBeenCalledWith('LoanDetails', { loanId: '1', focusFund: true });
+    expect(mockNavigate).toHaveBeenCalledWith('LoanDetails', {
+      loanId: '1',
+      focusFund: true,
+    });
   });
 
   it('shows loading indicator while fetching loans', () => {
-    const { getByTestId, queryByTestId } = render(
+    const {getByTestId, queryByTestId} = render(
       <MarketplaceScreen navigation={mockNavigation} />,
-      { wrapper: AllTheProviders }
+      {wrapper: AllTheProviders},
     );
     // ActivityIndicator is shown initially. The component uses a loading state.
     // We can check for its presence. If it had a testID, it would be easier.
@@ -137,9 +176,9 @@ describe('MarketplaceScreen', () => {
   });
 
   it('shows empty list message when no loans are found after search', async () => {
-    const { getByPlaceholderText, findByText } = render(
+    const {getByPlaceholderText, findByText} = render(
       <MarketplaceScreen navigation={mockNavigation} />,
-      { wrapper: AllTheProviders }
+      {wrapper: AllTheProviders},
     );
     act(() => jest.runAllTimers()); // Initial load
 
@@ -154,9 +193,9 @@ describe('MarketplaceScreen', () => {
   });
 
   it('refreshes loan list when pull-to-refresh is triggered', async () => {
-    const { getByTestId, findByText } = render(
+    const {getByTestId, findByText} = render(
       <MarketplaceScreen navigation={mockNavigation} />,
-      { wrapper: AllTheProviders }
+      {wrapper: AllTheProviders},
     );
     act(() => jest.runAllTimers()); // Initial load
     await findByText('Debt Consolidation'); // Ensure initial load complete
@@ -170,24 +209,23 @@ describe('MarketplaceScreen', () => {
     expect(true).toBe(true); // Placeholder for direct refresh gesture testing
   });
 
-   it('renders funding progress correctly for available loans', async () => {
-    const { findByText } = render(
+  it('renders funding progress correctly for available loans', async () => {
+    const {findByText} = render(
       <MarketplaceScreen navigation={mockNavigation} />,
-      { wrapper: AllTheProviders }
+      {wrapper: AllTheProviders},
     );
     act(() => jest.runAllTimers());
 
     // Loan 2: amount: 500, fundedAmount: 100 (20%)
     await waitFor(() => {
-        expect(findByText('$100 / $500 funded (20%)')).toBeTruthy();
+      expect(findByText('$100 / $500 funded (20%)')).toBeTruthy();
     });
 
     // Loan 1: amount: 1500, fundedAmount: 0 (0%)
     // The text for 0% funded is not explicitly shown in the same format, but progress bar won't be there.
     // Loan 4: status 'Funded'
     await waitFor(() => {
-        expect(findByText('Fully Funded')).toBeTruthy();
+      expect(findByText('Fully Funded')).toBeTruthy();
     });
   });
-
 });

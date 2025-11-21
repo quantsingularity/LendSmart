@@ -6,8 +6,13 @@ const NotFoundPage = () => {
     <div className="page-container not-found-page">
       <h1>404</h1>
       <h2>Oops! Page Not Found.</h2>
-      <p>The page you are looking for might have been removed, had its name changed, or is temporarily unavailable.</p>
-      <Link to="/" className="button button-primary">Go to Homepage</Link>
+      <p>
+        The page you are looking for might have been removed, had its name
+        changed, or is temporarily unavailable.
+      </p>
+      <Link to="/" className="button button-primary">
+        Go to Homepage
+      </Link>
       <style jsx>{`
         .not-found-page {
           text-align: center;

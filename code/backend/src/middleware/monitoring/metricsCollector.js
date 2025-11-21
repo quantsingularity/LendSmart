@@ -1,5 +1,5 @@
-const { logger } = require('../../utils/logger');
-const { cache } = require('../../config/database');
+const { logger } = require("../../utils/logger");
+const { cache } = require("../../config/database");
 
 /**
  * Metrics Collection System
@@ -26,37 +26,46 @@ class MetricsCollector {
    */
   initializeMetrics() {
     // HTTP Request metrics
-    this.createCounter('http_requests_total', 'Total HTTP requests');
-    this.createHistogram('http_request_duration', 'HTTP request duration in milliseconds');
-    this.createCounter('http_errors_total', 'Total HTTP errors');
+    this.createCounter("http_requests_total", "Total HTTP requests");
+    this.createHistogram(
+      "http_request_duration",
+      "HTTP request duration in milliseconds",
+    );
+    this.createCounter("http_errors_total", "Total HTTP errors");
 
     // Database metrics
-    this.createCounter('db_queries_total', 'Total database queries');
-    this.createHistogram('db_query_duration', 'Database query duration in milliseconds');
-    this.createCounter('db_errors_total', 'Total database errors');
+    this.createCounter("db_queries_total", "Total database queries");
+    this.createHistogram(
+      "db_query_duration",
+      "Database query duration in milliseconds",
+    );
+    this.createCounter("db_errors_total", "Total database errors");
 
     // Authentication metrics
-    this.createCounter('auth_attempts_total', 'Total authentication attempts');
-    this.createCounter('auth_failures_total', 'Total authentication failures');
-    this.createCounter('auth_successes_total', 'Total successful authentications');
+    this.createCounter("auth_attempts_total", "Total authentication attempts");
+    this.createCounter("auth_failures_total", "Total authentication failures");
+    this.createCounter(
+      "auth_successes_total",
+      "Total successful authentications",
+    );
 
     // Business metrics
-    this.createCounter('loan_applications_total', 'Total loan applications');
-    this.createCounter('loan_approvals_total', 'Total loan approvals');
-    this.createCounter('loan_rejections_total', 'Total loan rejections');
-    this.createCounter('payments_total', 'Total payments processed');
-    this.createHistogram('payment_amount', 'Payment amounts');
+    this.createCounter("loan_applications_total", "Total loan applications");
+    this.createCounter("loan_approvals_total", "Total loan approvals");
+    this.createCounter("loan_rejections_total", "Total loan rejections");
+    this.createCounter("payments_total", "Total payments processed");
+    this.createHistogram("payment_amount", "Payment amounts");
 
     // System metrics
-    this.createGauge('memory_usage', 'Memory usage in bytes');
-    this.createGauge('cpu_usage', 'CPU usage percentage');
-    this.createGauge('active_connections', 'Active database connections');
+    this.createGauge("memory_usage", "Memory usage in bytes");
+    this.createGauge("cpu_usage", "CPU usage percentage");
+    this.createGauge("active_connections", "Active database connections");
 
     // Cache metrics
-    this.createCounter('cache_hits_total', 'Total cache hits');
-    this.createCounter('cache_misses_total', 'Total cache misses');
+    this.createCounter("cache_hits_total", "Total cache hits");
+    this.createCounter("cache_misses_total", "Total cache misses");
 
-    logger.info('Metrics collector initialized with default metrics');
+    logger.info("Metrics collector initialized with default metrics");
   }
 
   /**
@@ -66,22 +75,26 @@ class MetricsCollector {
     this.counters.set(name, {
       value: 0,
       description,
-      type: 'counter',
-      labels: new Map()
+      type: "counter",
+      labels: new Map(),
     });
   }
 
   /**
    * Create a histogram metric
    */
-  createHistogram(name, description, buckets = [1, 5, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000]) {
+  createHistogram(
+    name,
+    description,
+    buckets = [1, 5, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000],
+  ) {
     this.histograms.set(name, {
-      buckets: new Map(buckets.map(b => [b, 0])),
+      buckets: new Map(buckets.map((b) => [b, 0])),
       sum: 0,
       count: 0,
       description,
-      type: 'histogram',
-      labels: new Map()
+      type: "histogram",
+      labels: new Map(),
     });
   }
 
@@ -92,8 +105,8 @@ class MetricsCollector {
     this.gauges.set(name, {
       value: 0,
       description,
-      type: 'gauge',
-      labels: new Map()
+      type: "gauge",
+      labels: new Map(),
     });
   }
 
@@ -126,9 +139,11 @@ class MetricsCollector {
     const labelKey = this.getLabelKey(labels);
     if (!histogram.labels.has(labelKey)) {
       histogram.labels.set(labelKey, {
-        buckets: new Map(Array.from(histogram.buckets.keys()).map(b => [b, 0])),
+        buckets: new Map(
+          Array.from(histogram.buckets.keys()).map((b) => [b, 0]),
+        ),
         sum: 0,
-        count: 0
+        count: 0,
       });
     }
 
@@ -187,13 +202,13 @@ class MetricsCollector {
    */
   getLabelKey(labels) {
     if (!labels || Object.keys(labels).length === 0) {
-      return 'default';
+      return "default";
     }
 
     return Object.entries(labels)
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([key, value]) => `${key}=${value}`)
-      .join(',');
+      .join(",");
   }
 
   /**
@@ -204,9 +219,9 @@ class MetricsCollector {
       const startTime = Date.now();
 
       // Increment request counter
-      this.incrementCounter('http_requests_total', {
+      this.incrementCounter("http_requests_total", {
         method: req.method,
-        route: req.route?.path || req.path
+        route: req.route?.path || req.path,
       });
 
       // Override res.end to capture response metrics
@@ -215,18 +230,18 @@ class MetricsCollector {
         const duration = Date.now() - startTime;
 
         // Record request duration
-        this.recordHistogram('http_request_duration', duration, {
+        this.recordHistogram("http_request_duration", duration, {
           method: req.method,
           route: req.route?.path || req.path,
-          status_code: res.statusCode.toString()
+          status_code: res.statusCode.toString(),
         });
 
         // Count errors
         if (res.statusCode >= 400) {
-          this.incrementCounter('http_errors_total', {
+          this.incrementCounter("http_errors_total", {
             method: req.method,
             route: req.route?.path || req.path,
-            status_code: res.statusCode.toString()
+            status_code: res.statusCode.toString(),
           });
         }
 
@@ -241,20 +256,20 @@ class MetricsCollector {
    * Database query metrics
    */
   recordDatabaseQuery(operation, collection, duration, success = true) {
-    this.incrementCounter('db_queries_total', {
+    this.incrementCounter("db_queries_total", {
       operation,
-      collection
+      collection,
     });
 
-    this.recordHistogram('db_query_duration', duration, {
+    this.recordHistogram("db_query_duration", duration, {
       operation,
-      collection
+      collection,
     });
 
     if (!success) {
-      this.incrementCounter('db_errors_total', {
+      this.incrementCounter("db_errors_total", {
         operation,
-        collection
+        collection,
       });
     }
   }
@@ -262,15 +277,15 @@ class MetricsCollector {
   /**
    * Authentication metrics
    */
-  recordAuthAttempt(success, method = 'password', reason = null) {
-    this.incrementCounter('auth_attempts_total', { method });
+  recordAuthAttempt(success, method = "password", reason = null) {
+    this.incrementCounter("auth_attempts_total", { method });
 
     if (success) {
-      this.incrementCounter('auth_successes_total', { method });
+      this.incrementCounter("auth_successes_total", { method });
     } else {
-      this.incrementCounter('auth_failures_total', {
+      this.incrementCounter("auth_failures_total", {
         method,
-        reason: reason || 'unknown'
+        reason: reason || "unknown",
       });
     }
   }
@@ -279,26 +294,26 @@ class MetricsCollector {
    * Business metrics
    */
   recordLoanApplication(amount, purpose) {
-    this.incrementCounter('loan_applications_total', { purpose });
-    this.recordHistogram('loan_application_amount', amount, { purpose });
+    this.incrementCounter("loan_applications_total", { purpose });
+    this.recordHistogram("loan_application_amount", amount, { purpose });
   }
 
   recordLoanDecision(decision, amount, purpose) {
-    if (decision === 'approved') {
-      this.incrementCounter('loan_approvals_total', { purpose });
+    if (decision === "approved") {
+      this.incrementCounter("loan_approvals_total", { purpose });
     } else {
-      this.incrementCounter('loan_rejections_total', { purpose });
+      this.incrementCounter("loan_rejections_total", { purpose });
     }
   }
 
   recordPayment(amount, method, success = true) {
-    this.incrementCounter('payments_total', {
+    this.incrementCounter("payments_total", {
       method,
-      status: success ? 'success' : 'failed'
+      status: success ? "success" : "failed",
     });
 
     if (success) {
-      this.recordHistogram('payment_amount', amount, { method });
+      this.recordHistogram("payment_amount", amount, { method });
     }
   }
 
@@ -306,11 +321,11 @@ class MetricsCollector {
    * Cache metrics
    */
   recordCacheHit(key) {
-    this.incrementCounter('cache_hits_total');
+    this.incrementCounter("cache_hits_total");
   }
 
   recordCacheMiss(key) {
-    this.incrementCounter('cache_misses_total');
+    this.incrementCounter("cache_misses_total");
   }
 
   /**
@@ -320,17 +335,18 @@ class MetricsCollector {
     try {
       // Memory metrics
       const memUsage = process.memoryUsage();
-      this.setGauge('memory_usage', memUsage.heapUsed, { type: 'heap_used' });
-      this.setGauge('memory_usage', memUsage.heapTotal, { type: 'heap_total' });
-      this.setGauge('memory_usage', memUsage.external, { type: 'external' });
-      this.setGauge('memory_usage', memUsage.rss, { type: 'rss' });
+      this.setGauge("memory_usage", memUsage.heapUsed, { type: "heap_used" });
+      this.setGauge("memory_usage", memUsage.heapTotal, { type: "heap_total" });
+      this.setGauge("memory_usage", memUsage.external, { type: "external" });
+      this.setGauge("memory_usage", memUsage.rss, { type: "rss" });
 
       // CPU metrics (simplified)
       const cpuUsage = process.cpuUsage();
-      this.setGauge('cpu_usage', cpuUsage.user + cpuUsage.system);
-
+      this.setGauge("cpu_usage", cpuUsage.user + cpuUsage.system);
     } catch (error) {
-      logger.error('Failed to collect system metrics', { error: error.message });
+      logger.error("Failed to collect system metrics", {
+        error: error.message,
+      });
     }
   }
 
@@ -338,7 +354,7 @@ class MetricsCollector {
    * Get all metrics in Prometheus format
    */
   getPrometheusMetrics() {
-    let output = '';
+    let output = "";
 
     // Counters
     for (const [name, counter] of this.counters) {
@@ -349,11 +365,11 @@ class MetricsCollector {
         output += `${name} ${counter.value}\n`;
       } else {
         for (const [labelKey, value] of counter.labels) {
-          const labels = labelKey === 'default' ? '' : `{${labelKey}}`;
+          const labels = labelKey === "default" ? "" : `{${labelKey}}`;
           output += `${name}${labels} ${value}\n`;
         }
       }
-      output += '\n';
+      output += "\n";
     }
 
     // Histograms
@@ -369,19 +385,21 @@ class MetricsCollector {
         output += `${name}_count ${histogram.count}\n`;
       } else {
         for (const [labelKey, labelData] of histogram.labels) {
-          const baseLabels = labelKey === 'default' ? '' : labelKey;
+          const baseLabels = labelKey === "default" ? "" : labelKey;
 
           for (const [bucket, count] of labelData.buckets) {
-            const labels = baseLabels ? `{${baseLabels},le="${bucket}"}` : `{le="${bucket}"}`;
+            const labels = baseLabels
+              ? `{${baseLabels},le="${bucket}"}`
+              : `{le="${bucket}"}`;
             output += `${name}_bucket${labels} ${count}\n`;
           }
 
-          const labels = baseLabels ? `{${baseLabels}}` : '';
+          const labels = baseLabels ? `{${baseLabels}}` : "";
           output += `${name}_sum${labels} ${labelData.sum}\n`;
           output += `${name}_count${labels} ${labelData.count}\n`;
         }
       }
-      output += '\n';
+      output += "\n";
     }
 
     // Gauges
@@ -393,11 +411,11 @@ class MetricsCollector {
         output += `${name} ${gauge.value}\n`;
       } else {
         for (const [labelKey, value] of gauge.labels) {
-          const labels = labelKey === 'default' ? '' : `{${labelKey}}`;
+          const labels = labelKey === "default" ? "" : `{${labelKey}}`;
           output += `${name}${labels} ${value}\n`;
         }
       }
-      output += '\n';
+      output += "\n";
     }
 
     return output;
@@ -412,7 +430,7 @@ class MetricsCollector {
       uptime: Date.now() - this.startTime,
       counters: {},
       histograms: {},
-      gauges: {}
+      gauges: {},
     };
 
     // Convert counters
@@ -420,7 +438,7 @@ class MetricsCollector {
       metrics.counters[name] = {
         value: counter.value,
         description: counter.description,
-        labels: Object.fromEntries(counter.labels)
+        labels: Object.fromEntries(counter.labels),
       };
     }
 
@@ -430,14 +448,14 @@ class MetricsCollector {
         sum: histogram.sum,
         count: histogram.count,
         description: histogram.description,
-        labels: {}
+        labels: {},
       };
 
       for (const [labelKey, labelData] of histogram.labels) {
         metrics.histograms[name].labels[labelKey] = {
           sum: labelData.sum,
           count: labelData.count,
-          buckets: Object.fromEntries(labelData.buckets)
+          buckets: Object.fromEntries(labelData.buckets),
         };
       }
     }
@@ -447,7 +465,7 @@ class MetricsCollector {
       metrics.gauges[name] = {
         value: gauge.value,
         description: gauge.description,
-        labels: Object.fromEntries(gauge.labels)
+        labels: Object.fromEntries(gauge.labels),
       };
     }
 
@@ -463,9 +481,8 @@ class MetricsCollector {
 
       // Store metrics in cache for persistence
       if (cache) {
-        cache.set('metrics_snapshot', this.getJSONMetrics(), 300); // 5 minutes TTL
+        cache.set("metrics_snapshot", this.getJSONMetrics(), 300); // 5 minutes TTL
       }
-
     }, this.resetInterval);
   }
 
@@ -477,17 +494,19 @@ class MetricsCollector {
       try {
         const format = req.query.format || req.headers.accept;
 
-        if (format && format.includes('application/json')) {
-          res.setHeader('Content-Type', 'application/json');
+        if (format && format.includes("application/json")) {
+          res.setHeader("Content-Type", "application/json");
           res.json(this.getJSONMetrics());
         } else {
-          res.setHeader('Content-Type', 'text/plain; version=0.0.4; charset=utf-8');
+          res.setHeader(
+            "Content-Type",
+            "text/plain; version=0.0.4; charset=utf-8",
+          );
           res.send(this.getPrometheusMetrics());
         }
-
       } catch (error) {
-        logger.error('Failed to generate metrics', { error: error.message });
-        res.status(500).json({ error: 'Failed to generate metrics' });
+        logger.error("Failed to generate metrics", { error: error.message });
+        res.status(500).json({ error: "Failed to generate metrics" });
       }
     };
   }
@@ -498,6 +517,7 @@ const metricsCollector = new MetricsCollector();
 
 module.exports = {
   metricsCollector,
-  httpMetricsMiddleware: metricsCollector.httpMetricsMiddleware.bind(metricsCollector),
-  getMetricsHandler: metricsCollector.getMetricsHandler.bind(metricsCollector)
+  httpMetricsMiddleware:
+    metricsCollector.httpMetricsMiddleware.bind(metricsCollector),
+  getMetricsHandler: metricsCollector.getMetricsHandler.bind(metricsCollector),
 };

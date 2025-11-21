@@ -1,5 +1,5 @@
-const { logger } = require('../../utils/logger');
-const { auditLogger } = require('../../compliance/auditLogger');
+const { logger } = require("../../utils/logger");
+const { auditLogger } = require("../../compliance/auditLogger");
 
 /**
  * Enhanced Error Handling Middleware
@@ -10,45 +10,66 @@ class ErrorHandler {
   constructor() {
     this.errorCodes = {
       // Authentication & Authorization
-      UNAUTHORIZED: { status: 401, message: 'Authentication required' },
-      FORBIDDEN: { status: 403, message: 'Access denied' },
-      TOKEN_EXPIRED: { status: 401, message: 'Token has expired' },
-      INVALID_TOKEN: { status: 401, message: 'Invalid token provided' },
-      ACCOUNT_LOCKED: { status: 423, message: 'Account is temporarily locked' },
+      UNAUTHORIZED: { status: 401, message: "Authentication required" },
+      FORBIDDEN: { status: 403, message: "Access denied" },
+      TOKEN_EXPIRED: { status: 401, message: "Token has expired" },
+      INVALID_TOKEN: { status: 401, message: "Invalid token provided" },
+      ACCOUNT_LOCKED: { status: 423, message: "Account is temporarily locked" },
 
       // Validation
-      VALIDATION_ERROR: { status: 400, message: 'Validation failed' },
-      INVALID_INPUT: { status: 400, message: 'Invalid input provided' },
-      MISSING_REQUIRED_FIELD: { status: 400, message: 'Required field is missing' },
-      INVALID_FORMAT: { status: 400, message: 'Invalid data format' },
+      VALIDATION_ERROR: { status: 400, message: "Validation failed" },
+      INVALID_INPUT: { status: 400, message: "Invalid input provided" },
+      MISSING_REQUIRED_FIELD: {
+        status: 400,
+        message: "Required field is missing",
+      },
+      INVALID_FORMAT: { status: 400, message: "Invalid data format" },
 
       // Business Logic
-      INSUFFICIENT_FUNDS: { status: 400, message: 'Insufficient funds' },
-      LOAN_NOT_FOUND: { status: 404, message: 'Loan not found' },
-      USER_NOT_FOUND: { status: 404, message: 'User not found' },
-      DUPLICATE_ENTRY: { status: 409, message: 'Resource already exists' },
-      BUSINESS_RULE_VIOLATION: { status: 422, message: 'Business rule violation' },
+      INSUFFICIENT_FUNDS: { status: 400, message: "Insufficient funds" },
+      LOAN_NOT_FOUND: { status: 404, message: "Loan not found" },
+      USER_NOT_FOUND: { status: 404, message: "User not found" },
+      DUPLICATE_ENTRY: { status: 409, message: "Resource already exists" },
+      BUSINESS_RULE_VIOLATION: {
+        status: 422,
+        message: "Business rule violation",
+      },
 
       // External Services
-      PAYMENT_PROCESSOR_ERROR: { status: 502, message: 'Payment processing failed' },
-      CREDIT_BUREAU_ERROR: { status: 502, message: 'Credit bureau service unavailable' },
-      BLOCKCHAIN_ERROR: { status: 502, message: 'Blockchain service error' },
-      EXTERNAL_SERVICE_TIMEOUT: { status: 504, message: 'External service timeout' },
+      PAYMENT_PROCESSOR_ERROR: {
+        status: 502,
+        message: "Payment processing failed",
+      },
+      CREDIT_BUREAU_ERROR: {
+        status: 502,
+        message: "Credit bureau service unavailable",
+      },
+      BLOCKCHAIN_ERROR: { status: 502, message: "Blockchain service error" },
+      EXTERNAL_SERVICE_TIMEOUT: {
+        status: 504,
+        message: "External service timeout",
+      },
 
       // System Errors
-      DATABASE_ERROR: { status: 500, message: 'Database operation failed' },
-      CACHE_ERROR: { status: 500, message: 'Cache operation failed' },
-      FILE_SYSTEM_ERROR: { status: 500, message: 'File system error' },
-      CONFIGURATION_ERROR: { status: 500, message: 'System configuration error' },
+      DATABASE_ERROR: { status: 500, message: "Database operation failed" },
+      CACHE_ERROR: { status: 500, message: "Cache operation failed" },
+      FILE_SYSTEM_ERROR: { status: 500, message: "File system error" },
+      CONFIGURATION_ERROR: {
+        status: 500,
+        message: "System configuration error",
+      },
 
       // Rate Limiting
-      RATE_LIMIT_EXCEEDED: { status: 429, message: 'Rate limit exceeded' },
+      RATE_LIMIT_EXCEEDED: { status: 429, message: "Rate limit exceeded" },
 
       // Generic
-      INTERNAL_SERVER_ERROR: { status: 500, message: 'Internal server error' },
-      NOT_FOUND: { status: 404, message: 'Resource not found' },
-      METHOD_NOT_ALLOWED: { status: 405, message: 'Method not allowed' },
-      UNSUPPORTED_MEDIA_TYPE: { status: 415, message: 'Unsupported media type' }
+      INTERNAL_SERVER_ERROR: { status: 500, message: "Internal server error" },
+      NOT_FOUND: { status: 404, message: "Resource not found" },
+      METHOD_NOT_ALLOWED: { status: 405, message: "Method not allowed" },
+      UNSUPPORTED_MEDIA_TYPE: {
+        status: 415,
+        message: "Unsupported media type",
+      },
     };
   }
 
@@ -56,7 +77,8 @@ class ErrorHandler {
    * Create a standardized error object
    */
   createError(code, details = null, cause = null) {
-    const errorInfo = this.errorCodes[code] || this.errorCodes.INTERNAL_SERVER_ERROR;
+    const errorInfo =
+      this.errorCodes[code] || this.errorCodes.INTERNAL_SERVER_ERROR;
 
     const error = new Error(errorInfo.message);
     error.code = code;
@@ -81,11 +103,11 @@ class ErrorHandler {
       errorId,
       method: req.method,
       url: req.originalUrl || req.url,
-      userAgent: req.get('User-Agent'),
+      userAgent: req.get("User-Agent"),
       ipAddress: req.ip || req.connection?.remoteAddress,
       userId: req.user?.id || req.user?._id || null,
-      requestId: req.id || req.headers['x-request-id'],
-      timestamp: new Date().toISOString()
+      requestId: req.id || req.headers["x-request-id"],
+      timestamp: new Date().toISOString(),
     };
 
     // Determine error type and status
@@ -102,11 +124,11 @@ class ErrorHandler {
         message: errorResponse.message,
         ...(errorResponse.details && { details: errorResponse.details }),
         timestamp: context.timestamp,
-        ...(process.env.NODE_ENV === 'development' && {
+        ...(process.env.NODE_ENV === "development" && {
           stack: error.stack,
-          cause: error.cause
-        })
-      }
+          cause: error.cause,
+        }),
+      },
     });
   }
 
@@ -120,64 +142,68 @@ class ErrorHandler {
         status: error.status || 500,
         code: error.code,
         message: error.message,
-        details: error.details
+        details: error.details,
       };
     }
 
     // Handle Mongoose validation errors
-    if (error.name === 'ValidationError') {
+    if (error.name === "ValidationError") {
       return {
         status: 400,
-        code: 'VALIDATION_ERROR',
-        message: 'Validation failed',
-        details: this.formatValidationErrors(error.errors)
+        code: "VALIDATION_ERROR",
+        message: "Validation failed",
+        details: this.formatValidationErrors(error.errors),
       };
     }
 
     // Handle Mongoose cast errors
-    if (error.name === 'CastError') {
+    if (error.name === "CastError") {
       return {
         status: 400,
-        code: 'INVALID_FORMAT',
+        code: "INVALID_FORMAT",
         message: `Invalid ${error.path}: ${error.value}`,
-        details: { field: error.path, value: error.value }
+        details: { field: error.path, value: error.value },
       };
     }
 
     // Handle MongoDB duplicate key errors
     if (error.code === 11000) {
-      const field = Object.keys(error.keyPattern || {})[0] || 'field';
+      const field = Object.keys(error.keyPattern || {})[0] || "field";
       return {
         status: 409,
-        code: 'DUPLICATE_ENTRY',
+        code: "DUPLICATE_ENTRY",
         message: `${field} already exists`,
-        details: { field, value: error.keyValue?.[field] }
+        details: { field, value: error.keyValue?.[field] },
       };
     }
 
     // Handle JWT errors
-    if (error.name === 'JsonWebTokenError') {
+    if (error.name === "JsonWebTokenError") {
       return {
         status: 401,
-        code: 'INVALID_TOKEN',
-        message: 'Invalid token provided'
+        code: "INVALID_TOKEN",
+        message: "Invalid token provided",
       };
     }
 
-    if (error.name === 'TokenExpiredError') {
+    if (error.name === "TokenExpiredError") {
       return {
         status: 401,
-        code: 'TOKEN_EXPIRED',
-        message: 'Token has expired'
+        code: "TOKEN_EXPIRED",
+        message: "Token has expired",
       };
     }
 
     // Handle syntax errors (malformed JSON, etc.)
-    if (error instanceof SyntaxError && error.status === 400 && 'body' in error) {
+    if (
+      error instanceof SyntaxError &&
+      error.status === 400 &&
+      "body" in error
+    ) {
       return {
         status: 400,
-        code: 'INVALID_FORMAT',
-        message: 'Invalid JSON format'
+        code: "INVALID_FORMAT",
+        message: "Invalid JSON format",
       };
     }
 
@@ -185,33 +211,34 @@ class ErrorHandler {
     if (error.status === 429) {
       return {
         status: 429,
-        code: 'RATE_LIMIT_EXCEEDED',
-        message: 'Rate limit exceeded',
+        code: "RATE_LIMIT_EXCEEDED",
+        message: "Rate limit exceeded",
         details: {
           retryAfter: error.retryAfter || 60,
           limit: error.limit,
-          remaining: error.remaining
-        }
+          remaining: error.remaining,
+        },
       };
     }
 
     // Handle file upload errors
-    if (error.code === 'LIMIT_FILE_SIZE') {
+    if (error.code === "LIMIT_FILE_SIZE") {
       return {
         status: 413,
-        code: 'FILE_TOO_LARGE',
-        message: 'File size exceeds limit',
-        details: { limit: error.limit }
+        code: "FILE_TOO_LARGE",
+        message: "File size exceeds limit",
+        details: { limit: error.limit },
       };
     }
 
     // Default to internal server error
     return {
       status: 500,
-      code: 'INTERNAL_SERVER_ERROR',
-      message: process.env.NODE_ENV === 'production'
-        ? 'An unexpected error occurred'
-        : error.message
+      code: "INTERNAL_SERVER_ERROR",
+      message:
+        process.env.NODE_ENV === "production"
+          ? "An unexpected error occurred"
+          : error.message,
     };
   }
 
@@ -226,7 +253,7 @@ class ErrorHandler {
       formatted[field] = {
         message: error.message,
         value: error.value,
-        kind: error.kind
+        kind: error.kind,
       };
     }
 
@@ -249,42 +276,47 @@ class ErrorHandler {
         userAgent: context.userAgent,
         ipAddress: context.ipAddress,
         userId: context.userId,
-        requestId: context.requestId
+        requestId: context.requestId,
       },
       ...(error.details && { details: error.details }),
-      ...(error.cause && { cause: error.cause })
+      ...(error.cause && { cause: error.cause }),
     };
 
     // Determine log level based on error severity
     if (errorResponse.status >= 500) {
-      logger.error('Server error occurred', logData);
+      logger.error("Server error occurred", logData);
 
       // Log critical errors to audit log
-      auditLogger.logSystemEvent('critical_error', {
+      auditLogger.logSystemEvent("critical_error", {
         errorId: context.errorId,
         code: errorResponse.code,
         message: error.message,
         userId: context.userId,
-        ipAddress: context.ipAddress
+        ipAddress: context.ipAddress,
       });
-
     } else if (errorResponse.status >= 400) {
-      logger.warn('Client error occurred', logData);
+      logger.warn("Client error occurred", logData);
 
       // Log security-related errors
-      if (['UNAUTHORIZED', 'FORBIDDEN', 'TOKEN_EXPIRED', 'INVALID_TOKEN'].includes(errorResponse.code)) {
+      if (
+        [
+          "UNAUTHORIZED",
+          "FORBIDDEN",
+          "TOKEN_EXPIRED",
+          "INVALID_TOKEN",
+        ].includes(errorResponse.code)
+      ) {
         logger.security.accessDenied(
           context.userId,
           context.url,
           context.method,
           context.ipAddress,
           context.userAgent,
-          errorResponse.code
+          errorResponse.code,
         );
       }
-
     } else {
-      logger.info('Request completed with error', logData);
+      logger.info("Request completed with error", logData);
     }
   }
 
@@ -301,9 +333,9 @@ class ErrorHandler {
    * Handle 404 errors
    */
   handleNotFound(req, res, next) {
-    const error = this.createError('NOT_FOUND', {
+    const error = this.createError("NOT_FOUND", {
       resource: req.originalUrl || req.url,
-      method: req.method
+      method: req.method,
     });
 
     next(error);
@@ -328,17 +360,17 @@ class ErrorHandler {
     if (global.server) {
       global.server.close((err) => {
         if (err) {
-          logger.error('Error during server shutdown', { error: err.message });
+          logger.error("Error during server shutdown", { error: err.message });
           process.exit(1);
         }
 
-        logger.info('Server closed successfully');
+        logger.info("Server closed successfully");
         process.exit(0);
       });
 
       // Force shutdown after timeout
       setTimeout(() => {
-        logger.error('Forced shutdown due to timeout');
+        logger.error("Forced shutdown due to timeout");
         process.exit(1);
       }, 10000); // 10 seconds
     } else {
@@ -350,14 +382,14 @@ class ErrorHandler {
    * Handle uncaught exceptions
    */
   handleUncaughtException(error) {
-    logger.error('Uncaught exception occurred', {
+    logger.error("Uncaught exception occurred", {
       error: error.message,
-      stack: error.stack
+      stack: error.stack,
     });
 
-    auditLogger.logSystemEvent('uncaught_exception', {
+    auditLogger.logSystemEvent("uncaught_exception", {
       error: error.message,
-      stack: error.stack
+      stack: error.stack,
     });
 
     // Graceful shutdown
@@ -368,14 +400,14 @@ class ErrorHandler {
    * Handle unhandled promise rejections
    */
   handleUnhandledRejection(reason, promise) {
-    logger.error('Unhandled promise rejection', {
+    logger.error("Unhandled promise rejection", {
       reason: reason?.message || reason,
-      stack: reason?.stack
+      stack: reason?.stack,
     });
 
-    auditLogger.logSystemEvent('unhandled_rejection', {
+    auditLogger.logSystemEvent("unhandled_rejection", {
       reason: reason?.message || reason,
-      stack: reason?.stack
+      stack: reason?.stack,
     });
 
     // Graceful shutdown
@@ -387,16 +419,16 @@ class ErrorHandler {
    */
   setupGlobalHandlers() {
     // Handle uncaught exceptions
-    process.on('uncaughtException', this.handleUncaughtException.bind(this));
+    process.on("uncaughtException", this.handleUncaughtException.bind(this));
 
     // Handle unhandled promise rejections
-    process.on('unhandledRejection', this.handleUnhandledRejection.bind(this));
+    process.on("unhandledRejection", this.handleUnhandledRejection.bind(this));
 
     // Handle graceful shutdown signals
-    process.on('SIGTERM', () => this.handleShutdown('SIGTERM'));
-    process.on('SIGINT', () => this.handleShutdown('SIGINT'));
+    process.on("SIGTERM", () => this.handleShutdown("SIGTERM"));
+    process.on("SIGINT", () => this.handleShutdown("SIGINT"));
 
-    logger.info('Global error handlers registered');
+    logger.info("Global error handlers registered");
   }
 }
 
@@ -410,5 +442,5 @@ module.exports = {
   handleNotFound: errorHandler.handleNotFound.bind(errorHandler),
   asyncHandler: errorHandler.asyncHandler.bind(errorHandler),
   createError: errorHandler.createError.bind(errorHandler),
-  setupGlobalHandlers: errorHandler.setupGlobalHandlers.bind(errorHandler)
+  setupGlobalHandlers: errorHandler.setupGlobalHandlers.bind(errorHandler),
 };

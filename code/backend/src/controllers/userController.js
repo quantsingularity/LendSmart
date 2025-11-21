@@ -1,4 +1,4 @@
-const User = require('../models/User');
+const User = require("../models/User");
 
 /**
  * @desc    Get all users
@@ -12,7 +12,7 @@ exports.getUsers = async (req, res, next) => {
     res.status(200).json({
       success: true,
       count: users.length,
-      data: users
+      data: users,
     });
   } catch (error) {
     next(error);
@@ -31,13 +31,13 @@ exports.getUser = async (req, res, next) => {
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: 'User not found'
+        message: "User not found",
       });
     }
 
     res.status(200).json({
       success: true,
-      data: user
+      data: user,
     });
   } catch (error) {
     next(error);
@@ -57,7 +57,7 @@ exports.createUser = async (req, res, next) => {
     if (!name || !email || !password) {
       return res.status(400).json({
         success: false,
-        message: 'Please provide name, email, and password'
+        message: "Please provide name, email, and password",
       });
     }
 
@@ -66,7 +66,7 @@ exports.createUser = async (req, res, next) => {
     if (existingUser) {
       return res.status(400).json({
         success: false,
-        message: 'Email already in use'
+        message: "Email already in use",
       });
     }
 
@@ -76,7 +76,7 @@ exports.createUser = async (req, res, next) => {
       if (walletUser) {
         return res.status(400).json({
           success: false,
-          message: 'Wallet address already in use'
+          message: "Wallet address already in use",
         });
       }
     }
@@ -87,12 +87,12 @@ exports.createUser = async (req, res, next) => {
       email,
       password,
       walletAddress,
-      role
+      role,
     });
 
     res.status(201).json({
       success: true,
-      data: user
+      data: user,
     });
   } catch (error) {
     next(error);
@@ -109,7 +109,7 @@ exports.updateUser = async (req, res, next) => {
     const fieldsToUpdate = {
       name: req.body.name,
       email: req.body.email,
-      role: req.body.role
+      role: req.body.role,
     };
 
     // Only update wallet address if provided
@@ -117,13 +117,13 @@ exports.updateUser = async (req, res, next) => {
       // Check if wallet address is already in use by another user
       const walletUser = await User.findOne({
         walletAddress: req.body.walletAddress,
-        _id: { $ne: req.params.id }
+        _id: { $ne: req.params.id },
       });
 
       if (walletUser) {
         return res.status(400).json({
           success: false,
-          message: 'Wallet address already in use'
+          message: "Wallet address already in use",
         });
       }
 
@@ -137,19 +137,19 @@ exports.updateUser = async (req, res, next) => {
 
     const user = await User.findByIdAndUpdate(req.params.id, fieldsToUpdate, {
       new: true,
-      runValidators: true
+      runValidators: true,
     });
 
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: 'User not found'
+        message: "User not found",
       });
     }
 
     res.status(200).json({
       success: true,
-      data: user
+      data: user,
     });
   } catch (error) {
     next(error);
@@ -168,7 +168,7 @@ exports.deleteUser = async (req, res, next) => {
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: 'User not found'
+        message: "User not found",
       });
     }
 
@@ -176,7 +176,7 @@ exports.deleteUser = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      data: {}
+      data: {},
     });
   } catch (error) {
     next(error);
@@ -193,11 +193,11 @@ exports.getUsersByRole = async (req, res, next) => {
     const { role } = req.params;
 
     // Validate role
-    const validRoles = ['user', 'borrower', 'lender', 'risk-assessor', 'admin'];
+    const validRoles = ["user", "borrower", "lender", "risk-assessor", "admin"];
     if (!validRoles.includes(role)) {
       return res.status(400).json({
         success: false,
-        message: 'Invalid role'
+        message: "Invalid role",
       });
     }
 
@@ -206,7 +206,7 @@ exports.getUsersByRole = async (req, res, next) => {
     res.status(200).json({
       success: true,
       count: users.length,
-      data: users
+      data: users,
     });
   } catch (error) {
     next(error);
@@ -227,13 +227,13 @@ exports.getUserByWalletAddress = async (req, res, next) => {
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: 'User not found'
+        message: "User not found",
       });
     }
 
     res.status(200).json({
       success: true,
-      data: user
+      data: user,
     });
   } catch (error) {
     next(error);

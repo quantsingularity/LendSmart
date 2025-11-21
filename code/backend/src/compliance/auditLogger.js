@@ -1,15 +1,17 @@
-const winston = require('winston');
-const DailyRotateFile = require('winston-daily-rotate-file');
-const mongoose = require('mongoose');
-const crypto = require('crypto');
-const { getEncryptionService } = require('../config/security/encryption');
+const winston = require("winston");
+const DailyRotateFile = require("winston-daily-rotate-file");
+const mongoose = require("mongoose");
+const crypto = require("crypto");
+const { getEncryptionService } = require("../config/security/encryption");
 
 // Redis client with fallback for development
 let redisClient;
 try {
-  redisClient = require('../config/redis');
+  redisClient = require("../config/redis");
 } catch (error) {
-  console.warn('Redis client not available, using in-memory fallback for development');
+  console.warn(
+    "Redis client not available, using in-memory fallback for development",
+  );
   // In-memory fallback for development
   const memoryStore = new Map();
   redisClient = {
@@ -18,99 +20,117 @@ try {
       memoryStore.set(key, value);
       setTimeout(() => memoryStore.delete(key), ttl * 1000);
     },
-    del: async (key) => memoryStore.delete(key)
+    del: async (key) => memoryStore.delete(key),
   };
 }
 
 /**
  * Audit Log Schema for database storage
  */
-const auditLogSchema = new mongoose.Schema({
-  eventId: {
-    type: String,
-    required: true,
-    unique: true,
-    default: () => `audit_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+const auditLogSchema = new mongoose.Schema(
+  {
+    eventId: {
+      type: String,
+      required: true,
+      unique: true,
+      default: () =>
+        `audit_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+    },
+
+    category: {
+      type: String,
+      required: true,
+      enum: [
+        "authentication",
+        "authorization",
+        "data_access",
+        "data_modification",
+        "security",
+        "compliance",
+        "system",
+        "business",
+        "financial",
+        "loan_management",
+        "api_access",
+      ],
+      index: true,
+    },
+
+    action: {
+      type: String,
+      required: true,
+      index: true,
+    },
+
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      index: true,
+    },
+
+    username: String,
+
+    ip: {
+      type: String,
+      required: true,
+      index: true,
+    },
+
+    userAgent: String,
+    method: String,
+    url: String,
+
+    resource: String,
+    resourceId: String,
+
+    oldValues: mongoose.Schema.Types.Mixed,
+    newValues: mongoose.Schema.Types.Mixed,
+
+    success: {
+      type: Boolean,
+      required: true,
+      index: true,
+    },
+
+    reason: String,
+
+    riskLevel: {
+      type: String,
+      enum: ["low", "medium", "high", "critical"],
+      default: "low",
+      index: true,
+    },
+
+    complianceFlags: [
+      {
+        type: String,
+        enum: ["pci_dss", "gdpr", "ccpa", "sox", "kyc_aml", "data_retention"],
+      },
+    ],
+
+    metadata: mongoose.Schema.Types.Mixed,
+
+    timestamp: {
+      type: Date,
+      required: true,
+      default: Date.now,
+      index: true,
+    },
+
+    retentionDate: {
+      type: Date,
+      index: true,
+    },
+
+    integrityHash: String,
+    chainCounter: Number,
+    previousHash: String,
   },
-
-  category: {
-    type: String,
-    required: true,
-    enum: ['authentication', 'authorization', 'data_access', 'data_modification', 'security', 'compliance', 'system', 'business', 'financial', 'loan_management', 'api_access'],
-    index: true
+  {
+    timestamps: true,
+    collection: "audit_logs",
   },
-
-  action: {
-    type: String,
-    required: true,
-    index: true
-  },
-
-  userId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    index: true
-  },
-
-  username: String,
-
-  ip: {
-    type: String,
-    required: true,
-    index: true
-  },
-
-  userAgent: String,
-  method: String,
-  url: String,
-
-  resource: String,
-  resourceId: String,
-
-  oldValues: mongoose.Schema.Types.Mixed,
-  newValues: mongoose.Schema.Types.Mixed,
-
-  success: {
-    type: Boolean,
-    required: true,
-    index: true
-  },
-
-  reason: String,
-
-  riskLevel: {
-    type: String,
-    enum: ['low', 'medium', 'high', 'critical'],
-    default: 'low',
-    index: true
-  },
-
-  complianceFlags: [{
-    type: String,
-    enum: ['pci_dss', 'gdpr', 'ccpa', 'sox', 'kyc_aml', 'data_retention']
-  }],
-
-  metadata: mongoose.Schema.Types.Mixed,
-
-  timestamp: {
-    type: Date,
-    required: true,
-    default: Date.now,
-    index: true
-  },
-
-  retentionDate: {
-    type: Date,
-    index: true
-  },
-
-  integrityHash: String,
-  chainCounter: Number,
-  previousHash: String
-}, {
-  timestamps: true,
-  collection: 'audit_logs'
-});
+);
 
 // Indexes for performance
 auditLogSchema.index({ timestamp: -1, category: 1 });
@@ -121,7 +141,7 @@ auditLogSchema.index({ action: 1, success: 1, timestamp: -1 });
 // TTL index for automatic cleanup
 auditLogSchema.index({ retentionDate: 1 }, { expireAfterSeconds: 0 });
 
-const AuditLog = mongoose.model('AuditLog', auditLogSchema);
+const AuditLog = mongoose.model("AuditLog", auditLogSchema);
 
 /**
  * Enterprise-grade audit logging system for financial compliance
@@ -141,71 +161,69 @@ class AuditLogger {
     // Audit log format
     const auditFormat = winston.format.combine(
       winston.format.timestamp({
-        format: 'YYYY-MM-DD HH:mm:ss.SSS'
+        format: "YYYY-MM-DD HH:mm:ss.SSS",
       }),
       winston.format.errors({ stack: true }),
       winston.format.json(),
-      winston.format.printf(info => {
+      winston.format.printf((info) => {
         return JSON.stringify({
           timestamp: info.timestamp,
           level: info.level,
           message: info.message,
-          ...info.metadata
+          ...info.metadata,
         });
-      })
+      }),
     );
 
     // Daily rotate file transport for audit logs
     const auditTransport = new DailyRotateFile({
-      filename: 'logs/audit/audit-%DATE%.log',
-      datePattern: 'YYYY-MM-DD',
+      filename: "logs/audit/audit-%DATE%.log",
+      datePattern: "YYYY-MM-DD",
       zippedArchive: true,
-      maxSize: '100m',
-      maxFiles: '365d', // Keep for 1 year
+      maxSize: "100m",
+      maxFiles: "365d", // Keep for 1 year
       format: auditFormat,
-      level: 'info'
+      level: "info",
     });
 
     // Separate transport for security events
     const securityTransport = new DailyRotateFile({
-      filename: 'logs/security/security-%DATE%.log',
-      datePattern: 'YYYY-MM-DD',
+      filename: "logs/security/security-%DATE%.log",
+      datePattern: "YYYY-MM-DD",
       zippedArchive: true,
-      maxSize: '50m',
-      maxFiles: '2555d', // Keep for 7 years (regulatory requirement)
+      maxSize: "50m",
+      maxFiles: "2555d", // Keep for 7 years (regulatory requirement)
       format: auditFormat,
-      level: 'warn'
+      level: "warn",
     });
 
     // Financial transaction logs (highest retention)
     const financialTransport = new DailyRotateFile({
-      filename: 'logs/financial/financial-%DATE%.log',
-      datePattern: 'YYYY-MM-DD',
+      filename: "logs/financial/financial-%DATE%.log",
+      datePattern: "YYYY-MM-DD",
       zippedArchive: true,
-      maxSize: '200m',
-      maxFiles: '2555d', // Keep for 7 years
+      maxSize: "200m",
+      maxFiles: "2555d", // Keep for 7 years
       format: auditFormat,
-      level: 'info'
+      level: "info",
     });
 
     this.auditLogger = winston.createLogger({
-      level: 'info',
-      transports: [
-        auditTransport,
-        securityTransport,
-        financialTransport
-      ],
-      exitOnError: false
+      level: "info",
+      transports: [auditTransport, securityTransport, financialTransport],
+      exitOnError: false,
     });
 
     // Add console transport in development
-    if (process.env.NODE_ENV === 'development') {
-      this.auditLogger.add(new winston.transports.Console({
-        format: winston.format.combine(
-          winston.format.colorize(),
-          winston.format.simple()
-        )
-      }));
+    if (process.env.NODE_ENV === "development") {
+      this.auditLogger.add(
+        new winston.transports.Console({
+          format: winston.format.combine(
+            winston.format.colorize(),
+            winston.format.simple(),
+          ),
+        }),
+      );
     }
   }
 
@@ -234,7 +252,7 @@ class AuditLogger {
 
       return auditLog;
     } catch (error) {
-      console.error('Failed to create database audit log:', error);
+      console.error("Failed to create database audit log:", error);
       return null;
     }
   }
@@ -246,28 +264,28 @@ class AuditLogger {
    */
   getRiskLevel(action) {
     const riskLevels = {
-      'user_login': 'low',
-      'user_logout': 'low',
-      'profile_view': 'low',
-      'profile_update': 'medium',
-      'password_change': 'medium',
-      'mfa_setup': 'medium',
-      'loan_application': 'medium',
-      'payment_initiated': 'medium',
-      'admin_action': 'high',
-      'user_suspension': 'high',
-      'loan_approval': 'high',
-      'large_payment': 'high',
-      'kyc_status_change': 'high',
-      'data_export': 'high',
-      'security_violation': 'critical',
-      'data_breach': 'critical',
-      'unauthorized_access': 'critical',
-      'system_compromise': 'critical',
-      'compliance_violation': 'critical'
+      user_login: "low",
+      user_logout: "low",
+      profile_view: "low",
+      profile_update: "medium",
+      password_change: "medium",
+      mfa_setup: "medium",
+      loan_application: "medium",
+      payment_initiated: "medium",
+      admin_action: "high",
+      user_suspension: "high",
+      loan_approval: "high",
+      large_payment: "high",
+      kyc_status_change: "high",
+      data_export: "high",
+      security_violation: "critical",
+      data_breach: "critical",
+      unauthorized_access: "critical",
+      system_compromise: "critical",
+      compliance_violation: "critical",
     };
 
-    return riskLevels[action] || 'low';
+    return riskLevels[action] || "low";
   }
 
   /**
@@ -277,13 +295,13 @@ class AuditLogger {
    */
   getRetentionDate(riskLevel) {
     const retentionPeriods = {
-      'low': 1 * 365 * 24 * 60 * 60 * 1000, // 1 year
-      'medium': 3 * 365 * 24 * 60 * 60 * 1000, // 3 years
-      'high': 7 * 365 * 24 * 60 * 60 * 1000, // 7 years
-      'critical': 10 * 365 * 24 * 60 * 60 * 1000 // 10 years
+      low: 1 * 365 * 24 * 60 * 60 * 1000, // 1 year
+      medium: 3 * 365 * 24 * 60 * 60 * 1000, // 3 years
+      high: 7 * 365 * 24 * 60 * 60 * 1000, // 7 years
+      critical: 10 * 365 * 24 * 60 * 60 * 1000, // 10 years
     };
 
-    const period = retentionPeriods[riskLevel] || retentionPeriods['low'];
+    const period = retentionPeriods[riskLevel] || retentionPeriods["low"];
     return new Date(Date.now() + period);
   }
 
@@ -293,19 +311,19 @@ class AuditLogger {
    */
   async logAuthEvent(event) {
     // Create file-based audit entry (existing functionality)
-    const auditEntry = await this.createAuditEntry('AUTH', event, {
-      category: 'authentication',
-      severity: event.success ? 'info' : 'warn',
-      retention: '7_years'
+    const auditEntry = await this.createAuditEntry("AUTH", event, {
+      category: "authentication",
+      severity: event.success ? "info" : "warn",
+      retention: "7_years",
     });
 
-    this.auditLogger.info('Authentication Event', auditEntry);
+    this.auditLogger.info("Authentication Event", auditEntry);
     await this.storeAuditHash(auditEntry);
 
     // Also store in database
     const dbAuditData = {
-      category: 'authentication',
-      action: event.action || 'user_login',
+      category: "authentication",
+      action: event.action || "user_login",
       userId: event.userId,
       username: event.username,
       ip: event.ip,
@@ -315,9 +333,9 @@ class AuditLogger {
       metadata: {
         mfaUsed: event.mfaUsed,
         loginAttempts: event.loginAttempts,
-        sessionDuration: event.sessionDuration
+        sessionDuration: event.sessionDuration,
       },
-      timestamp: new Date(event.timestamp)
+      timestamp: new Date(event.timestamp),
     };
 
     await this.createDatabaseAuditLog(dbAuditData);
@@ -329,19 +347,19 @@ class AuditLogger {
    */
   async logDataEvent(event) {
     // File-based logging
-    const auditEntry = await this.createAuditEntry('DATA_ACCESS', event, {
-      category: 'data_access',
-      severity: 'info',
-      retention: '7_years'
+    const auditEntry = await this.createAuditEntry("DATA_ACCESS", event, {
+      category: "data_access",
+      severity: "info",
+      retention: "7_years",
     });
 
-    this.auditLogger.info('Data Access Event', auditEntry);
+    this.auditLogger.info("Data Access Event", auditEntry);
     await this.storeAuditHash(auditEntry);
 
     // Database logging
     const dbAuditData = {
-      category: 'data_access',
-      action: event.action || 'data_access',
+      category: "data_access",
+      action: event.action || "data_access",
       userId: event.userId,
       ip: event.ip,
       userAgent: event.userAgent,
@@ -354,10 +372,10 @@ class AuditLogger {
         queryParameters: event.queryParameters,
         fileId: event.fileId,
         fileType: event.fileType,
-        fileSize: event.fileSize
+        fileSize: event.fileSize,
       },
       complianceFlags: this.getComplianceFlags(event.dataType),
-      timestamp: new Date(event.timestamp)
+      timestamp: new Date(event.timestamp),
     };
 
     await this.createDatabaseAuditLog(dbAuditData);
@@ -369,21 +387,21 @@ class AuditLogger {
    */
   async logSecurityEvent(event) {
     // File-based logging
-    const auditEntry = await this.createAuditEntry('SECURITY', event, {
-      category: 'security',
-      severity: 'error',
-      retention: '7_years',
-      encrypted: true
+    const auditEntry = await this.createAuditEntry("SECURITY", event, {
+      category: "security",
+      severity: "error",
+      retention: "7_years",
+      encrypted: true,
     });
 
-    this.auditLogger.error('Security Event', auditEntry);
+    this.auditLogger.error("Security Event", auditEntry);
     await this.storeAuditHash(auditEntry);
     await this.alertSecurityTeam(auditEntry);
 
     // Database logging
     const dbAuditData = {
-      category: 'security',
-      action: event.action || 'security_incident',
+      category: "security",
+      action: event.action || "security_incident",
       userId: event.userId,
       ip: event.ip,
       userAgent: event.userAgent,
@@ -395,9 +413,9 @@ class AuditLogger {
         blocked: event.blocked,
         violations: event.violations,
         errorCode: event.errorCode,
-        statusCode: event.statusCode
+        statusCode: event.statusCode,
       },
-      timestamp: new Date(event.timestamp)
+      timestamp: new Date(event.timestamp),
     };
 
     await this.createDatabaseAuditLog(dbAuditData);
@@ -410,11 +428,11 @@ class AuditLogger {
    */
   getComplianceFlags(dataType) {
     const complianceMapping = {
-      'payment': ['pci_dss'],
-      'personal_data': ['gdpr', 'ccpa'],
-      'financial_data': ['sox', 'pci_dss'],
-      'kyc': ['kyc_aml'],
-      'user_data': ['gdpr', 'ccpa', 'data_retention']
+      payment: ["pci_dss"],
+      personal_data: ["gdpr", "ccpa"],
+      financial_data: ["sox", "pci_dss"],
+      kyc: ["kyc_aml"],
+      user_data: ["gdpr", "ccpa", "data_retention"],
     };
 
     return complianceMapping[dataType] || [];
@@ -425,14 +443,14 @@ class AuditLogger {
    * @param {Object} transaction - Transaction data
    */
   async logFinancialTransaction(transaction) {
-    const auditEntry = await this.createAuditEntry('FINANCIAL', transaction, {
-      category: 'financial',
-      severity: 'info',
-      retention: '7_years',
-      encrypted: true
+    const auditEntry = await this.createAuditEntry("FINANCIAL", transaction, {
+      category: "financial",
+      severity: "info",
+      retention: "7_years",
+      encrypted: true,
     });
 
-    this.auditLogger.info('Financial Transaction', auditEntry);
+    this.auditLogger.info("Financial Transaction", auditEntry);
     await this.storeAuditHash(auditEntry);
     await this.notifyComplianceTeam(auditEntry);
   }
@@ -442,13 +460,13 @@ class AuditLogger {
    * @param {Object} loanEvent - Loan event data
    */
   async logLoanEvent(loanEvent) {
-    const auditEntry = await this.createAuditEntry('LOAN', loanEvent, {
-      category: 'loan_management',
-      severity: 'info',
-      retention: '7_years'
+    const auditEntry = await this.createAuditEntry("LOAN", loanEvent, {
+      category: "loan_management",
+      severity: "info",
+      retention: "7_years",
     });
 
-    this.auditLogger.info('Loan Event', auditEntry);
+    this.auditLogger.info("Loan Event", auditEntry);
     await this.storeAuditHash(auditEntry);
   }
 
@@ -457,17 +475,21 @@ class AuditLogger {
    * @param {Object} complianceEvent - Compliance event data
    */
   async logComplianceEvent(complianceEvent) {
-    const auditEntry = await this.createAuditEntry('COMPLIANCE', complianceEvent, {
-      category: 'compliance',
-      severity: complianceEvent.risk_level === 'high' ? 'error' : 'warn',
-      retention: '7_years',
-      encrypted: true
-    });
+    const auditEntry = await this.createAuditEntry(
+      "COMPLIANCE",
+      complianceEvent,
+      {
+        category: "compliance",
+        severity: complianceEvent.risk_level === "high" ? "error" : "warn",
+        retention: "7_years",
+        encrypted: true,
+      },
+    );
 
-    this.auditLogger.warn('Compliance Event', auditEntry);
+    this.auditLogger.warn("Compliance Event", auditEntry);
     await this.storeAuditHash(auditEntry);
 
-    if (complianceEvent.risk_level === 'high') {
+    if (complianceEvent.risk_level === "high") {
       await this.alertComplianceTeam(auditEntry);
     }
   }
@@ -477,13 +499,13 @@ class AuditLogger {
    * @param {Object} dataAccess - Data access event
    */
   async logDataAccess(dataAccess) {
-    const auditEntry = await this.createAuditEntry('DATA_ACCESS', dataAccess, {
-      category: 'data_privacy',
-      severity: 'info',
-      retention: '7_years'
+    const auditEntry = await this.createAuditEntry("DATA_ACCESS", dataAccess, {
+      category: "data_privacy",
+      severity: "info",
+      retention: "7_years",
     });
 
-    this.auditLogger.info('Data Access Event', auditEntry);
+    this.auditLogger.info("Data Access Event", auditEntry);
     await this.storeAuditHash(auditEntry);
   }
 
@@ -492,14 +514,14 @@ class AuditLogger {
    * @param {Object} incident - Security incident data
    */
   async logSecurityIncident(incident) {
-    const auditEntry = await this.createAuditEntry('SECURITY', incident, {
-      category: 'security',
-      severity: 'error',
-      retention: '7_years',
-      encrypted: true
+    const auditEntry = await this.createAuditEntry("SECURITY", incident, {
+      category: "security",
+      severity: "error",
+      retention: "7_years",
+      encrypted: true,
     });
 
-    this.auditLogger.error('Security Incident', auditEntry);
+    this.auditLogger.error("Security Incident", auditEntry);
     await this.storeAuditHash(auditEntry);
     await this.alertSecurityTeam(auditEntry);
   }
@@ -509,13 +531,13 @@ class AuditLogger {
    * @param {Object} adminAction - Admin action data
    */
   async logAdminAction(adminAction) {
-    const auditEntry = await this.createAuditEntry('ADMIN', adminAction, {
-      category: 'administration',
-      severity: 'warn',
-      retention: '7_years'
+    const auditEntry = await this.createAuditEntry("ADMIN", adminAction, {
+      category: "administration",
+      severity: "warn",
+      retention: "7_years",
     });
 
-    this.auditLogger.warn('Admin Action', auditEntry);
+    this.auditLogger.warn("Admin Action", auditEntry);
     await this.storeAuditHash(auditEntry);
   }
 
@@ -524,15 +546,15 @@ class AuditLogger {
    * @param {Object} apiAccess - API access data
    */
   async logApiAccess(apiAccess) {
-    const auditEntry = await this.createAuditEntry('API', apiAccess, {
-      category: 'api_access',
-      severity: 'info',
-      retention: '1_year'
+    const auditEntry = await this.createAuditEntry("API", apiAccess, {
+      category: "api_access",
+      severity: "info",
+      retention: "1_year",
     });
 
     // Only log to audit if it's a sensitive endpoint or error
     if (apiAccess.sensitive || apiAccess.status >= 400) {
-      this.auditLogger.info('API Access', auditEntry);
+      this.auditLogger.info("API Access", auditEntry);
       await this.storeAuditHash(auditEntry);
     }
   }
@@ -553,12 +575,12 @@ class AuditLogger {
       eventId,
       eventType,
       timestamp,
-      category: options.category || 'general',
-      severity: options.severity || 'info',
-      retention: options.retention || '1_year',
+      category: options.category || "general",
+      severity: options.severity || "info",
+      retention: options.retention || "1_year",
       chainCounter: ++this.chainCounter,
       previousHash: this.lastHash,
-      ...eventData
+      ...eventData,
     };
 
     // Encrypt sensitive data if required
@@ -580,8 +602,15 @@ class AuditLogger {
    */
   async encryptSensitiveFields(auditEntry) {
     const sensitiveFields = [
-      'userId', 'email', 'phoneNumber', 'ssn', 'accountNumber',
-      'routingNumber', 'cardNumber', 'amount', 'balance'
+      "userId",
+      "email",
+      "phoneNumber",
+      "ssn",
+      "accountNumber",
+      "routingNumber",
+      "cardNumber",
+      "amount",
+      "balance",
     ];
 
     const encrypted = { ...auditEntry };
@@ -590,7 +619,7 @@ class AuditLogger {
       if (encrypted[field] !== undefined && encrypted[field] !== null) {
         encrypted[field] = await this.encryptionService.encrypt(
           String(encrypted[field]),
-          `audit_${field}`
+          `audit_${field}`,
         );
       }
     }
@@ -606,12 +635,18 @@ class AuditLogger {
   calculateIntegrityHash(auditEntry) {
     // Create deterministic string from audit entry
     const { integrityHash, ...dataToHash } = auditEntry;
-    const dataString = JSON.stringify(dataToHash, Object.keys(dataToHash).sort());
+    const dataString = JSON.stringify(
+      dataToHash,
+      Object.keys(dataToHash).sort(),
+    );
 
     // Calculate HMAC-SHA256 hash
-    const hmac = crypto.createHmac('sha256', process.env.AUDIT_INTEGRITY_KEY || 'default-key');
+    const hmac = crypto.createHmac(
+      "sha256",
+      process.env.AUDIT_INTEGRITY_KEY || "default-key",
+    );
     hmac.update(dataString);
-    return hmac.digest('hex');
+    return hmac.digest("hex");
   }
 
   /**
@@ -625,12 +660,12 @@ class AuditLogger {
         eventId: auditEntry.eventId,
         timestamp: auditEntry.timestamp,
         integrityHash: auditEntry.integrityHash,
-        chainCounter: auditEntry.chainCounter
+        chainCounter: auditEntry.chainCounter,
       };
 
       await redisClient.setex(hashKey, 86400 * 365, JSON.stringify(hashData)); // 1 year
     } catch (error) {
-      console.error('Failed to store audit hash:', error);
+      console.error("Failed to store audit hash:", error);
     }
   }
 
@@ -652,7 +687,7 @@ class AuditLogger {
       // from logs and recalculate the hash to compare
       return true;
     } catch (error) {
-      console.error('Failed to verify audit integrity:', error);
+      console.error("Failed to verify audit integrity:", error);
       return false;
     }
   }
@@ -668,7 +703,7 @@ class AuditLogger {
       endDate,
       eventTypes = [],
       categories = [],
-      userId = null
+      userId = null,
     } = criteria;
 
     // This would typically query a database or log aggregation system
@@ -681,13 +716,13 @@ class AuditLogger {
         totalEvents: 0,
         eventsByType: {},
         eventsByCategory: {},
-        complianceScore: 100
+        complianceScore: 100,
       },
       events: [],
       integrityVerification: {
         verified: true,
-        tamperedEvents: []
-      }
+        tamperedEvents: [],
+      },
     };
   }
 
@@ -697,10 +732,10 @@ class AuditLogger {
    */
   async notifyComplianceTeam(auditEntry) {
     // Implementation would send notifications via email, Slack, etc.
-    console.log('Compliance notification:', {
+    console.log("Compliance notification:", {
       eventId: auditEntry.eventId,
       eventType: auditEntry.eventType,
-      severity: auditEntry.severity
+      severity: auditEntry.severity,
     });
   }
 
@@ -710,10 +745,10 @@ class AuditLogger {
    */
   async alertComplianceTeam(auditEntry) {
     // Implementation would send immediate alerts
-    console.log('Compliance alert:', {
+    console.log("Compliance alert:", {
       eventId: auditEntry.eventId,
       eventType: auditEntry.eventType,
-      severity: auditEntry.severity
+      severity: auditEntry.severity,
     });
   }
 
@@ -723,10 +758,10 @@ class AuditLogger {
    */
   async alertSecurityTeam(auditEntry) {
     // Implementation would send immediate security alerts
-    console.log('Security alert:', {
+    console.log("Security alert:", {
       eventId: auditEntry.eventId,
       eventType: auditEntry.eventType,
-      severity: auditEntry.severity
+      severity: auditEntry.severity,
     });
   }
 
@@ -739,8 +774,8 @@ class AuditLogger {
     const {
       startDate,
       endDate,
-      format = 'json', // json, csv, xml
-      includeEncrypted = false
+      format = "json", // json, csv, xml
+      includeEncrypted = false,
     } = exportCriteria;
 
     // Implementation would export logs in the requested format
@@ -750,7 +785,7 @@ class AuditLogger {
       format,
       recordCount: 0,
       filePath: `/exports/audit_${Date.now()}.${format}`,
-      integrityHash: crypto.randomBytes(32).toString('hex')
+      integrityHash: crypto.randomBytes(32).toString("hex"),
     };
   }
 
@@ -763,10 +798,10 @@ class AuditLogger {
     const purgeResult = {
       purgedAt: new Date().toISOString(),
       recordsPurged: 0,
-      retentionPolicy
+      retentionPolicy,
     };
 
-    console.log('Audit log purge completed:', purgeResult);
+    console.log("Audit log purge completed:", purgeResult);
     return purgeResult;
   }
 }
@@ -800,7 +835,7 @@ function auditMiddleware(options = {}) {
     const originalJson = res.json;
     let responseBody = null;
 
-    res.json = function(body) {
+    res.json = function (body) {
       responseBody = body;
       return originalJson.call(this, body);
     };
@@ -809,7 +844,7 @@ function auditMiddleware(options = {}) {
     next();
 
     // Log after response is sent
-    res.on('finish', async () => {
+    res.on("finish", async () => {
       const duration = Date.now() - startTime;
 
       const apiAccess = {
@@ -817,12 +852,12 @@ function auditMiddleware(options = {}) {
         path: req.path,
         query: req.query,
         ip: req.ip,
-        userAgent: req.get('User-Agent'),
+        userAgent: req.get("User-Agent"),
         userId: req.user?.id,
         status: res.statusCode,
         duration,
         sensitive: options.sensitive || false,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
 
       // Add request body for sensitive endpoints (excluding passwords)
@@ -846,5 +881,5 @@ function auditMiddleware(options = {}) {
 module.exports = {
   AuditLogger,
   getAuditLogger,
-  auditMiddleware
+  auditMiddleware,
 };

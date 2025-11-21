@@ -35,6 +35,7 @@ The API uses JWT (JSON Web Tokens) for authentication:
 
 2. **Using Access Tokens**:
    - Include the token in the Authorization header:
+
    ```
    Authorization: Bearer <access_token>
    ```
@@ -87,6 +88,7 @@ The API returns standard HTTP status codes and JSON error responses:
 ```
 
 Common error codes:
+
 - `400`: Bad Request - Invalid input parameters
 - `401`: Unauthorized - Missing or invalid authentication
 - `403`: Forbidden - Insufficient permissions
@@ -106,6 +108,7 @@ POST /api/auth/register
 ```
 
 Request body:
+
 ```json
 {
   "email": "user@example.com",
@@ -116,6 +119,7 @@ Request body:
 ```
 
 Response:
+
 ```json
 {
   "status": "success",
@@ -138,6 +142,7 @@ POST /api/auth/login
 ```
 
 Request body:
+
 ```json
 {
   "email": "user@example.com",
@@ -146,6 +151,7 @@ Request body:
 ```
 
 Response:
+
 ```json
 {
   "status": "success",
@@ -167,6 +173,7 @@ POST /api/auth/refresh
 ```
 
 Request body:
+
 ```json
 {
   "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
@@ -174,6 +181,7 @@ Request body:
 ```
 
 Response:
+
 ```json
 {
   "status": "success",
@@ -191,6 +199,7 @@ POST /api/auth/logout
 ```
 
 Request body:
+
 ```json
 {
   "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
@@ -198,6 +207,7 @@ Request body:
 ```
 
 Response:
+
 ```json
 {
   "status": "success",
@@ -214,6 +224,7 @@ GET /api/users/profile
 ```
 
 Response:
+
 ```json
 {
   "status": "success",
@@ -250,6 +261,7 @@ PUT /api/users/profile
 ```
 
 Request body:
+
 ```json
 {
   "fullName": "John Smith",
@@ -265,6 +277,7 @@ Request body:
 ```
 
 Response:
+
 ```json
 {
   "status": "success",
@@ -298,6 +311,7 @@ POST /api/users/verify
 ```
 
 Request body (multipart/form-data):
+
 ```
 idType: "passport"
 documentNumber: "AB123456"
@@ -307,6 +321,7 @@ selfieImage: [file]
 ```
 
 Response:
+
 ```json
 {
   "status": "success",
@@ -326,11 +341,13 @@ GET /api/users/notifications
 ```
 
 Query parameters:
+
 - `page`: Page number (default: 1)
 - `limit`: Items per page (default: 20)
 - `read`: Filter by read status (true/false)
 
 Response:
+
 ```json
 {
   "status": "success",
@@ -372,6 +389,7 @@ POST /api/loans
 ```
 
 Request body:
+
 ```json
 {
   "amount": 5000,
@@ -383,6 +401,7 @@ Request body:
 ```
 
 Response:
+
 ```json
 {
   "status": "success",
@@ -409,6 +428,7 @@ GET /api/loans
 ```
 
 Query parameters:
+
 - `page`: Page number (default: 1)
 - `limit`: Items per page (default: 20)
 - `status`: Filter by status (pending, active, completed, defaulted)
@@ -416,6 +436,7 @@ Query parameters:
 - `sortOrder`: Sort order (asc, desc)
 
 Response:
+
 ```json
 {
   "status": "success",
@@ -461,6 +482,7 @@ GET /api/loans/:id
 ```
 
 Response:
+
 ```json
 {
   "status": "success",
@@ -504,6 +526,7 @@ POST /api/loans/:id/fund
 ```
 
 Request body:
+
 ```json
 {
   "amount": 1000,
@@ -512,6 +535,7 @@ Request body:
 ```
 
 Response:
+
 ```json
 {
   "status": "success",
@@ -534,6 +558,7 @@ POST /api/loans/:id/repay
 ```
 
 Request body:
+
 ```json
 {
   "amount": 450.33,
@@ -542,6 +567,7 @@ Request body:
 ```
 
 Response:
+
 ```json
 {
   "status": "success",
@@ -567,6 +593,7 @@ GET /api/transactions
 ```
 
 Query parameters:
+
 - `page`: Page number (default: 1)
 - `limit`: Items per page (default: 20)
 - `type`: Filter by type (funding, repayment, withdrawal, deposit)
@@ -576,6 +603,7 @@ Query parameters:
 - `sortOrder`: Sort order (asc, desc)
 
 Response:
+
 ```json
 {
   "status": "success",
@@ -619,6 +647,7 @@ GET /api/transactions/:id
 ```
 
 Response:
+
 ```json
 {
   "status": "success",
@@ -654,6 +683,7 @@ GET /api/marketplace
 ```
 
 Query parameters:
+
 - `page`: Page number (default: 1)
 - `limit`: Items per page (default: 20)
 - `minAmount`: Minimum loan amount
@@ -668,6 +698,7 @@ Query parameters:
 - `sortOrder`: Sort order (asc, desc)
 
 Response:
+
 ```json
 {
   "status": "success",
@@ -721,6 +752,7 @@ GET /api/marketplace/stats
 ```
 
 Response:
+
 ```json
 {
   "status": "success",
@@ -778,6 +810,7 @@ GET /api/analytics/user
 ```
 
 Response:
+
 ```json
 {
   "status": "success",
@@ -812,9 +845,11 @@ GET /api/analytics/platform
 ```
 
 Query parameters:
+
 - `period`: Time period (day, week, month, year, all)
 
 Response:
+
 ```json
 {
   "status": "success",
@@ -869,6 +904,7 @@ LendSmart provides webhooks for real-time event notifications:
    - `loan.defaulted`: Loan defaulted
 
 3. **Webhook Payload Format**:
+
    ```json
    {
      "id": "evt_123456789",
@@ -894,34 +930,36 @@ LendSmart provides webhooks for real-time event notifications:
 LendSmart provides official SDKs for easy integration:
 
 1. **JavaScript/TypeScript SDK**:
+
    ```javascript
    // Installation
    // npm install lendsmart-sdk
 
    // Usage
-   import { LendSmartClient } from 'lendsmart-sdk';
+   import { LendSmartClient } from "lendsmart-sdk";
 
    const client = new LendSmartClient({
-     apiKey: 'your_api_key',
-     environment: 'production' // or 'staging', 'development'
+     apiKey: "your_api_key",
+     environment: "production", // or 'staging', 'development'
    });
 
    // Authentication
-   await client.auth.login('user@example.com', 'password');
+   await client.auth.login("user@example.com", "password");
 
    // Get loans
-   const loans = await client.loans.getAll({ status: 'active' });
+   const loans = await client.loans.getAll({ status: "active" });
 
    // Create loan application
    const loan = await client.loans.create({
      amount: 5000,
-     currency: 'USD',
+     currency: "USD",
      term: 12,
-     purpose: 'Home renovation'
+     purpose: "Home renovation",
    });
    ```
 
 2. **Python SDK**:
+
    ```python
    # Installation
    # pip install lendsmart-sdk

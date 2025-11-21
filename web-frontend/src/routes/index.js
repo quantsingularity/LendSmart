@@ -1,5 +1,11 @@
 import React, { Suspense, lazy, useContext } from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+  useLocation,
+} from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { AuthContext } from "../contexts/AuthContext";
@@ -9,14 +15,20 @@ const HomePage = lazy(() => import("../pages/HomePage"));
 const LoginPage = lazy(() => import("../pages/LoginPage"));
 const RegisterPage = lazy(() => import("../pages/RegisterPage"));
 const DashboardPage = lazy(() => import("../pages/DashboardPage"));
-const LoansMarketplacePage = lazy(() => import("../pages/LoansMarketplacePage"));
+const LoansMarketplacePage = lazy(
+  () => import("../pages/LoansMarketplacePage"),
+);
 const LoanDetailsPage = lazy(() => import("../pages/LoanDetailsPage"));
 const LoanApplicationPage = lazy(() => import("../pages/LoanApplicationPage"));
 const ProfilePage = lazy(() => import("../pages/ProfilePage"));
 const NotFoundPage = lazy(() => import("../pages/NotFoundPage"));
 const AdminDashboardPage = lazy(() => import("../pages/AdminDashboardPage"));
-const WalletConnectionPage = lazy(() => import("../pages/WalletConnectionPage"));
-const TransactionsHistoryPage = lazy(() => import("../pages/TransactionsHistoryPage"));
+const WalletConnectionPage = lazy(
+  () => import("../pages/WalletConnectionPage"),
+);
+const TransactionsHistoryPage = lazy(
+  () => import("../pages/TransactionsHistoryPage"),
+);
 const SettingsPage = lazy(() => import("../pages/SettingsPage"));
 const KycVerificationPage = lazy(() => import("../pages/KycVerificationPage"));
 
@@ -43,8 +55,12 @@ const LoadingComponent = () => (
         margin-bottom: 20px;
       }
       @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
       }
     `}</style>
   </div>

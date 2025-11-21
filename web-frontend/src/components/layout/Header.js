@@ -1,14 +1,26 @@
-import React from 'react';
-import { AppBar, Toolbar, Typography, Button, Box, Container, IconButton, Menu, MenuItem, Avatar } from '@mui/material';
-import { Link as RouterLink } from 'react-router-dom';
-import MenuIcon from '@mui/icons-material/Menu';
-import AccountCircleIcon from '@mui/icons-material/AccountCircle';
-import { useApi } from '../../contexts/ApiContext';
-import { useBlockchain } from '../../contexts/BlockchainContext';
+import React from "react";
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  Button,
+  Box,
+  Container,
+  IconButton,
+  Menu,
+  MenuItem,
+  Avatar,
+} from "@mui/material";
+import { Link as RouterLink } from "react-router-dom";
+import MenuIcon from "@mui/icons-material/Menu";
+import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+import { useApi } from "../../contexts/ApiContext";
+import { useBlockchain } from "../../contexts/BlockchainContext";
 
 const Header = () => {
   const { isAuthenticated, user, logout } = useApi();
-  const { isConnected, account, connectWallet, disconnectWallet } = useBlockchain();
+  const { isConnected, account, connectWallet, disconnectWallet } =
+    useBlockchain();
 
   const [anchorElNav, setAnchorElNav] = React.useState(null);
   const [anchorElUser, setAnchorElUser] = React.useState(null);
@@ -43,16 +55,21 @@ const Header = () => {
   };
 
   const pages = [
-    { title: 'Home', path: '/' },
-    { title: 'Marketplace', path: '/marketplace' },
-    { title: 'Apply for Loan', path: '/apply', auth: true },
-    { title: 'My Loans', path: '/my-loans', auth: true },
-    { title: 'Risk Assessment', path: '/risk-assessment', auth: true, role: 'risk-assessor' }
+    { title: "Home", path: "/" },
+    { title: "Marketplace", path: "/marketplace" },
+    { title: "Apply for Loan", path: "/apply", auth: true },
+    { title: "My Loans", path: "/my-loans", auth: true },
+    {
+      title: "Risk Assessment",
+      path: "/risk-assessment",
+      auth: true,
+      role: "risk-assessor",
+    },
   ];
 
   const settings = [
-    { title: 'Dashboard', path: '/dashboard' },
-    { title: 'Profile', path: '/profile' },
+    { title: "Dashboard", path: "/dashboard" },
+    { title: "Profile", path: "/profile" },
   ];
 
   return (
@@ -67,19 +84,19 @@ const Header = () => {
             to="/"
             sx={{
               mr: 2,
-              display: { xs: 'none', md: 'flex' },
-              fontFamily: 'monospace',
+              display: { xs: "none", md: "flex" },
+              fontFamily: "monospace",
               fontWeight: 700,
-              letterSpacing: '.3rem',
-              color: 'inherit',
-              textDecoration: 'none',
+              letterSpacing: ".3rem",
+              color: "inherit",
+              textDecoration: "none",
             }}
           >
             LENDSMART
           </Typography>
 
           {/* Mobile Menu */}
-          <Box sx={{ flexGrow: 1, display: { xs: 'flex', md: 'none' } }}>
+          <Box sx={{ flexGrow: 1, display: { xs: "flex", md: "none" } }}>
             <IconButton
               size="large"
               aria-label="menu"
@@ -94,25 +111,26 @@ const Header = () => {
               id="menu-appbar"
               anchorEl={anchorElNav}
               anchorOrigin={{
-                vertical: 'bottom',
-                horizontal: 'left',
+                vertical: "bottom",
+                horizontal: "left",
               }}
               keepMounted
               transformOrigin={{
-                vertical: 'top',
-                horizontal: 'left',
+                vertical: "top",
+                horizontal: "left",
               }}
               open={Boolean(anchorElNav)}
               onClose={handleCloseNavMenu}
               sx={{
-                display: { xs: 'block', md: 'none' },
+                display: { xs: "block", md: "none" },
               }}
             >
               {pages.map((page) => {
                 // Skip if page requires auth and user is not authenticated
                 if (page.auth && !isAuthenticated) return null;
                 // Skip if page requires specific role and user doesn't have it
-                if (page.role && (!user || user.role !== page.role)) return null;
+                if (page.role && (!user || user.role !== page.role))
+                  return null;
 
                 return (
                   <MenuItem
@@ -136,20 +154,20 @@ const Header = () => {
             to="/"
             sx={{
               mr: 2,
-              display: { xs: 'flex', md: 'none' },
+              display: { xs: "flex", md: "none" },
               flexGrow: 1,
-              fontFamily: 'monospace',
+              fontFamily: "monospace",
               fontWeight: 700,
-              letterSpacing: '.3rem',
-              color: 'inherit',
-              textDecoration: 'none',
+              letterSpacing: ".3rem",
+              color: "inherit",
+              textDecoration: "none",
             }}
           >
             LENDSMART
           </Typography>
 
           {/* Desktop Menu */}
-          <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
+          <Box sx={{ flexGrow: 1, display: { xs: "none", md: "flex" } }}>
             {pages.map((page) => {
               // Skip if page requires auth and user is not authenticated
               if (page.auth && !isAuthenticated) return null;
@@ -162,7 +180,7 @@ const Header = () => {
                   component={RouterLink}
                   to={page.path}
                   onClick={handleCloseNavMenu}
-                  sx={{ my: 2, color: 'white', display: 'block' }}
+                  sx={{ my: 2, color: "white", display: "block" }}
                 >
                   {page.title}
                 </Button>
@@ -176,11 +194,17 @@ const Header = () => {
               variant="outlined"
               color="inherit"
               onClick={handleWalletConnect}
-              sx={{ borderColor: 'white', '&:hover': { borderColor: 'white', backgroundColor: 'rgba(255,255,255,0.1)' } }}
+              sx={{
+                borderColor: "white",
+                "&:hover": {
+                  borderColor: "white",
+                  backgroundColor: "rgba(255,255,255,0.1)",
+                },
+              }}
             >
               {isConnected
                 ? `${account.substring(0, 6)}...${account.substring(account.length - 4)}`
-                : 'Connect Wallet'}
+                : "Connect Wallet"}
             </Button>
           </Box>
 
@@ -189,22 +213,26 @@ const Header = () => {
             {isAuthenticated ? (
               <>
                 <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-                  <Avatar alt={user?.name || 'User'}>
-                    {user?.name ? user.name.charAt(0).toUpperCase() : <AccountCircleIcon />}
+                  <Avatar alt={user?.name || "User"}>
+                    {user?.name ? (
+                      user.name.charAt(0).toUpperCase()
+                    ) : (
+                      <AccountCircleIcon />
+                    )}
                   </Avatar>
                 </IconButton>
                 <Menu
-                  sx={{ mt: '45px' }}
+                  sx={{ mt: "45px" }}
                   id="menu-appbar"
                   anchorEl={anchorElUser}
                   anchorOrigin={{
-                    vertical: 'top',
-                    horizontal: 'right',
+                    vertical: "top",
+                    horizontal: "right",
                   }}
                   keepMounted
                   transformOrigin={{
-                    vertical: 'top',
-                    horizontal: 'right',
+                    vertical: "top",
+                    horizontal: "right",
                   }}
                   open={Boolean(anchorElUser)}
                   onClose={handleCloseUserMenu}
@@ -216,7 +244,9 @@ const Header = () => {
                       component={RouterLink}
                       to={setting.path}
                     >
-                      <Typography textAlign="center">{setting.title}</Typography>
+                      <Typography textAlign="center">
+                        {setting.title}
+                      </Typography>
                     </MenuItem>
                   ))}
                   <MenuItem onClick={handleLogout}>
@@ -225,7 +255,7 @@ const Header = () => {
                 </Menu>
               </>
             ) : (
-              <Box sx={{ display: 'flex' }}>
+              <Box sx={{ display: "flex" }}>
                 <Button
                   color="inherit"
                   component={RouterLink}
@@ -239,7 +269,13 @@ const Header = () => {
                   color="inherit"
                   component={RouterLink}
                   to="/register"
-                  sx={{ borderColor: 'white', '&:hover': { borderColor: 'white', backgroundColor: 'rgba(255,255,255,0.1)' } }}
+                  sx={{
+                    borderColor: "white",
+                    "&:hover": {
+                      borderColor: "white",
+                      backgroundColor: "rgba(255,255,255,0.1)",
+                    },
+                  }}
                 >
                   Register
                 </Button>

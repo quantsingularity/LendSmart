@@ -15,6 +15,7 @@ This directory contains the infrastructure as code (IaC) configurations and depl
 Ansible playbooks and roles for automating server configuration and application deployment processes:
 
 #### Key Features:
+
 - **Server Provisioning**: Automated setup of application servers, databases, and supporting services
 - **Configuration Management**: Consistent configuration across development, staging, and production environments
 - **Application Deployment**: Zero-downtime deployment workflows for all LendSmart components
@@ -22,6 +23,7 @@ Ansible playbooks and roles for automating server configuration and application 
 - **Monitoring Setup**: Configuration of monitoring agents and alerting systems
 
 #### Usage:
+
 ```bash
 # Deploy to development environment
 cd infrastructure/ansible
@@ -36,6 +38,7 @@ ansible-playbook -i inventories/prod site.yml --tags=deploy
 Kubernetes manifests and Helm charts for container orchestration and microservices management:
 
 #### Key Features:
+
 - **Microservices Architecture**: Deployment configurations for all LendSmart microservices
 - **Horizontal Scaling**: Automatic scaling based on resource utilization and demand
 - **Service Discovery**: Internal service communication and load balancing
@@ -44,6 +47,7 @@ Kubernetes manifests and Helm charts for container orchestration and microservic
 - **Health Monitoring**: Liveness and readiness probes for service reliability
 
 #### Components:
+
 - Deployment manifests for backend services
 - StatefulSets for databases and stateful components
 - ConfigMaps and Secrets for configuration management
@@ -52,6 +56,7 @@ Kubernetes manifests and Helm charts for container orchestration and microservic
 - HorizontalPodAutoscalers for automatic scaling
 
 #### Usage:
+
 ```bash
 # Apply Kubernetes manifests
 cd infrastructure/kubernetes
@@ -68,6 +73,7 @@ helm upgrade --install lendsmart ./helm/lendsmart -f ./helm/values-prod.yaml
 Infrastructure as Code using Terraform for provisioning and managing cloud resources:
 
 #### Key Features:
+
 - **Multi-Cloud Support**: Configurations for AWS, Azure, and Google Cloud Platform
 - **Network Infrastructure**: VPCs, subnets, security groups, and routing tables
 - **Compute Resources**: Virtual machines, container services, and serverless functions
@@ -77,6 +83,7 @@ Infrastructure as Code using Terraform for provisioning and managing cloud resou
 - **Monitoring Resources**: Logging, metrics, and alerting infrastructure
 
 #### Modules:
+
 - `vpc/` - Network infrastructure setup
 - `compute/` - Compute resources (EC2, EKS, etc.)
 - `database/` - Database services (RDS, DynamoDB)
@@ -84,6 +91,7 @@ Infrastructure as Code using Terraform for provisioning and managing cloud resou
 - `security/` - Security configurations and policies
 
 #### Usage:
+
 ```bash
 # Initialize Terraform
 cd infrastructure/terraform/environments/prod

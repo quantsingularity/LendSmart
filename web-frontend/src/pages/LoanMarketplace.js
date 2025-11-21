@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Typography,
   Box,
@@ -14,14 +14,14 @@ import {
   TextField,
   InputAdornment,
   IconButton,
-  Divider
-} from '@mui/material';
-import { useNavigate } from 'react-router-dom';
-import { useApi } from '../contexts/ApiContext';
-import { useBlockchain } from '../contexts/BlockchainContext';
-import SearchIcon from '@mui/icons-material/Search';
-import FilterListIcon from '@mui/icons-material/FilterList';
-import SortIcon from '@mui/icons-material/Sort';
+  Divider,
+} from "@mui/material";
+import { useNavigate } from "react-router-dom";
+import { useApi } from "../contexts/ApiContext";
+import { useBlockchain } from "../contexts/BlockchainContext";
+import SearchIcon from "@mui/icons-material/Search";
+import FilterListIcon from "@mui/icons-material/FilterList";
+import SortIcon from "@mui/icons-material/Sort";
 
 const LoanMarketplace = () => {
   const navigate = useNavigate();
@@ -31,11 +31,11 @@ const LoanMarketplace = () => {
   const [loans, setLoans] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [filters, setFilters] = useState({
-    status: '',
-    minAmount: '',
-    maxAmount: ''
+    status: "",
+    minAmount: "",
+    maxAmount: "",
   });
 
   useEffect(() => {
@@ -48,13 +48,13 @@ const LoanMarketplace = () => {
       setError(null);
 
       // Only get loans with status 'Requested' for the marketplace
-      const result = await getLoans({ status: 'Requested' });
+      const result = await getLoans({ status: "Requested" });
 
       setLoans(result.data);
       setLoading(false);
     } catch (err) {
-      console.error('Error fetching loans:', err);
-      setError('Failed to fetch available loans');
+      console.error("Error fetching loans:", err);
+      setError("Failed to fetch available loans");
       setLoading(false);
     }
   };
@@ -67,7 +67,7 @@ const LoanMarketplace = () => {
     const { name, value } = e.target;
     setFilters({
       ...filters,
-      [name]: value
+      [name]: value,
     });
   };
 
@@ -82,10 +82,11 @@ const LoanMarketplace = () => {
   };
 
   // Filter loans based on search term
-  const filteredLoans = loans.filter(loan =>
-    loan.purpose?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    loan.borrower?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    loan.blockchainId?.toString().includes(searchTerm)
+  const filteredLoans = loans.filter(
+    (loan) =>
+      loan.purpose?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      loan.borrower?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      loan.blockchainId?.toString().includes(searchTerm),
   );
 
   return (
@@ -113,7 +114,7 @@ const LoanMarketplace = () => {
           </Grid>
 
           <Grid item xs={12} md={6}>
-            <Box sx={{ display: 'flex', gap: 2 }}>
+            <Box sx={{ display: "flex", gap: 2 }}>
               <TextField
                 label="Min Amount"
                 name="minAmount"
@@ -154,18 +155,18 @@ const LoanMarketplace = () => {
       )}
 
       {loading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
+        <Box sx={{ display: "flex", justifyContent: "center", my: 4 }}>
           <CircularProgress />
         </Box>
       ) : filteredLoans.length === 0 ? (
-        <Paper elevation={2} sx={{ p: 4, textAlign: 'center' }}>
+        <Paper elevation={2} sx={{ p: 4, textAlign: "center" }}>
           <Typography variant="h6" color="text.secondary">
             No loans available matching your criteria
           </Typography>
           <Button
             variant="contained"
             sx={{ mt: 2 }}
-            onClick={() => navigate('/apply')}
+            onClick={() => navigate("/apply")}
             disabled={!isConnected}
           >
             Apply for a Loan
@@ -174,16 +175,30 @@ const LoanMarketplace = () => {
       ) : (
         <Grid container spacing={3}>
           {filteredLoans.map((loan) => (
-            <Grid item xs={12} md={6} lg={4} key={loan._id || loan.blockchainId}>
+            <Grid
+              item
+              xs={12}
+              md={6}
+              lg={4}
+              key={loan._id || loan.blockchainId}
+            >
               <Card elevation={2}>
                 <CardContent>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      mb: 2,
+                    }}
+                  >
                     <Typography variant="h6" component="div" noWrap>
                       {loan.purpose}
                     </Typography>
                     <Chip
                       label={loan.status}
-                      color={loan.status === 'Requested' ? 'primary' : 'default'}
+                      color={
+                        loan.status === "Requested" ? "primary" : "default"
+                      }
                       size="small"
                     />
                   </Box>
@@ -224,7 +239,7 @@ const LoanMarketplace = () => {
                         Collateralized:
                       </Typography>
                       <Typography variant="body1" fontWeight="medium">
-                        {loan.isCollateralized ? 'Yes' : 'No'}
+                        {loan.isCollateralized ? "Yes" : "No"}
                       </Typography>
                     </Grid>
                   </Grid>
@@ -232,7 +247,9 @@ const LoanMarketplace = () => {
                 <CardActions>
                   <Button
                     size="small"
-                    onClick={() => handleViewLoan(loan._id || loan.blockchainId)}
+                    onClick={() =>
+                      handleViewLoan(loan._id || loan.blockchainId)
+                    }
                     fullWidth
                   >
                     View Details

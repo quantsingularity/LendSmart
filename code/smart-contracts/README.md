@@ -7,19 +7,20 @@ This directory contains the Solidity smart contracts for the LendSmart platform.
 The primary smart contract, `LoanContract.sol`, manages the lifecycle of loans on the blockchain. This includes loan creation, funding by lenders, disbursement of funds to borrowers, repayments, and handling of defaults.
 
 Future contracts might include:
+
 - A reputation or identity contract for users.
 - A stablecoin integration contract.
 - Governance contracts for platform parameters.
 
 ## Contracts
 
--   **`contracts/LoanContract.sol`**: The main contract for managing loan agreements between borrowers and lenders.
-    -   Allows borrowers to request loans.
-    -   Allows lenders to fund open loan requests.
-    -   Manages fund disbursement upon successful funding.
-    -   Tracks repayment schedules and processes repayments.
-    -   Handles loan defaults and collateral (if applicable and on-chain).
--   **`contracts/Migrations.sol`**: Standard Truffle/Hardhat migrations contract (if using these frameworks).
+- **`contracts/LoanContract.sol`**: The main contract for managing loan agreements between borrowers and lenders.
+  - Allows borrowers to request loans.
+  - Allows lenders to fund open loan requests.
+  - Manages fund disbursement upon successful funding.
+  - Tracks repayment schedules and processes repayments.
+  - Handles loan defaults and collateral (if applicable and on-chain).
+- **`contracts/Migrations.sol`**: Standard Truffle/Hardhat migrations contract (if using these frameworks).
 
 ## Project Structure
 
@@ -42,28 +43,31 @@ smart-contracts/
 
 ## Prerequisites
 
--   Node.js (v18.x or later recommended)
--   npm or yarn
--   A development environment for Solidity (e.g., Hardhat, Truffle)
+- Node.js (v18.x or later recommended)
+- npm or yarn
+- A development environment for Solidity (e.g., Hardhat, Truffle)
 
 ## Setup and Installation (Example using Hardhat)
 
 1.  **Navigate to the `smart-contracts` directory:**
+
     ```bash
     cd LendSmart/smart-contracts
     ```
 
 2.  **Install dependencies:**
+
     ```bash
     npm install
     # or
     # yarn install
     ```
+
     Common dependencies include:
-    -   `hardhat`
-    -   `@nomicfoundation/hardhat-toolbox` (includes ethers, chai, etc.)
-    -   `@openzeppelin/contracts` (for reusable and secure contract components)
-    -   `dotenv` (for managing environment variables)
+    - `hardhat`
+    - `@nomicfoundation/hardhat-toolbox` (includes ethers, chai, etc.)
+    - `@openzeppelin/contracts` (for reusable and secure contract components)
+    - `dotenv` (for managing environment variables)
 
 3.  **Set up environment variables:**
     Create a `.env` file in the `smart-contracts` directory by copying `.env.example`:
@@ -80,29 +84,32 @@ smart-contracts/
 ## Development Workflow (Example using Hardhat)
 
 1.  **Compile Contracts:**
+
     ```bash
     npx hardhat compile
     ```
 
 2.  **Run Tests:**
+
     ```bash
     npx hardhat test
     ```
+
     Tests are typically located in the `test/` directory (e.g., `LoanContract.test.js`).
 
 3.  **Deploy Contracts:**
-    -   **To a local Hardhat network:**
-        ```bash
-        npx hardhat node # Starts a local node
-        # In another terminal:
-        npx hardhat run scripts/deploy.js --network localhost
-        ```
-    -   **To a testnet (e.g., Sepolia):**
-        Ensure your `hardhat.config.js` is configured for the testnet and your `.env` file has the RPC URL and private key.
-        ```bash
-        npx hardhat run scripts/deploy.js --network sepolia
-        ```
-        The `deploy.js` script should output the address of the deployed contract.
+    - **To a local Hardhat network:**
+      ```bash
+      npx hardhat node # Starts a local node
+      # In another terminal:
+      npx hardhat run scripts/deploy.js --network localhost
+      ```
+    - **To a testnet (e.g., Sepolia):**
+      Ensure your `hardhat.config.js` is configured for the testnet and your `.env` file has the RPC URL and private key.
+      ```bash
+      npx hardhat run scripts/deploy.js --network sepolia
+      ```
+      The `deploy.js` script should output the address of the deployed contract.
 
 4.  **Verify Contracts on Etherscan (or similar block explorer):**
     After deploying to a public testnet or mainnet, you can verify the contract source code.
@@ -117,10 +124,10 @@ Once deployed, contracts can be interacted with using libraries like Ethers.js o
 
 ## Key Considerations
 
--   **Security:** Smart contracts handle valuable assets and must be developed with security as the top priority. Use established patterns, conduct thorough testing, and consider security audits for production deployments.
--   **Gas Optimization:** Blockchain transactions cost gas. Write efficient Solidity code to minimize gas consumption.
--   **Upgradability:** Consider using proxy patterns (e.g., OpenZeppelin Upgrades Plugins) if you anticipate needing to upgrade contract logic in the future without migrating data.
--   **Oracles:** If your contracts need real-world data (e.g., fiat currency prices), you will need to integrate with a reliable oracle service.
+- **Security:** Smart contracts handle valuable assets and must be developed with security as the top priority. Use established patterns, conduct thorough testing, and consider security audits for production deployments.
+- **Gas Optimization:** Blockchain transactions cost gas. Write efficient Solidity code to minimize gas consumption.
+- **Upgradability:** Consider using proxy patterns (e.g., OpenZeppelin Upgrades Plugins) if you anticipate needing to upgrade contract logic in the future without migrating data.
+- **Oracles:** If your contracts need real-world data (e.g., fiat currency prices), you will need to integrate with a reliable oracle service.
 
 ## License
 

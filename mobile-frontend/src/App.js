@@ -1,14 +1,14 @@
 import React from 'react';
-import { Provider as PaperProvider } from 'react-native-paper';
-import { AuthProvider } from './contexts/AuthContext';
-import { ThemeProvider, ThemeContext } from './contexts/ThemeContext';
-import { WalletProvider } from './contexts/WalletContext'; // Import WalletProvider
+import {Provider as PaperProvider} from 'react-native-paper';
+import {AuthProvider} from './contexts/AuthContext';
+import {ThemeProvider, ThemeContext} from './contexts/ThemeContext';
+import {WalletProvider} from './contexts/WalletContext'; // Import WalletProvider
 import AppNavigator from './navigation/AppNavigator';
 
 // Import necessary WalletConnect components
-import { WalletConnectModal } from "@walletconnect/modal-react-native";
+import {WalletConnectModal} from '@walletconnect/modal-react-native';
 import '@walletconnect/react-native-compat'; // Polyfill for compatibility
-import "react-native-get-random-values"; // Required for crypto operations
+import 'react-native-get-random-values'; // Required for crypto operations
 
 // --- WalletConnect Configuration ---
 // IMPORTANT: Replace with your actual Project ID from https://cloud.walletconnect.com/
@@ -22,15 +22,15 @@ const providerMetadata = {
   icons: ['https://lendsmart.example.com/logo.png'], // Replace with your logo URL
   redirect: {
     native: 'lendsmart://', // Your app's deep link scheme
-    universal: 'https://lendsmart.example.com' // Your app's universal link
-  }
+    universal: 'https://lendsmart.example.com', // Your app's universal link
+  },
 };
 
 // Optional: Session Parameters for WalletConnect
 // const sessionParams = { ... };
 
 const AppContent = () => {
-  const { theme } = React.useContext(ThemeContext);
+  const {theme} = React.useContext(ThemeContext);
 
   return (
     <PaperProvider theme={theme}>

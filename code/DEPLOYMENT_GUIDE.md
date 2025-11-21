@@ -7,12 +7,14 @@ This guide provides step-by-step instructions for deploying the enhanced LendSma
 ## 📋 Prerequisites
 
 ### System Requirements
+
 - **Operating System**: Ubuntu 20.04+ / CentOS 8+ / macOS 10.15+ / Windows 10+
 - **Memory**: Minimum 8GB RAM (16GB recommended for production)
 - **Storage**: Minimum 50GB free space
 - **Network**: Stable internet connection for external service integrations
 
 ### Required Software
+
 - **Node.js**: v18.0.0 or higher
 - **npm**: v8.0.0 or higher
 - **MongoDB**: v5.0 or higher
@@ -21,6 +23,7 @@ This guide provides step-by-step instructions for deploying the enhanced LendSma
 - **Git**: Latest version
 
 ### Optional (for production)
+
 - **Docker**: v20.10+ and Docker Compose v2.0+
 - **Nginx**: v1.18+ (for reverse proxy)
 - **SSL Certificate**: For HTTPS (Let's Encrypt recommended)
@@ -28,6 +31,7 @@ This guide provides step-by-step instructions for deploying the enhanced LendSma
 ## 🛠 Local Development Setup
 
 ### 1. Extract and Navigate to Project
+
 ```bash
 # Extract the provided zip file
 unzip lendsmart-enhanced-code.zip
@@ -51,6 +55,7 @@ nano .env
 ```
 
 #### Backend Environment Configuration (.env)
+
 ```env
 # Server Configuration
 NODE_ENV=development
@@ -114,6 +119,7 @@ nano .env
 ```
 
 #### Frontend Environment Configuration (.env)
+
 ```env
 REACT_APP_API_URL=http://localhost:3001/api
 REACT_APP_ENVIRONMENT=development
@@ -131,6 +137,7 @@ npm run dev
 ### 4. Database Setup
 
 #### MongoDB Setup
+
 ```bash
 # Install MongoDB (Ubuntu/Debian)
 wget -qO - https://www.mongodb.org/static/pgp/server-5.0.asc | sudo apt-key add -
@@ -147,6 +154,7 @@ sudo systemctl status mongod
 ```
 
 #### Redis Setup
+
 ```bash
 # Install Redis (Ubuntu/Debian)
 sudo apt update
@@ -467,6 +475,7 @@ gcloud run deploy lendsmart-frontend \
 ### Environment Variables for Production
 
 #### Backend Production Environment
+
 ```env
 NODE_ENV=production
 PORT=3001
@@ -786,6 +795,7 @@ chmod +x load-test.sh
 ### Common Issues and Solutions
 
 #### Backend Won't Start
+
 ```bash
 # Check logs
 pm2 logs lendsmart-backend
@@ -801,6 +811,7 @@ redis-cli -u $REDIS_URL ping
 ```
 
 #### Frontend Build Fails
+
 ```bash
 # Clear npm cache
 npm cache clean --force
@@ -814,6 +825,7 @@ npm audit
 ```
 
 #### Database Connection Issues
+
 ```bash
 # Check MongoDB status
 sudo systemctl status mongod
@@ -826,6 +838,7 @@ mongo --host localhost --port 27017
 ```
 
 #### Performance Issues
+
 ```bash
 # Check system resources
 htop
@@ -844,18 +857,21 @@ mongo --eval "db.serverStatus().opcounters"
 ### Regular Maintenance Tasks
 
 #### Daily
+
 - Monitor application logs
 - Check system resources
 - Verify backup completion
 - Review security alerts
 
 #### Weekly
+
 - Update system packages
 - Review performance metrics
 - Check SSL certificate expiry
 - Analyze user activity logs
 
 #### Monthly
+
 - Security audit
 - Database optimization
 - Backup testing

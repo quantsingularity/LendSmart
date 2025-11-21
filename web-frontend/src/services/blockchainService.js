@@ -3,9 +3,14 @@ import LoanContractABI from "../contracts/LoanContract.json"; // ABI of your Loa
 import ContractAddress from "../contracts/LoanContract-address.json"; // Address of deployed contract
 
 // Configuration constants
-const CONTRACT_ADDRESS = process.env.REACT_APP_LOAN_CONTRACT_ADDRESS || (ContractAddress?.address || "");
-const NETWORK_RPC_URL = process.env.REACT_APP_NETWORK_RPC_URL || "https://rpc.ankr.com/eth"; // Default fallback RPC
-const CHAIN_ID = parseInt(process.env.REACT_APP_BLOCKCHAIN_NETWORK_ID || "1", 10); // Default to Ethereum mainnet
+const CONTRACT_ADDRESS =
+  process.env.REACT_APP_LOAN_CONTRACT_ADDRESS || ContractAddress?.address || "";
+const NETWORK_RPC_URL =
+  process.env.REACT_APP_NETWORK_RPC_URL || "https://rpc.ankr.com/eth"; // Default fallback RPC
+const CHAIN_ID = parseInt(
+  process.env.REACT_APP_BLOCKCHAIN_NETWORK_ID || "1",
+  10,
+); // Default to Ethereum mainnet
 const BLOCKCHAIN_ENABLED = process.env.REACT_APP_BLOCKCHAIN_ENABLED !== "false"; // Enable by default
 
 // Service state
@@ -56,12 +61,14 @@ export const initBlockchainService = async () => {
 
     // Check if on the correct network
     if (CHAIN_ID !== 0 && network.chainId !== BigInt(String(CHAIN_ID))) {
-      console.warn(`Connected to wrong network. Expected chain ID: ${CHAIN_ID}, got: ${network.chainId}`);
+      console.warn(
+        `Connected to wrong network. Expected chain ID: ${CHAIN_ID}, got: ${network.chainId}`,
+      );
 
       // Try to switch network
       try {
         await window.ethereum.request({
-          method: 'wallet_switchEthereumChain',
+          method: "wallet_switchEthereumChain",
           params: [{ chainId: `0x${CHAIN_ID.toString(16)}` }],
         });
 
@@ -73,19 +80,19 @@ export const initBlockchainService = async () => {
         if (switchError.code === 4902) {
           try {
             await window.ethereum.request({
-              method: 'wallet_addEthereumChain',
+              method: "wallet_addEthereumChain",
               params: [
                 {
                   chainId: `0x${CHAIN_ID.toString(16)}`,
                   chainName: getNetworkName(CHAIN_ID),
                   nativeCurrency: {
-                    name: 'Ether',
-                    symbol: 'ETH',
-                    decimals: 18
+                    name: "Ether",
+                    symbol: "ETH",
+                    decimals: 18,
                   },
                   rpcUrls: [NETWORK_RPC_URL],
-                  blockExplorerUrls: [getBlockExplorerUrl(CHAIN_ID)]
-                }
+                  blockExplorerUrls: [getBlockExplorerUrl(CHAIN_ID)],
+                },
               ],
             });
 
@@ -105,20 +112,31 @@ export const initBlockchainService = async () => {
 
     // Initialize contract instances
     if (CONTRACT_ADDRESS && CONTRACT_ADDRESS !== "") {
-      loanContract = new ethers.Contract(CONTRACT_ADDRESS, LoanContractABI.abi, signer);
+      loanContract = new ethers.Contract(
+        CONTRACT_ADDRESS,
+        LoanContractABI.abi,
+        signer,
+      );
 
       // For read-only operations, use a public RPC if user is not connected
-      const readOnlyProvider = NETWORK_RPC_URL ?
-        new ethers.JsonRpcProvider(NETWORK_RPC_URL) : provider;
-      loanContractReadOnly = new ethers.Contract(CONTRACT_ADDRESS, LoanContractABI.abi, readOnlyProvider);
+      const readOnlyProvider = NETWORK_RPC_URL
+        ? new ethers.JsonRpcProvider(NETWORK_RPC_URL)
+        : provider;
+      loanContractReadOnly = new ethers.Contract(
+        CONTRACT_ADDRESS,
+        LoanContractABI.abi,
+        readOnlyProvider,
+      );
     } else {
-      console.warn("LoanContract address is not configured. Some blockchain features may not work.");
+      console.warn(
+        "LoanContract address is not configured. Some blockchain features may not work.",
+      );
     }
 
     // Set up event listeners for wallet changes
-    window.ethereum.on('accountsChanged', handleAccountsChanged);
-    window.ethereum.on('chainChanged', handleChainChanged);
-    window.ethereum.on('disconnect', handleDisconnect);
+    window.ethereum.on("accountsChanged", handleAccountsChanged);
+    window.ethereum.on("chainChanged", handleChainChanged);
+    window.ethereum.on("disconnect", handleDisconnect);
 
     isInitialized = true;
     walletConnected = true;
@@ -145,13 +163,18 @@ const handleAccountsChanged = async (accounts) => {
 
     // Use read-only provider for contract interactions
     if (CONTRACT_ADDRESS && CONTRACT_ADDRESS !== "") {
-      const readOnlyProvider = NETWORK_RPC_URL ?
-        new ethers.JsonRpcProvider(NETWORK_RPC_URL) : provider;
-      loanContractReadOnly = new ethers.Contract(CONTRACT_ADDRESS, LoanContractABI.abi, readOnlyProvider);
+      const readOnlyProvider = NETWORK_RPC_URL
+        ? new ethers.JsonRpcProvider(NETWORK_RPC_URL)
+        : provider;
+      loanContractReadOnly = new ethers.Contract(
+        CONTRACT_ADDRESS,
+        LoanContractABI.abi,
+        readOnlyProvider,
+      );
     }
 
     // Dispatch event for UI to update
-    window.dispatchEvent(new CustomEvent('walletDisconnected'));
+    window.dispatchEvent(new CustomEvent("walletDisconnected"));
   } else {
     // User switched accounts
     try {
@@ -159,16 +182,22 @@ const handleAccountsChanged = async (accounts) => {
       signer = await provider.getSigner();
 
       if (CONTRACT_ADDRESS && CONTRACT_ADDRESS !== "") {
-        loanContract = new ethers.Contract(CONTRACT_ADDRESS, LoanContractABI.abi, signer);
+        loanContract = new ethers.Contract(
+          CONTRACT_ADDRESS,
+          LoanContractABI.abi,
+          signer,
+        );
       }
 
       walletConnected = true;
       console.log("Wallet account changed:", accounts[0]);
 
       // Dispatch event for UI to update
-      window.dispatchEvent(new CustomEvent('walletAccountChanged', {
-        detail: { account: accounts[0] }
-      }));
+      window.dispatchEvent(
+        new CustomEvent("walletAccountChanged", {
+          detail: { account: accounts[0] },
+        }),
+      );
     } catch (error) {
       console.error("Error handling account change:", error);
     }
@@ -191,7 +220,7 @@ const handleDisconnect = () => {
   console.log("Wallet disconnected");
 
   // Dispatch event for UI to update
-  window.dispatchEvent(new CustomEvent('walletDisconnected'));
+  window.dispatchEvent(new CustomEvent("walletDisconnected"));
 };
 
 /**
@@ -226,7 +255,7 @@ export const getNetworkInfo = async () => {
     const network = await provider.getNetwork();
     return {
       chainId: Number(network.chainId),
-      name: network.name || getNetworkName(Number(network.chainId))
+      name: network.name || getNetworkName(Number(network.chainId)),
     };
   } catch (error) {
     console.error("Error getting network info:", error);
@@ -247,13 +276,18 @@ export const disconnectWallet = async () => {
 
     // Use read-only provider for contract interactions
     if (CONTRACT_ADDRESS && CONTRACT_ADDRESS !== "") {
-      const readOnlyProvider = NETWORK_RPC_URL ?
-        new ethers.JsonRpcProvider(NETWORK_RPC_URL) : provider;
-      loanContractReadOnly = new ethers.Contract(CONTRACT_ADDRESS, LoanContractABI.abi, readOnlyProvider);
+      const readOnlyProvider = NETWORK_RPC_URL
+        ? new ethers.JsonRpcProvider(NETWORK_RPC_URL)
+        : provider;
+      loanContractReadOnly = new ethers.Contract(
+        CONTRACT_ADDRESS,
+        LoanContractABI.abi,
+        readOnlyProvider,
+      );
     }
 
     // Dispatch event for UI to update
-    window.dispatchEvent(new CustomEvent('walletDisconnected'));
+    window.dispatchEvent(new CustomEvent("walletDisconnected"));
 
     return true;
   } catch (error) {
@@ -274,7 +308,14 @@ export const disconnectWallet = async () => {
  * @param {string} loanId The backend loan ID to associate with this contract
  * @returns {Promise<string>} The deployed contract address
  */
-export const deployLoanContract = async (borrowerAddress, lenderAddress, amount, interestRate, termMonths, loanId) => {
+export const deployLoanContract = async (
+  borrowerAddress,
+  lenderAddress,
+  amount,
+  interestRate,
+  termMonths,
+  loanId,
+) => {
   if (!isEnabled()) {
     console.log("Blockchain features are disabled");
     return null;
@@ -290,7 +331,7 @@ export const deployLoanContract = async (borrowerAddress, lenderAddress, amount,
     const loanContractFactory = new ethers.ContractFactory(
       LoanContractABI.abi,
       LoanContractABI.bytecode,
-      signer
+      signer,
     );
 
     // Convert amount to wei (assuming amount is in ETH)
@@ -309,7 +350,7 @@ export const deployLoanContract = async (borrowerAddress, lenderAddress, amount,
       amountWei,
       interestRateBps,
       termSeconds,
-      loanId
+      loanId,
     );
 
     // Wait for deployment to complete
@@ -334,7 +375,12 @@ export const deployLoanContract = async (borrowerAddress, lenderAddress, amount,
  * @param {number} amount The amount to fund
  * @returns {Promise<string>} The transaction hash
  */
-export const fundLoan = async (contractAddress, borrowerAddress, lenderAddress, amount) => {
+export const fundLoan = async (
+  contractAddress,
+  borrowerAddress,
+  lenderAddress,
+  amount,
+) => {
   if (!isEnabled()) {
     console.log("Blockchain features are disabled");
     return null;
@@ -353,7 +399,11 @@ export const fundLoan = async (contractAddress, borrowerAddress, lenderAddress, 
     }
 
     // Create contract instance for this specific loan
-    const loanContract = new ethers.Contract(contractAddress, LoanContractABI.abi, signer);
+    const loanContract = new ethers.Contract(
+      contractAddress,
+      LoanContractABI.abi,
+      signer,
+    );
 
     // Convert amount to wei
     const amountWei = ethers.parseEther(amount.toString());
@@ -381,7 +431,13 @@ export const fundLoan = async (contractAddress, borrowerAddress, lenderAddress, 
  * @param {number} installmentNumber The installment number being repaid
  * @returns {Promise<string>} The transaction hash
  */
-export const repayLoan = async (contractAddress, borrowerAddress, lenderAddress, amount, installmentNumber) => {
+export const repayLoan = async (
+  contractAddress,
+  borrowerAddress,
+  lenderAddress,
+  amount,
+  installmentNumber,
+) => {
   if (!isEnabled()) {
     console.log("Blockchain features are disabled");
     return null;
@@ -400,13 +456,19 @@ export const repayLoan = async (contractAddress, borrowerAddress, lenderAddress,
     }
 
     // Create contract instance for this specific loan
-    const loanContract = new ethers.Contract(contractAddress, LoanContractABI.abi, signer);
+    const loanContract = new ethers.Contract(
+      contractAddress,
+      LoanContractABI.abi,
+      signer,
+    );
 
     // Convert amount to wei
     const amountWei = ethers.parseEther(amount.toString());
 
     // Send transaction to repay the loan
-    const tx = await loanContract.repayLoan(installmentNumber, { value: amountWei });
+    const tx = await loanContract.repayLoan(installmentNumber, {
+      value: amountWei,
+    });
 
     // Wait for transaction to be mined
     await tx.wait();
@@ -433,7 +495,11 @@ export const getLoanDetails = async (contractAddress) => {
   try {
     // Create a read-only contract instance
     const provider = new ethers.JsonRpcProvider(NETWORK_RPC_URL);
-    const contract = new ethers.Contract(contractAddress, LoanContractABI.abi, provider);
+    const contract = new ethers.Contract(
+      contractAddress,
+      LoanContractABI.abi,
+      provider,
+    );
 
     // Get loan details
     const details = await contract.getLoanDetails();
@@ -450,7 +516,7 @@ export const getLoanDetails = async (contractAddress) => {
       amountRepaid: ethers.formatEther(details.amountRepaid),
       remainingBalance: ethers.formatEther(details.remainingBalance),
       nextPaymentDue: new Date(Number(details.nextPaymentDue) * 1000),
-      loanId: details.loanId
+      loanId: details.loanId,
     };
   } catch (error) {
     console.error("Error getting loan details:", error);
@@ -472,7 +538,11 @@ export const getLoanTransactionHistory = async (contractAddress) => {
   try {
     // Create a provider to query events
     const provider = new ethers.JsonRpcProvider(NETWORK_RPC_URL);
-    const contract = new ethers.Contract(contractAddress, LoanContractABI.abi, provider);
+    const contract = new ethers.Contract(
+      contractAddress,
+      LoanContractABI.abi,
+      provider,
+    );
 
     // Get the contract creation block
     const code = await provider.getCode(contractAddress);
@@ -498,31 +568,31 @@ export const getLoanTransactionHistory = async (contractAddress) => {
 
     // Combine and format all events
     const allEvents = [
-      ...fundingEvents.map(event => ({
+      ...fundingEvents.map((event) => ({
         type: "Funding",
         amount: ethers.formatEther(event.args.amount),
         timestamp: new Date(Number(event.args.timestamp) * 1000),
         hash: event.transactionHash,
-        from: event.args.lender
+        from: event.args.lender,
       })),
-      ...repaymentEvents.map(event => ({
+      ...repaymentEvents.map((event) => ({
         type: "Repayment",
         amount: ethers.formatEther(event.args.amount),
         timestamp: new Date(Number(event.args.timestamp) * 1000),
         hash: event.transactionHash,
         from: event.args.borrower,
-        installmentNumber: Number(event.args.installmentNumber)
+        installmentNumber: Number(event.args.installmentNumber),
       })),
-      ...completionEvents.map(event => ({
+      ...completionEvents.map((event) => ({
         type: "Completion",
         timestamp: new Date(Number(event.args.timestamp) * 1000),
-        hash: event.transactionHash
+        hash: event.transactionHash,
       })),
-      ...defaultEvents.map(event => ({
+      ...defaultEvents.map((event) => ({
         type: "Default",
         timestamp: new Date(Number(event.args.timestamp) * 1000),
-        hash: event.transactionHash
-      }))
+        hash: event.transactionHash,
+      })),
     ];
 
     // Sort by timestamp
@@ -563,14 +633,23 @@ export const getWalletBalance = async () => {
  * @param {object} options Additional options (value, etc.)
  * @returns {Promise<string>} The estimated gas in ETH
  */
-export const estimateGas = async (contractAddress, method, params = [], options = {}) => {
+export const estimateGas = async (
+  contractAddress,
+  method,
+  params = [],
+  options = {},
+) => {
   if (!walletConnected) {
     const success = await initBlockchainService();
     if (!success) throw new Error("Wallet connection required");
   }
 
   try {
-    const contract = new ethers.Contract(contractAddress, LoanContractABI.abi, signer);
+    const contract = new ethers.Contract(
+      contractAddress,
+      LoanContractABI.abi,
+      signer,
+    );
     const gasEstimate = await contract[method].estimateGas(...params, options);
     const gasPrice = await provider.getGasPrice();
     const gasCost = gasEstimate * gasPrice;
@@ -599,7 +678,7 @@ const getNetworkName = (chainId) => {
     56: "Binance Smart Chain",
     97: "BSC Testnet",
     42161: "Arbitrum One",
-    421613: "Arbitrum Goerli"
+    421613: "Arbitrum Goerli",
   };
 
   return networks[chainId] || `Chain ID ${chainId}`;
@@ -620,7 +699,7 @@ const getBlockExplorerUrl = (chainId) => {
     56: "https://bscscan.com",
     97: "https://testnet.bscscan.com",
     42161: "https://arbiscan.io",
-    421613: "https://goerli.arbiscan.io"
+    421613: "https://goerli.arbiscan.io",
   };
 
   return explorers[chainId] || "";
@@ -638,7 +717,7 @@ const getLoanStatusString = (status) => {
     2: "Active",
     3: "Completed",
     4: "Defaulted",
-    5: "Cancelled"
+    5: "Cancelled",
   };
 
   return statuses[status] || "Unknown";
@@ -658,5 +737,5 @@ export default {
   getLoanDetails,
   getLoanTransactionHistory,
   getWalletBalance,
-  estimateGas
+  estimateGas,
 };
