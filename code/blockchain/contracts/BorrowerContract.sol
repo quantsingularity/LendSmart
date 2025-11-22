@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "./LoanManager.sol";
+import './LoanManager.sol';
 
 contract BorrowerContract {
     address public borrower;
@@ -17,12 +17,12 @@ contract BorrowerContract {
     event LoanFullyRepaid();
 
     modifier onlyBorrower() {
-        require(msg.sender == borrower, "Only borrower can call this function");
+        require(msg.sender == borrower, 'Only borrower can call this function');
         _;
     }
 
     modifier onlyActive() {
-        require(isActive, "Loan is not active");
+        require(isActive, 'Loan is not active');
         _;
     }
 
@@ -36,17 +36,17 @@ contract BorrowerContract {
         isActive = true;
     }
 
-    function getTotalOwed() public view returns(uint256) {
+    function getTotalOwed() public view returns (uint256) {
         return loanAmount + (loanAmount * interestRate) / 100;
     }
 
-    function getRemainingBalance() public view returns(uint256) {
+    function getRemainingBalance() public view returns (uint256) {
         return getTotalOwed() - repaidAmount;
     }
 
     function repayLoan() external payable onlyBorrower onlyActive {
-        require(block.timestamp <= repaymentDeadline, "Loan has expired");
-        require(msg.value > 0, "Payment must be greater than 0");
+        require(block.timestamp <= repaymentDeadline, 'Loan has expired');
+        require(msg.value > 0, 'Payment must be greater than 0');
 
         uint256 remainingBalance = getRemainingBalance();
 
@@ -76,7 +76,7 @@ contract BorrowerContract {
         }
     }
 
-    function checkDefault() external returns(bool) {
+    function checkDefault() external returns (bool) {
         if (block.timestamp > repaymentDeadline && isActive) {
             isActive = false;
             emit LoanDefaulted();
@@ -85,13 +85,17 @@ contract BorrowerContract {
         return false;
     }
 
-    function getRepaymentStatus() external view returns(uint256 totalOwed, uint256 amountRepaid, uint256 remainingBalance, uint256 deadline, bool active) {
-        return (
-            getTotalOwed(),
-            repaidAmount,
-            getRemainingBalance(),
-            repaymentDeadline,
-            isActive
-        );
+    function getRepaymentStatus()
+        external
+        view
+        returns (
+            uint256 totalOwed,
+            uint256 amountRepaid,
+            uint256 remainingBalance,
+            uint256 deadline,
+            bool active
+        )
+    {
+        return (getTotalOwed(), repaidAmount, getRemainingBalance(), repaymentDeadline, isActive);
     }
 }

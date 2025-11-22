@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/utils/Pausable.sol";
+import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
+import '@openzeppelin/contracts/access/Ownable.sol';
+import '@openzeppelin/contracts/utils/ReentrancyGuard.sol';
+import '@openzeppelin/contracts/utils/Pausable.sol';
 
 /**
  * @title LendSmartLoan
@@ -38,12 +38,12 @@ contract LendSmartLoan is Ownable, ReentrancyGuard, Pausable {
 
     enum LoanStatus {
         Requested, // Loan request created by borrower
-        Funded,    // Loan funded by lender, awaiting borrower withdrawal or automatic disbursement
-        Active,    // Funds disbursed to borrower, repayment period started
-        Repaid,    // Loan fully repaid by borrower
+        Funded, // Loan funded by lender, awaiting borrower withdrawal or automatic disbursement
+        Active, // Funds disbursed to borrower, repayment period started
+        Repaid, // Loan fully repaid by borrower
         Defaulted, // Loan not repaid by due date
         Cancelled, // Loan request cancelled by borrower before funding
-        Rejected   // Loan request rejected by risk assessment
+        Rejected // Loan request rejected by risk assessment
     }
 
     uint256 public nextLoanId;
@@ -67,11 +67,7 @@ contract LendSmartLoan is Ownable, ReentrancyGuard, Pausable {
         string purpose,
         bool isCollateralized
     );
-    event LoanFunded(
-        uint256 indexed loanId,
-        address indexed lender,
-        uint256 fundedTime
-    );
+    event LoanFunded(uint256 indexed loanId, address indexed lender, uint256 fundedTime);
     event LoanDisbursed(
         uint256 indexed loanId,
         address indexed borrower,
@@ -93,27 +89,32 @@ contract LendSmartLoan is Ownable, ReentrancyGuard, Pausable {
     event RiskAssessorUpdated(address newRiskAssessor);
     event RiskScoreAssigned(uint256 indexed loanId, uint256 riskScore);
     event CollateralDeposited(uint256 indexed loanId, address token, uint256 amount);
-    event CollateralReleased(uint256 indexed loanId, address token, uint256 amount, address recipient);
+    event CollateralReleased(
+        uint256 indexed loanId,
+        address token,
+        uint256 amount,
+        address recipient
+    );
     event RepaymentScheduleCreated(uint256 indexed loanId, uint256[] schedule, uint256[] amounts);
     event ReputationScoreUpdated(address indexed user, uint256 newScore);
 
     modifier onlyBorrower(uint256 _loanId) {
-        require(loans[_loanId].borrower == msg.sender, "LendSmartLoan: Caller is not the borrower");
+        require(loans[_loanId].borrower == msg.sender, 'LendSmartLoan: Caller is not the borrower');
         _;
     }
 
     modifier onlyLender(uint256 _loanId) {
-        require(loans[_loanId].lender == msg.sender, "LendSmartLoan: Caller is not the lender");
+        require(loans[_loanId].lender == msg.sender, 'LendSmartLoan: Caller is not the lender');
         _;
     }
 
     modifier loanExists(uint256 _loanId) {
-        require(loans[_loanId].borrower != address(0), "LendSmartLoan: Loan does not exist");
+        require(loans[_loanId].borrower != address(0), 'LendSmartLoan: Loan does not exist');
         _;
     }
 
     modifier onlyRiskAssessor() {
-        require(msg.sender == riskAssessor, "LendSmartLoan: Caller is not the risk assessor");
+        require(msg.sender == riskAssessor, 'LendSmartLoan: Caller is not the risk assessor');
         _;
     }
 
@@ -130,8 +131,8 @@ contract LendSmartLoan is Ownable, ReentrancyGuard, Pausable {
         address _initialFeeRecipient,
         address _initialRiskAssessor
     ) Ownable(_initialOwner) {
-        require(_initialFeeRecipient != address(0), "Fee recipient cannot be zero address");
-        require(_initialRiskAssessor != address(0), "Risk assessor cannot be zero address");
+        require(_initialFeeRecipient != address(0), 'Fee recipient cannot be zero address');
+        require(_initialRiskAssessor != address(0), 'Risk assessor cannot be zero address');
 
         platformFeeRate = _initialFeeRate;
         feeRecipient = _initialFeeRecipient;
@@ -162,14 +163,20 @@ contract LendSmartLoan is Ownable, ReentrancyGuard, Pausable {
         address _collateralToken,
         uint256 _collateralAmount
     ) external whenNotPaused nonReentrant returns (uint256) {
-        require(_token != address(0), "LendSmartLoan: Token address cannot be zero");
-        require(_principal > 0, "LendSmartLoan: Principal must be greater than zero");
-        require(_duration > 0, "LendSmartLoan: Duration must be greater than zero");
+        require(_token != address(0), 'LendSmartLoan: Token address cannot be zero');
+        require(_principal > 0, 'LendSmartLoan: Principal must be greater than zero');
+        require(_duration > 0, 'LendSmartLoan: Duration must be greater than zero');
 
         // If collateralized, validate collateral details
         if (_isCollateralized) {
-            require(_collateralToken != address(0), "LendSmartLoan: Collateral token cannot be zero address");
-            require(_collateralAmount > 0, "LendSmartLoan: Collateral amount must be greater than zero");
+            require(
+                _collateralToken != address(0),
+                'LendSmartLoan: Collateral token cannot be zero address'
+            );
+            require(
+                _collateralAmount > 0,
+                'LendSmartLoan: Collateral amount must be greater than zero'
+            );
         }
 
         uint256 loanId = nextLoanId++;
@@ -230,10 +237,10 @@ contract LendSmartLoan is Ownable, ReentrancyGuard, Pausable {
         uint256 _riskScore,
         bool _shouldReject
     ) external whenNotPaused nonReentrant loanExists(_loanId) onlyRiskAssessor {
-        require(_riskScore <= 100, "LendSmartLoan: Risk score must be between 0 and 100");
+        require(_riskScore <= 100, 'LendSmartLoan: Risk score must be between 0 and 100');
 
         Loan storage loan = loans[_loanId];
-        require(loan.status == LoanStatus.Requested, "LendSmartLoan: Loan not in Requested state");
+        require(loan.status == LoanStatus.Requested, 'LendSmartLoan: Loan not in Requested state');
 
         loan.riskScore = _riskScore;
         emit RiskScoreAssigned(_loanId, _riskScore);
@@ -248,24 +255,30 @@ contract LendSmartLoan is Ownable, ReentrancyGuard, Pausable {
      * @dev Allows a borrower to deposit collateral for a collateralized loan.
      * @param _loanId The ID of the loan to deposit collateral for.
      */
-    function depositCollateral(uint256 _loanId) external whenNotPaused nonReentrant loanExists(_loanId) onlyBorrower(_loanId) {
+    function depositCollateral(
+        uint256 _loanId
+    ) external whenNotPaused nonReentrant loanExists(_loanId) onlyBorrower(_loanId) {
         Loan storage loan = loans[_loanId];
-        require(loan.isCollateralized, "LendSmartLoan: Loan is not collateralized");
-        require(loan.status == LoanStatus.Requested, "LendSmartLoan: Loan not in Requested state");
+        require(loan.isCollateralized, 'LendSmartLoan: Loan is not collateralized');
+        require(loan.status == LoanStatus.Requested, 'LendSmartLoan: Loan not in Requested state');
 
         IERC20 collateralToken = IERC20(loan.collateralToken);
         require(
             collateralToken.balanceOf(msg.sender) >= loan.collateralAmount,
-            "LendSmartLoan: Insufficient collateral token balance"
+            'LendSmartLoan: Insufficient collateral token balance'
         );
         require(
             collateralToken.allowance(msg.sender, address(this)) >= loan.collateralAmount,
-            "LendSmartLoan: Contract not approved to spend collateral tokens"
+            'LendSmartLoan: Contract not approved to spend collateral tokens'
         );
 
         // Transfer collateral from borrower to this contract
-        bool success = collateralToken.transferFrom(msg.sender, address(this), loan.collateralAmount);
-        require(success, "LendSmartLoan: Collateral token transferFrom failed");
+        bool success = collateralToken.transferFrom(
+            msg.sender,
+            address(this),
+            loan.collateralAmount
+        );
+        require(success, 'LendSmartLoan: Collateral token transferFrom failed');
 
         emit CollateralDeposited(_loanId, loan.collateralToken, loan.collateralAmount);
     }
@@ -277,28 +290,31 @@ contract LendSmartLoan is Ownable, ReentrancyGuard, Pausable {
      */
     function fundLoan(uint256 _loanId) external whenNotPaused nonReentrant loanExists(_loanId) {
         Loan storage loan = loans[_loanId];
-        require(loan.status == LoanStatus.Requested, "LendSmartLoan: Loan not in Requested state");
-        require(msg.sender != loan.borrower, "LendSmartLoan: Borrower cannot fund their own loan");
+        require(loan.status == LoanStatus.Requested, 'LendSmartLoan: Loan not in Requested state');
+        require(msg.sender != loan.borrower, 'LendSmartLoan: Borrower cannot fund their own loan');
 
         // If loan is collateralized, ensure collateral has been deposited
         if (loan.isCollateralized) {
             IERC20 collateralToken = IERC20(loan.collateralToken);
             require(
                 collateralToken.balanceOf(address(this)) >= loan.collateralAmount,
-                "LendSmartLoan: Collateral not deposited"
+                'LendSmartLoan: Collateral not deposited'
             );
         }
 
         IERC20 token = IERC20(loan.token);
-        require(token.balanceOf(msg.sender) >= loan.principal, "LendSmartLoan: Insufficient token balance");
+        require(
+            token.balanceOf(msg.sender) >= loan.principal,
+            'LendSmartLoan: Insufficient token balance'
+        );
         require(
             token.allowance(msg.sender, address(this)) >= loan.principal,
-            "LendSmartLoan: Contract not approved to spend tokens"
+            'LendSmartLoan: Contract not approved to spend tokens'
         );
 
         // Transfer principal from lender to this contract
         bool success = token.transferFrom(msg.sender, address(this), loan.principal);
-        require(success, "LendSmartLoan: Token transferFrom failed");
+        require(success, 'LendSmartLoan: Token transferFrom failed');
 
         loan.lender = msg.sender;
         loan.fundedTime = block.timestamp;
@@ -318,18 +334,24 @@ contract LendSmartLoan is Ownable, ReentrancyGuard, Pausable {
         uint256 _loanId,
         uint256 _numberOfPayments
     ) external whenNotPaused nonReentrant loanExists(_loanId) {
-        require(_numberOfPayments > 0, "LendSmartLoan: Number of payments must be greater than zero");
+        require(
+            _numberOfPayments > 0,
+            'LendSmartLoan: Number of payments must be greater than zero'
+        );
 
         Loan storage loan = loans[_loanId];
         require(
             msg.sender == loan.borrower || msg.sender == loan.lender || msg.sender == owner(),
-            "LendSmartLoan: Not authorized to create schedule"
+            'LendSmartLoan: Not authorized to create schedule'
         );
-        require(loan.status == LoanStatus.Funded, "LendSmartLoan: Loan not in Funded state");
+        require(loan.status == LoanStatus.Funded, 'LendSmartLoan: Loan not in Funded state');
 
         // Calculate payment interval and amount per payment
         uint256 paymentInterval = loan.duration / _numberOfPayments;
-        require(paymentInterval >= minRepaymentInterval, "LendSmartLoan: Payment interval too short");
+        require(
+            paymentInterval >= minRepaymentInterval,
+            'LendSmartLoan: Payment interval too short'
+        );
 
         uint256 basePaymentAmount = loan.repaymentAmount / _numberOfPayments;
         uint256 remainder = loan.repaymentAmount % _numberOfPayments;
@@ -361,10 +383,10 @@ contract LendSmartLoan is Ownable, ReentrancyGuard, Pausable {
      */
     function disburseLoan(uint256 _loanId) external whenNotPaused nonReentrant loanExists(_loanId) {
         Loan storage loan = loans[_loanId];
-        require(loan.status == LoanStatus.Funded, "LendSmartLoan: Loan not in Funded state");
+        require(loan.status == LoanStatus.Funded, 'LendSmartLoan: Loan not in Funded state');
         require(
             msg.sender == loan.borrower || msg.sender == loan.lender || msg.sender == owner(),
-            "LendSmartLoan: Not authorized to disburse"
+            'LendSmartLoan: Not authorized to disburse'
         );
 
         // Ensure repayment schedule is created if we want to enforce it
@@ -373,7 +395,7 @@ contract LendSmartLoan is Ownable, ReentrancyGuard, Pausable {
 
         IERC20 token = IERC20(loan.token);
         bool success = token.transfer(loan.borrower, loan.principal);
-        require(success, "LendSmartLoan: Token transfer to borrower failed");
+        require(success, 'LendSmartLoan: Token transfer to borrower failed');
 
         loan.status = LoanStatus.Active;
         loan.disbursedTime = block.timestamp;
@@ -395,14 +417,17 @@ contract LendSmartLoan is Ownable, ReentrancyGuard, Pausable {
         uint256 _amount
     ) external whenNotPaused nonReentrant loanExists(_loanId) onlyBorrower(_loanId) {
         Loan storage loan = loans[_loanId];
-        require(loan.status == LoanStatus.Active, "LendSmartLoan: Loan not in Active state");
-        require(_amount > 0, "LendSmartLoan: Repayment amount must be greater than zero");
+        require(loan.status == LoanStatus.Active, 'LendSmartLoan: Loan not in Active state');
+        require(_amount > 0, 'LendSmartLoan: Repayment amount must be greater than zero');
 
         IERC20 token = IERC20(loan.token);
-        require(token.balanceOf(msg.sender) >= _amount, "LendSmartLoan: Insufficient token balance for repayment");
+        require(
+            token.balanceOf(msg.sender) >= _amount,
+            'LendSmartLoan: Insufficient token balance for repayment'
+        );
         require(
             token.allowance(msg.sender, address(this)) >= _amount,
-            "LendSmartLoan: Contract not approved to spend tokens for repayment"
+            'LendSmartLoan: Contract not approved to spend tokens for repayment'
         );
 
         uint256 amountToRepayThisTime = _amount;
@@ -414,7 +439,7 @@ contract LendSmartLoan is Ownable, ReentrancyGuard, Pausable {
 
         // Transfer repayment from borrower to this contract
         bool success = token.transferFrom(msg.sender, address(this), amountToRepayThisTime);
-        require(success, "LendSmartLoan: Repayment token transferFrom failed");
+        require(success, 'LendSmartLoan: Repayment token transferFrom failed');
 
         loan.amountRepaid += amountToRepayThisTime;
         remainingDue = loan.repaymentAmount - loan.amountRepaid;
@@ -423,12 +448,14 @@ contract LendSmartLoan is Ownable, ReentrancyGuard, Pausable {
         uint256 interestPortion = 0;
         uint256 principalPortion = amountToRepayThisTime;
 
-        if (loan.amountRepaid > loan.principal) { // If repayment starts covering interest
+        if (loan.amountRepaid > loan.principal) {
+            // If repayment starts covering interest
             uint256 totalInterestPaidSoFar = loan.amountRepaid - loan.principal;
             uint256 totalInterestDue = loan.repaymentAmount - loan.principal;
             uint256 interestPaidThisTime = amountToRepayThisTime;
 
-            if (loan.amountRepaid - amountToRepayThisTime < loan.principal) { // If this payment crosses principal boundary
+            if (loan.amountRepaid - amountToRepayThisTime < loan.principal) {
+                // If this payment crosses principal boundary
                 interestPaidThisTime = loan.amountRepaid - loan.principal;
             }
 
@@ -445,17 +472,23 @@ contract LendSmartLoan is Ownable, ReentrancyGuard, Pausable {
             platformFee = (interestPortion * platformFeeRate) / 10000;
             if (platformFee > 0) {
                 bool feeSuccess = token.transfer(feeRecipient, platformFee);
-                require(feeSuccess, "LendSmartLoan: Platform fee transfer failed");
+                require(feeSuccess, 'LendSmartLoan: Platform fee transfer failed');
             }
         }
 
         uint256 amountToLender = amountToRepayThisTime - platformFee;
         if (amountToLender > 0) {
             bool lenderSuccess = token.transfer(loan.lender, amountToLender);
-            require(lenderSuccess, "LendSmartLoan: Transfer to lender failed");
+            require(lenderSuccess, 'LendSmartLoan: Transfer to lender failed');
         }
 
-        emit LoanRepaid(_loanId, msg.sender, amountToRepayThisTime, loan.amountRepaid, remainingDue);
+        emit LoanRepaid(
+            _loanId,
+            msg.sender,
+            amountToRepayThisTime,
+            loan.amountRepaid,
+            remainingDue
+        );
 
         if (loan.amountRepaid >= loan.repaymentAmount) {
             loan.status = LoanStatus.Repaid;
@@ -476,14 +509,19 @@ contract LendSmartLoan is Ownable, ReentrancyGuard, Pausable {
      */
     function _releaseCollateral(uint256 _loanId) internal {
         Loan storage loan = loans[_loanId];
-        require(loan.isCollateralized, "LendSmartLoan: Loan is not collateralized");
+        require(loan.isCollateralized, 'LendSmartLoan: Loan is not collateralized');
 
         if (loan.collateralAmount > 0 && loan.collateralToken != address(0)) {
             IERC20 collateralToken = IERC20(loan.collateralToken);
             bool success = collateralToken.transfer(loan.borrower, loan.collateralAmount);
-            require(success, "LendSmartLoan: Collateral release failed");
+            require(success, 'LendSmartLoan: Collateral release failed');
 
-            emit CollateralReleased(_loanId, loan.collateralToken, loan.collateralAmount, loan.borrower);
+            emit CollateralReleased(
+                _loanId,
+                loan.collateralToken,
+                loan.collateralAmount,
+                loan.borrower
+            );
 
             // Reset collateral amount to prevent double-release
             loan.collateralAmount = 0;
@@ -494,9 +532,14 @@ contract LendSmartLoan is Ownable, ReentrancyGuard, Pausable {
      * @dev Allows a borrower to cancel their loan request if it has not been funded yet.
      * @param _loanId The ID of the loan to cancel.
      */
-    function cancelLoanRequest(uint256 _loanId) external whenNotPaused nonReentrant loanExists(_loanId) onlyBorrower(_loanId) {
+    function cancelLoanRequest(
+        uint256 _loanId
+    ) external whenNotPaused nonReentrant loanExists(_loanId) onlyBorrower(_loanId) {
         Loan storage loan = loans[_loanId];
-        require(loan.status == LoanStatus.Requested, "LendSmartLoan: Loan not in Requested state or already funded");
+        require(
+            loan.status == LoanStatus.Requested,
+            'LendSmartLoan: Loan not in Requested state or already funded'
+        );
 
         loan.status = LoanStatus.Cancelled;
 
@@ -512,18 +555,20 @@ contract LendSmartLoan is Ownable, ReentrancyGuard, Pausable {
      * @dev Allows the owner or lender to mark a loan as defaulted if it's past due.
      * @param _loanId The ID of the loan to mark as defaulted.
      */
-    function markLoanAsDefaulted(uint256 _loanId) external whenNotPaused nonReentrant loanExists(_loanId) {
+    function markLoanAsDefaulted(
+        uint256 _loanId
+    ) external whenNotPaused nonReentrant loanExists(_loanId) {
         Loan storage loan = loans[_loanId];
-        require(loan.status == LoanStatus.Active, "LendSmartLoan: Loan not in Active state");
+        require(loan.status == LoanStatus.Active, 'LendSmartLoan: Loan not in Active state');
         require(
             msg.sender == loan.lender || msg.sender == owner(),
-            "LendSmartLoan: Only lender or owner can mark as defaulted"
+            'LendSmartLoan: Only lender or owner can mark as defaulted'
         );
 
         // Check if loan is past due (end of duration + grace period)
         require(
             block.timestamp > loan.disbursedTime + loan.duration + gracePeriod,
-            "LendSmartLoan: Loan not past due date with grace period"
+            'LendSmartLoan: Loan not past due date with grace period'
         );
 
         loan.status = LoanStatus.Defaulted;
@@ -532,9 +577,14 @@ contract LendSmartLoan is Ownable, ReentrancyGuard, Pausable {
         if (loan.isCollateralized && loan.collateralAmount > 0) {
             IERC20 collateralToken = IERC20(loan.collateralToken);
             bool success = collateralToken.transfer(loan.lender, loan.collateralAmount);
-            require(success, "LendSmartLoan: Collateral transfer to lender failed");
+            require(success, 'LendSmartLoan: Collateral transfer to lender failed');
 
-            emit CollateralReleased(_loanId, loan.collateralToken, loan.collateralAmount, loan.lender);
+            emit CollateralReleased(
+                _loanId,
+                loan.collateralToken,
+                loan.collateralAmount,
+                loan.lender
+            );
 
             // Reset collateral amount to prevent double-release
             loan.collateralAmount = 0;
@@ -572,7 +622,7 @@ contract LendSmartLoan is Ownable, ReentrancyGuard, Pausable {
      * @param _newFeeRate The new platform fee rate (e.g., 150 for 1.50%).
      */
     function setPlatformFeeRate(uint256 _newFeeRate) external onlyOwner {
-        require(_newFeeRate <= 1000, "LendSmartLoan: Fee rate too high"); // Max 10%
+        require(_newFeeRate <= 1000, 'LendSmartLoan: Fee rate too high'); // Max 10%
         platformFeeRate = _newFeeRate;
         emit PlatformFeeUpdated(_newFeeRate);
     }
@@ -582,7 +632,10 @@ contract LendSmartLoan is Ownable, ReentrancyGuard, Pausable {
      * @param _newFeeRecipient The new address for receiving platform fees.
      */
     function setFeeRecipient(address _newFeeRecipient) external onlyOwner {
-        require(_newFeeRecipient != address(0), "LendSmartLoan: New fee recipient cannot be zero address");
+        require(
+            _newFeeRecipient != address(0),
+            'LendSmartLoan: New fee recipient cannot be zero address'
+        );
         feeRecipient = _newFeeRecipient;
         emit FeeRecipientUpdated(_newFeeRecipient);
     }
@@ -592,7 +645,10 @@ contract LendSmartLoan is Ownable, ReentrancyGuard, Pausable {
      * @param _newRiskAssessor The new address authorized to set risk scores.
      */
     function setRiskAssessor(address _newRiskAssessor) external onlyOwner {
-        require(_newRiskAssessor != address(0), "LendSmartLoan: New risk assessor cannot be zero address");
+        require(
+            _newRiskAssessor != address(0),
+            'LendSmartLoan: New risk assessor cannot be zero address'
+        );
         riskAssessor = _newRiskAssessor;
         emit RiskAssessorUpdated(_newRiskAssessor);
     }
@@ -652,11 +708,14 @@ contract LendSmartLoan is Ownable, ReentrancyGuard, Pausable {
      * @return schedule The repayment schedule timestamps.
      * @return amounts The repayment amounts.
      */
-    function getLoanDetails(uint256 _loanId) external view loanExists(_loanId) returns (
-        Loan memory loan,
-        uint256[] memory schedule,
-        uint256[] memory amounts
-    ) {
+    function getLoanDetails(
+        uint256 _loanId
+    )
+        external
+        view
+        loanExists(_loanId)
+        returns (Loan memory loan, uint256[] memory schedule, uint256[] memory amounts)
+    {
         loan = loans[_loanId];
         schedule = loan.repaymentSchedule;
         amounts = loan.repaymentAmounts;
@@ -668,7 +727,9 @@ contract LendSmartLoan is Ownable, ReentrancyGuard, Pausable {
      */
     receive() external payable {
         // Reverting is safer if ETH is not meant to be held by the contract this way.
-        revert("LendSmartLoan: Direct Ether payments not accepted. Use specific functions for ERC20 loan operations.");
+        revert(
+            'LendSmartLoan: Direct Ether payments not accepted. Use specific functions for ERC20 loan operations.'
+        );
     }
 
     /**
@@ -683,9 +744,12 @@ contract LendSmartLoan is Ownable, ReentrancyGuard, Pausable {
         address _to,
         uint256 _amount
     ) external onlyOwner {
-        require(_to != address(0), "LendSmartLoan: Cannot send to zero address");
+        require(_to != address(0), 'LendSmartLoan: Cannot send to zero address');
         IERC20 token = IERC20(_tokenAddress);
-        require(token.balanceOf(address(this)) >= _amount, "LendSmartLoan: Insufficient balance of specified token");
+        require(
+            token.balanceOf(address(this)) >= _amount,
+            'LendSmartLoan: Insufficient balance of specified token'
+        );
         token.transfer(_to, _amount);
     }
 }

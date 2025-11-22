@@ -2,7 +2,12 @@
 pragma solidity ^0.8.0;
 
 contract LoanManager {
-    enum LoanStatus { PENDING, APPROVED, REPAID, DEFAULTED }
+    enum LoanStatus {
+        PENDING,
+        APPROVED,
+        REPAID,
+        DEFAULTED
+    }
 
     struct Loan {
         address borrower;
@@ -19,15 +24,31 @@ contract LoanManager {
     mapping(address => Loan[]) public lenderLoans;
     Loan[] public allLoans;
 
-    event LoanCreated(address indexed borrower, uint256 loanId, uint256 amount, uint256 interestRate, uint256 duration);
-    event LoanApproved(uint256 indexed loanId, address indexed lender, address indexed borrower, uint256 amount);
-    event LoanRepaid(uint256 indexed loanId, address indexed borrower, address indexed lender, uint256 amount);
+    event LoanCreated(
+        address indexed borrower,
+        uint256 loanId,
+        uint256 amount,
+        uint256 interestRate,
+        uint256 duration
+    );
+    event LoanApproved(
+        uint256 indexed loanId,
+        address indexed lender,
+        address indexed borrower,
+        uint256 amount
+    );
+    event LoanRepaid(
+        uint256 indexed loanId,
+        address indexed borrower,
+        address indexed lender,
+        uint256 amount
+    );
     event LoanDefaulted(uint256 indexed loanId, address indexed borrower, address indexed lender);
 
     function createLoan(uint256 amount, uint256 interest, uint256 durationDays) external {
-        require(amount > 0, "Loan amount must be greater than 0");
-        require(interest > 0, "Interest rate must be greater than 0");
-        require(durationDays > 0, "Duration must be greater than 0");
+        require(amount > 0, 'Loan amount must be greater than 0');
+        require(interest > 0, 'Interest rate must be greater than 0');
+        require(durationDays > 0, 'Duration must be greater than 0');
 
         Loan memory newLoan = Loan({
             borrower: msg.sender,
@@ -47,12 +68,12 @@ contract LoanManager {
     }
 
     function approveLoan(uint256 loanId) external payable {
-        require(loanId < allLoans.length, "Invalid loan ID");
+        require(loanId < allLoans.length, 'Invalid loan ID');
 
         Loan storage loan = allLoans[loanId];
-        require(loan.status == LoanStatus.PENDING, "Loan not pending");
-        require(msg.value >= loan.amount, "Insufficient funds");
-        require(loan.borrower != msg.sender, "Cannot fund your own loan");
+        require(loan.status == LoanStatus.PENDING, 'Loan not pending');
+        require(msg.value >= loan.amount, 'Insufficient funds');
+        require(loan.borrower != msg.sender, 'Cannot fund your own loan');
 
         loan.status = LoanStatus.APPROVED;
         loan.dueDate = block.timestamp + (loan.duration * 1 days);
@@ -68,16 +89,16 @@ contract LoanManager {
     }
 
     function repayLoan(uint256 loanId) external payable {
-        require(loanId < allLoans.length, "Invalid loan ID");
+        require(loanId < allLoans.length, 'Invalid loan ID');
 
         Loan storage loan = allLoans[loanId];
-        require(loan.status == LoanStatus.APPROVED, "Loan not approved");
-        require(loan.borrower == msg.sender, "Only borrower can repay");
+        require(loan.status == LoanStatus.APPROVED, 'Loan not approved');
+        require(loan.borrower == msg.sender, 'Only borrower can repay');
 
         uint256 totalOwed = loan.amount + ((loan.amount * loan.interestRate) / 100);
         uint256 remainingOwed = totalOwed - loan.repaidAmount;
 
-        require(msg.value > 0, "Payment must be greater than 0");
+        require(msg.value > 0, 'Payment must be greater than 0');
 
         if (msg.value >= remainingOwed) {
             // Full repayment
@@ -105,11 +126,11 @@ contract LoanManager {
     }
 
     function checkLoanDefault(uint256 loanId) external {
-        require(loanId < allLoans.length, "Invalid loan ID");
+        require(loanId < allLoans.length, 'Invalid loan ID');
 
         Loan storage loan = allLoans[loanId];
-        require(loan.status == LoanStatus.APPROVED, "Loan not approved");
-        require(block.timestamp > loan.dueDate, "Loan not yet due");
+        require(loan.status == LoanStatus.APPROVED, 'Loan not approved');
+        require(block.timestamp > loan.dueDate, 'Loan not yet due');
 
         loan.status = LoanStatus.DEFAULTED;
 

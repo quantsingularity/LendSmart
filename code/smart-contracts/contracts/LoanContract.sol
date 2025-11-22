@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/utils/Pausable.sol";
+import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
+import '@openzeppelin/contracts/access/Ownable.sol';
+import '@openzeppelin/contracts/utils/ReentrancyGuard.sol';
+import '@openzeppelin/contracts/utils/Pausable.sol';
 
 /**
  * @title LoanContract
@@ -32,11 +32,11 @@ contract LoanContract is Ownable, ReentrancyGuard, Pausable {
 
     enum LoanStatus {
         Requested, // Loan request created by borrower
-        Funded,    // Loan funded by lender, awaiting borrower withdrawal or automatic disbursement
-        Active,    // Funds disbursed to borrower, repayment period started
-        Repaid,    // Loan fully repaid by borrower
+        Funded, // Loan funded by lender, awaiting borrower withdrawal or automatic disbursement
+        Active, // Funds disbursed to borrower, repayment period started
+        Repaid, // Loan fully repaid by borrower
         Defaulted, // Loan not repaid by due date
-        Cancelled  // Loan request cancelled by borrower before funding
+        Cancelled // Loan request cancelled by borrower before funding
     }
 
     uint256 public nextLoanId;
@@ -55,11 +55,7 @@ contract LoanContract is Ownable, ReentrancyGuard, Pausable {
         uint256 duration,
         string purpose
     );
-    event LoanFunded(
-        uint256 indexed loanId,
-        address indexed lender,
-        uint256 fundedTime
-    );
+    event LoanFunded(uint256 indexed loanId, address indexed lender, uint256 fundedTime);
     event LoanDisbursed(uint256 indexed loanId, address indexed borrower, uint256 amount);
     event LoanRepaid(
         uint256 indexed loanId,
@@ -73,17 +69,17 @@ contract LoanContract is Ownable, ReentrancyGuard, Pausable {
     event FeeRecipientUpdated(address newFeeRecipient);
 
     modifier onlyBorrower(uint256 _loanId) {
-        require(loans[_loanId].borrower == msg.sender, "LoanContract: Caller is not the borrower");
+        require(loans[_loanId].borrower == msg.sender, 'LoanContract: Caller is not the borrower');
         _;
     }
 
     modifier onlyLender(uint256 _loanId) {
-        require(loans[_loanId].lender == msg.sender, "LoanContract: Caller is not the lender");
+        require(loans[_loanId].lender == msg.sender, 'LoanContract: Caller is not the lender');
         _;
     }
 
     modifier loanExists(uint256 _loanId) {
-        require(loans[_loanId].borrower != address(0), "LoanContract: Loan does not exist");
+        require(loans[_loanId].borrower != address(0), 'LoanContract: Loan does not exist');
         _;
     }
 
@@ -93,8 +89,12 @@ contract LoanContract is Ownable, ReentrancyGuard, Pausable {
      * @param _initialFeeRate The initial platform fee rate (e.g., 100 for 1.00%).
      * @param _initialFeeRecipient The address where platform fees will be sent.
      */
-    constructor(address _initialOwner, uint256 _initialFeeRate, address _initialFeeRecipient) Ownable(_initialOwner) {
-        require(_initialFeeRecipient != address(0), "Fee recipient cannot be zero address");
+    constructor(
+        address _initialOwner,
+        uint256 _initialFeeRate,
+        address _initialFeeRecipient
+    ) Ownable(_initialOwner) {
+        require(_initialFeeRecipient != address(0), 'Fee recipient cannot be zero address');
         platformFeeRate = _initialFeeRate;
         feeRecipient = _initialFeeRecipient;
         nextLoanId = 1; // Start loan IDs from 1
@@ -115,9 +115,9 @@ contract LoanContract is Ownable, ReentrancyGuard, Pausable {
         uint256 _duration,
         string memory _purpose
     ) external whenNotPaused nonReentrant returns (uint256) {
-        require(_token != address(0), "LoanContract: Token address cannot be zero");
-        require(_principal > 0, "LoanContract: Principal must be greater than zero");
-        require(_duration > 0, "LoanContract: Duration must be greater than zero");
+        require(_token != address(0), 'LoanContract: Token address cannot be zero');
+        require(_principal > 0, 'LoanContract: Principal must be greater than zero');
+        require(_duration > 0, 'LoanContract: Duration must be greater than zero');
         // Interest rate can be 0 for interest-free loans
 
         uint256 loanId = nextLoanId++;
@@ -142,7 +142,15 @@ contract LoanContract is Ownable, ReentrancyGuard, Pausable {
 
         userLoanIds[msg.sender].push(loanId);
 
-        emit LoanRequested(loanId, msg.sender, _token, _principal, _interestRate, _duration, _purpose);
+        emit LoanRequested(
+            loanId,
+            msg.sender,
+            _token,
+            _principal,
+            _interestRate,
+            _duration,
+            _purpose
+        );
         return loanId;
     }
 
@@ -153,16 +161,22 @@ contract LoanContract is Ownable, ReentrancyGuard, Pausable {
      */
     function fundLoan(uint256 _loanId) external whenNotPaused nonReentrant loanExists(_loanId) {
         Loan storage loan = loans[_loanId];
-        require(loan.status == LoanStatus.Requested, "LoanContract: Loan not in Requested state");
-        require(msg.sender != loan.borrower, "LoanContract: Borrower cannot fund their own loan");
+        require(loan.status == LoanStatus.Requested, 'LoanContract: Loan not in Requested state');
+        require(msg.sender != loan.borrower, 'LoanContract: Borrower cannot fund their own loan');
 
         IERC20 token = IERC20(loan.token);
-        require(token.balanceOf(msg.sender) >= loan.principal, "LoanContract: Insufficient token balance");
-        require(token.allowance(msg.sender, address(this)) >= loan.principal, "LoanContract: Contract not approved to spend tokens");
+        require(
+            token.balanceOf(msg.sender) >= loan.principal,
+            'LoanContract: Insufficient token balance'
+        );
+        require(
+            token.allowance(msg.sender, address(this)) >= loan.principal,
+            'LoanContract: Contract not approved to spend tokens'
+        );
 
         // Transfer principal from lender to this contract
         bool success = token.transferFrom(msg.sender, address(this), loan.principal);
-        require(success, "LoanContract: Token transferFrom failed");
+        require(success, 'LoanContract: Token transferFrom failed');
 
         loan.lender = msg.sender;
         loan.fundedTime = block.timestamp;
@@ -189,7 +203,7 @@ contract LoanContract is Ownable, ReentrancyGuard, Pausable {
 
         IERC20 token = IERC20(loan.token);
         bool success = token.transfer(loan.borrower, loan.principal);
-        require(success, "LoanContract: Token transfer to borrower failed");
+        require(success, 'LoanContract: Token transfer to borrower failed');
 
         loan.status = LoanStatus.Active;
         emit LoanDisbursed(_loanId, loan.borrower, loan.principal);
@@ -201,14 +215,23 @@ contract LoanContract is Ownable, ReentrancyGuard, Pausable {
      * @param _loanId The ID of the loan to repay.
      * @param _amount The amount of tokens to repay.
      */
-    function repayLoan(uint256 _loanId, uint256 _amount) external whenNotPaused nonReentrant loanExists(_loanId) onlyBorrower(_loanId) {
+    function repayLoan(
+        uint256 _loanId,
+        uint256 _amount
+    ) external whenNotPaused nonReentrant loanExists(_loanId) onlyBorrower(_loanId) {
         Loan storage loan = loans[_loanId];
-        require(loan.status == LoanStatus.Active, "LoanContract: Loan not in Active state");
-        require(_amount > 0, "LoanContract: Repayment amount must be greater than zero");
+        require(loan.status == LoanStatus.Active, 'LoanContract: Loan not in Active state');
+        require(_amount > 0, 'LoanContract: Repayment amount must be greater than zero');
 
         IERC20 token = IERC20(loan.token);
-        require(token.balanceOf(msg.sender) >= _amount, "LoanContract: Insufficient token balance for repayment");
-        require(token.allowance(msg.sender, address(this)) >= _amount, "LoanContract: Contract not approved to spend tokens for repayment");
+        require(
+            token.balanceOf(msg.sender) >= _amount,
+            'LoanContract: Insufficient token balance for repayment'
+        );
+        require(
+            token.allowance(msg.sender, address(this)) >= _amount,
+            'LoanContract: Contract not approved to spend tokens for repayment'
+        );
 
         uint256 amountToRepayThisTime = _amount;
         if (loan.amountRepaid + _amount > loan.repaymentAmount) {
@@ -217,7 +240,7 @@ contract LoanContract is Ownable, ReentrancyGuard, Pausable {
 
         // Transfer repayment from borrower to this contract
         bool success = token.transferFrom(msg.sender, address(this), amountToRepayThisTime);
-        require(success, "LoanContract: Repayment token transferFrom failed");
+        require(success, 'LoanContract: Repayment token transferFrom failed');
 
         loan.amountRepaid += amountToRepayThisTime;
 
@@ -225,11 +248,13 @@ contract LoanContract is Ownable, ReentrancyGuard, Pausable {
         uint256 interestPortion = 0;
         uint256 principalPortion = amountToRepayThisTime;
 
-        if (loan.amountRepaid > loan.principal) { // If repayment starts covering interest
+        if (loan.amountRepaid > loan.principal) {
+            // If repayment starts covering interest
             uint256 totalInterestPaidSoFar = loan.amountRepaid - loan.principal;
             uint256 totalInterestDue = loan.repaymentAmount - loan.principal;
             uint256 interestPaidThisTime = amountToRepayThisTime;
-            if (loan.amountRepaid - amountToRepayThisTime < loan.principal) { // If this payment crosses principal boundary
+            if (loan.amountRepaid - amountToRepayThisTime < loan.principal) {
+                // If this payment crosses principal boundary
                 interestPaidThisTime = loan.amountRepaid - loan.principal;
             }
             if (interestPaidThisTime > totalInterestDue) interestPaidThisTime = totalInterestDue;
@@ -245,14 +270,14 @@ contract LoanContract is Ownable, ReentrancyGuard, Pausable {
             platformFee = (interestPortion * platformFeeRate) / 10000;
             if (platformFee > 0) {
                 bool feeSuccess = token.transfer(feeRecipient, platformFee);
-                require(feeSuccess, "LoanContract: Platform fee transfer failed");
+                require(feeSuccess, 'LoanContract: Platform fee transfer failed');
             }
         }
 
         uint256 amountToLender = amountToRepayThisTime - platformFee;
         if (amountToLender > 0) {
             bool lenderSuccess = token.transfer(loan.lender, amountToLender);
-            require(lenderSuccess, "LoanContract: Transfer to lender failed");
+            require(lenderSuccess, 'LoanContract: Transfer to lender failed');
         }
 
         emit LoanRepaid(_loanId, msg.sender, amountToRepayThisTime, loan.amountRepaid);
@@ -273,9 +298,14 @@ contract LoanContract is Ownable, ReentrancyGuard, Pausable {
      * @dev Allows a borrower to cancel their loan request if it has not been funded yet.
      * @param _loanId The ID of the loan to cancel.
      */
-    function cancelLoanRequest(uint256 _loanId) external whenNotPaused nonReentrant loanExists(_loanId) onlyBorrower(_loanId) {
+    function cancelLoanRequest(
+        uint256 _loanId
+    ) external whenNotPaused nonReentrant loanExists(_loanId) onlyBorrower(_loanId) {
         Loan storage loan = loans[_loanId];
-        require(loan.status == LoanStatus.Requested, "LoanContract: Loan not in Requested state or already funded");
+        require(
+            loan.status == LoanStatus.Requested,
+            'LoanContract: Loan not in Requested state or already funded'
+        );
 
         loan.status = LoanStatus.Cancelled;
         emit LoanCancelled(_loanId);
@@ -297,7 +327,10 @@ contract LoanContract is Ownable, ReentrancyGuard, Pausable {
      * @param _newFeeRecipient The new address for receiving platform fees.
      */
     function setFeeRecipient(address _newFeeRecipient) external onlyOwner {
-        require(_newFeeRecipient != address(0), "LoanContract: New fee recipient cannot be zero address");
+        require(
+            _newFeeRecipient != address(0),
+            'LoanContract: New fee recipient cannot be zero address'
+        );
         feeRecipient = _newFeeRecipient;
         emit FeeRecipientUpdated(_newFeeRecipient);
     }
@@ -330,7 +363,9 @@ contract LoanContract is Ownable, ReentrancyGuard, Pausable {
      * @param _loanId The ID of the loan.
      * @return The Loan struct.
      */
-    function getLoanDetails(uint256 _loanId) external view loanExists(_loanId) returns (Loan memory) {
+    function getLoanDetails(
+        uint256 _loanId
+    ) external view loanExists(_loanId) returns (Loan memory) {
         return loans[_loanId];
     }
 
@@ -342,19 +377,28 @@ contract LoanContract is Ownable, ReentrancyGuard, Pausable {
         // Optionally handle received Ether, e.g., for gas refunds or revert
         // For this contract, direct ETH payments are not part of the core logic for ERC20 loans.
         // Reverting is safer if ETH is not meant to be held by the contract this way.
-        revert("LoanContract: Direct Ether payments not accepted. Use specific functions for ERC20 loan operations.");
+        revert(
+            'LoanContract: Direct Ether payments not accepted. Use specific functions for ERC20 loan operations.'
+        );
     }
 
     // Owner can withdraw any ERC20 tokens accidentally sent to the contract
     // (excluding the loan tokens which are managed by the loan lifecycle)
-    function withdrawStuckTokens(address _tokenAddress, address _to, uint256 _amount) external onlyOwner {
-        require(_to != address(0), "Cannot send to zero address");
+    function withdrawStuckTokens(
+        address _tokenAddress,
+        address _to,
+        uint256 _amount
+    ) external onlyOwner {
+        require(_to != address(0), 'Cannot send to zero address');
         IERC20 token = IERC20(_tokenAddress);
         // Basic check: ensure we are not withdrawing tokens that are part of active loan principals held by contract
         // This is a simplified check. A more robust check would sum up all principals held by the contract.
         // For now, this function is risky if not used carefully.
         // A safer approach might be to only allow withdrawal of specific, non-loan tokens.
-        require(token.balanceOf(address(this)) >= _amount, "Insufficient balance of specified token");
+        require(
+            token.balanceOf(address(this)) >= _amount,
+            'Insufficient balance of specified token'
+        );
         token.transfer(_to, _amount);
     }
 }
