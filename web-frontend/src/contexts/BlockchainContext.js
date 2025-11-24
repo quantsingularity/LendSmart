@@ -20,8 +20,25 @@ export const BlockchainProvider = ({ children }) => {
   // Contract addresses - should be environment variables in production
   const LEND_SMART_LOAN_ADDRESS = process.env.REACT_APP_LEND_SMART_LOAN_ADDRESS || '0x5FbDB2315678afecb367f032d93F642f64180aa3';
 
-  // Handle account changes
-  const handleAccountsC []);
+  const handleAccountsChanged = useCallback(async (accounts) => {
+    if (accounts.length === 0) {
+      setAccount(null);
+      setIsConnected(false);
+      return;
+    }
+    setAccount(accounts[0]);
+    setIsConnected(true);
+    if (provider) {
+      const newSigner = await provider.getSigner();
+      setSigner(newSigner);
+      const contract = new ethers.Contract(
+        LEND_SMART_LOAN_ADDRESS,
+        LendSmartLoanABI.abi,
+        newSigner
+      );
+      setLendSmartLoanContract(contract);
+    }
+  }, [provider, LEND_SMART_LOAN_ADDRESS]);
 
   // Initialize provider
   useEffect(() => {
