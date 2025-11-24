@@ -98,21 +98,21 @@ web-frontend/
 
 - **Development mode:**
 
-  ```bash
-  npm start
-  # or
-  # yarn start
-  ```
+    ```bash
+    npm start
+    # or
+    # yarn start
+    ```
 
-  This will start the development server, usually on `http://localhost:3000`, and open the application in your default web browser. The page will automatically reload if you make changes to the code.
+    This will start the development server, usually on `http://localhost:3000`, and open the application in your default web browser. The page will automatically reload if you make changes to the code.
 
 - **Production build:**
-  ```bash
-  npm run build
-  # or
-  # yarn build
-  ```
-  This command builds the app for production to the `build` folder. It correctly bundles React in production mode and optimizes the build for the best performance.
+    ```bash
+    npm run build
+    # or
+    # yarn build
+    ```
+    This command builds the app for production to the `build` folder. It correctly bundles React in production mode and optimizes the build for the best performance.
 
 ## Key Libraries Used
 

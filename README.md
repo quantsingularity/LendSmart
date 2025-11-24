@@ -157,10 +157,10 @@ LendSmart/
 ### 1. Smart Contract Development
 
 - Write Solidity contracts to:
-  - Manage loan creation, disbursement, and repayment
-  - Handle disputes and penalties for default
-  - Implement governance and protocol upgrades
-  - Ensure security and gas optimization
+    - Manage loan creation, disbursement, and repayment
+    - Handle disputes and penalties for default
+    - Implement governance and protocol upgrades
+    - Ensure security and gas optimization
 
 ### 2. AI Model Development
 

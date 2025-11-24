@@ -14,8 +14,8 @@ The model is trained on historical loan data, including borrower characteristics
 - **`model_training.py`**: Script for training the credit scoring model (e.g., Logistic Regression, Gradient Boosting, Neural Network) using the preprocessed data. Includes model evaluation and saving the trained model.
 - **`predict.py`**: Script or API endpoint (if integrated into the backend) to load the trained model and make predictions on new loan applications.
 - **`notebooks/`**: Directory for Jupyter notebooks used for exploratory data analysis (EDA), model experimentation, and visualization.
-  - `eda_and_feature_engineering.ipynb` (Example)
-  - `model_selection_and_tuning.ipynb` (Example)
+    - `eda_and_feature_engineering.ipynb` (Example)
+    - `model_selection_and_tuning.ipynb` (Example)
 - **`requirements.txt`**: Lists all Python dependencies required for the ML model (e.g., pandas, scikit-learn, numpy, matplotlib, seaborn, joblib/pickle).
 - **`saved_models/`**: Directory where trained model artifacts (e.g., `.joblib` or `.pkl` files) and any associated preprocessing objects (like scalers or encoders) are stored. (This directory should be in `.gitignore` if models are large, or use a model registry).
 

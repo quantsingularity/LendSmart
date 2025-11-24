@@ -32,27 +32,27 @@ LendSmart is a decentralized application (DApp) designed to revolutionize peer-t
 LendSmart is built using the following technologies:
 
 1. **Blockchain**:
-   - Ethereum/Polygon for smart contract deployment and transaction management
+    - Ethereum/Polygon for smart contract deployment and transaction management
 
 2. **AI/ML**:
-   - Python with TensorFlow and Scikit-learn for credit risk models
+    - Python with TensorFlow and Scikit-learn for credit risk models
 
 3. **Smart Contracts**:
-   - Solidity for implementing loan agreements and data management
+    - Solidity for implementing loan agreements and data management
 
 4. **Database**:
-   - MongoDB for off-chain storage of borrower and loan data
+    - MongoDB for off-chain storage of borrower and loan data
 
 5. **Frontend**:
-   - React.js for creating a responsive and intuitive user interface
+    - React.js for creating a responsive and intuitive user interface
 
 6. **Backend**:
-   - Node.js with Express for API endpoints and business logic
+    - Node.js with Express for API endpoints and business logic
 
 7. **Infrastructure**:
-   - Kubernetes for container orchestration
-   - Terraform for infrastructure as code
-   - Ansible for configuration management
+    - Kubernetes for container orchestration
+    - Terraform for infrastructure as code
+    - Ansible for configuration management
 
 ## Getting Started
 

@@ -123,11 +123,11 @@ Comprehensive documentation is critical for operational excellence, especially a
 - **Architecture Diagrams:** Maintaining up-to-date network, application, and data flow diagrams.
 - **Infrastructure as Code (IaC) Documentation:** Documenting Terraform modules, Ansible playbooks, and Kubernetes manifests, including their purpose, inputs, outputs, and dependencies.
 - **Runbooks:** Creating detailed, step-by-step guides for common operational procedures, incident response, and disaster recovery scenarios. These should cover:
-  - Deployment procedures
-  - Troubleshooting common issues
-  - On-call procedures and escalation paths
-  - Backup and restore processes
-  - Security incident response plans
+    - Deployment procedures
+    - Troubleshooting common issues
+    - On-call procedures and escalation paths
+    - Backup and restore processes
+    - Security incident response plans
 - **Monitoring and Alerting Playbooks:** Documenting alert definitions, their meaning, and the initial steps to take when an alert fires.
 - **Compliance Documentation:** Maintaining records of compliance audits, security assessments, and policy adherence.
 - **Knowledge Base:** Establishing a centralized knowledge base for all operational information, accessible to the relevant teams.

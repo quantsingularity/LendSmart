@@ -168,43 +168,43 @@ GAS_LIMIT=6721975
 
 1. **Install MongoDB** (if not using Docker):
 
-   ```bash
-   # Ubuntu
-   sudo apt-get install mongodb
+    ```bash
+    # Ubuntu
+    sudo apt-get install mongodb
 
-   # macOS with Homebrew
-   brew install mongodb-community
-   ```
+    # macOS with Homebrew
+    brew install mongodb-community
+    ```
 
 2. **Start MongoDB Service**:
 
-   ```bash
-   # Ubuntu
-   sudo systemctl start mongodb
+    ```bash
+    # Ubuntu
+    sudo systemctl start mongodb
 
-   # macOS
-   brew services start mongodb-community
-   ```
+    # macOS
+    brew services start mongodb-community
+    ```
 
 3. **Create Database and User**:
 
-   ```bash
-   # Connect to MongoDB shell
-   mongo
+    ```bash
+    # Connect to MongoDB shell
+    mongo
 
-   # Create database and user
-   use lendsmart
-   db.createUser({
-     user: "lendsmart_user",
-     pwd: "secure_password",
-     roles: [{ role: "readWrite", db: "lendsmart" }]
-   })
-   ```
+    # Create database and user
+    use lendsmart
+    db.createUser({
+      user: "lendsmart_user",
+      pwd: "secure_password",
+      roles: [{ role: "readWrite", db: "lendsmart" }]
+    })
+    ```
 
 4. **Update Connection String** in backend `.env` file:
-   ```
-   MONGODB_URI=mongodb://lendsmart_user:secure_password@localhost:27017/lendsmart
-   ```
+    ```
+    MONGODB_URI=mongodb://lendsmart_user:secure_password@localhost:27017/lendsmart
+    ```
 
 ### Database Initialization
 
@@ -224,65 +224,65 @@ npm run db:init
 
 1. **Install Ganache** for local blockchain:
 
-   ```bash
-   npm install -g ganache-cli
-   ```
+    ```bash
+    npm install -g ganache-cli
+    ```
 
 2. **Start Ganache**:
 
-   ```bash
-   ganache-cli -p 8545 -i 5777
-   ```
+    ```bash
+    ganache-cli -p 8545 -i 5777
+    ```
 
 3. **Deploy Smart Contracts**:
 
-   ```bash
-   # Navigate to blockchain directory
-   cd code/blockchain
+    ```bash
+    # Navigate to blockchain directory
+    cd code/blockchain
 
-   # Compile contracts
-   truffle compile
+    # Compile contracts
+    truffle compile
 
-   # Deploy contracts to local blockchain
-   truffle migrate --network development
-   ```
+    # Deploy contracts to local blockchain
+    truffle migrate --network development
+    ```
 
 ### Testnet Configuration (for testing)
 
 1. **Update Truffle Configuration** in `truffle-config.js`:
 
-   ```javascript
-   module.exports = {
-     networks: {
-       // ... other networks
-       ropsten: {
-         provider: () =>
-           new HDWalletProvider(
-             process.env.WALLET_MNEMONIC,
-             `https://ropsten.infura.io/v3/${process.env.INFURA_PROJECT_ID}`,
-           ),
-         network_id: 3,
-         gas: 5500000,
-         confirmations: 2,
-         timeoutBlocks: 200,
-         skipDryRun: true,
-       },
-     },
-     // ... rest of config
-   };
-   ```
+    ```javascript
+    module.exports = {
+        networks: {
+            // ... other networks
+            ropsten: {
+                provider: () =>
+                    new HDWalletProvider(
+                        process.env.WALLET_MNEMONIC,
+                        `https://ropsten.infura.io/v3/${process.env.INFURA_PROJECT_ID}`,
+                    ),
+                network_id: 3,
+                gas: 5500000,
+                confirmations: 2,
+                timeoutBlocks: 200,
+                skipDryRun: true,
+            },
+        },
+        // ... rest of config
+    };
+    ```
 
 2. **Deploy to Testnet**:
 
-   ```bash
-   truffle migrate --network ropsten
-   ```
+    ```bash
+    truffle migrate --network ropsten
+    ```
 
 3. **Update Contract Addresses** in backend `.env` file:
-   ```
-   LOAN_MANAGER_CONTRACT_ADDRESS=0x...
-   BORROWER_CONTRACT_ADDRESS=0x...
-   ```
+    ```
+    LOAN_MANAGER_CONTRACT_ADDRESS=0x...
+    BORROWER_CONTRACT_ADDRESS=0x...
+    ```
 
 ## Running the Application
 
@@ -376,67 +376,67 @@ npm test
 
 1. **Build Docker Images**:
 
-   ```bash
-   # Build all services
-   docker-compose build
-   ```
+    ```bash
+    # Build all services
+    docker-compose build
+    ```
 
 2. **Start Services**:
 
-   ```bash
-   # Start all services
-   docker-compose up -d
-   ```
+    ```bash
+    # Start all services
+    docker-compose up -d
+    ```
 
 3. **Check Service Status**:
-   ```bash
-   docker-compose ps
-   ```
+    ```bash
+    docker-compose ps
+    ```
 
 ### Kubernetes Deployment
 
 1. **Apply Kubernetes Configurations**:
 
-   ```bash
-   # Navigate to Kubernetes directory
-   cd infrastructure/kubernetes
+    ```bash
+    # Navigate to Kubernetes directory
+    cd infrastructure/kubernetes
 
-   # Apply base configurations
-   kubectl apply -f base/
+    # Apply base configurations
+    kubectl apply -f base/
 
-   # Apply environment-specific configurations
-   kubectl apply -f environments/dev/
-   ```
+    # Apply environment-specific configurations
+    kubectl apply -f environments/dev/
+    ```
 
 2. **Verify Deployment**:
-   ```bash
-   kubectl get pods
-   kubectl get services
-   ```
+    ```bash
+    kubectl get pods
+    kubectl get services
+    ```
 
 ### Terraform Deployment (Cloud Infrastructure)
 
 1. **Initialize Terraform**:
 
-   ```bash
-   # Navigate to Terraform directory
-   cd infrastructure/terraform
+    ```bash
+    # Navigate to Terraform directory
+    cd infrastructure/terraform
 
-   # Initialize Terraform
-   terraform init
-   ```
+    # Initialize Terraform
+    terraform init
+    ```
 
 2. **Plan Deployment**:
 
-   ```bash
-   # For development environment
-   terraform plan -var-file=environments/dev/terraform.tfvars
-   ```
+    ```bash
+    # For development environment
+    terraform plan -var-file=environments/dev/terraform.tfvars
+    ```
 
 3. **Apply Deployment**:
-   ```bash
-   terraform apply -var-file=environments/dev/terraform.tfvars
-   ```
+    ```bash
+    terraform apply -var-file=environments/dev/terraform.tfvars
+    ```
 
 ### Ansible Configuration (Server Setup)
 
@@ -445,13 +445,13 @@ npm test
 
 2. **Run Ansible Playbook**:
 
-   ```bash
-   # Navigate to Ansible directory
-   cd infrastructure/ansible
+    ```bash
+    # Navigate to Ansible directory
+    cd infrastructure/ansible
 
-   # Run playbook
-   ansible-playbook -i inventory/hosts.yml playbooks/main.yml
-   ```
+    # Run playbook
+    ansible-playbook -i inventory/hosts.yml playbooks/main.yml
+    ```
 
 ## Monitoring and Maintenance
 
@@ -465,13 +465,13 @@ npm test
 
 1. **Set up Prometheus** for metrics collection:
 
-   ```bash
-   # Navigate to monitoring directory
-   cd infrastructure/monitoring
+    ```bash
+    # Navigate to monitoring directory
+    cd infrastructure/monitoring
 
-   # Start Prometheus and Grafana
-   docker-compose up -d
-   ```
+    # Start Prometheus and Grafana
+    docker-compose up -d
+    ```
 
 2. **Access Grafana** at `http://localhost:3000` for visualization.
 
@@ -479,40 +479,40 @@ npm test
 
 1. **Database Backup**:
 
-   ```bash
-   # Create MongoDB backup
-   mongodump --uri="mongodb://lendsmart_user:secure_password@localhost:27017/lendsmart" --out=./backup/$(date +%Y-%m-%d)
-   ```
+    ```bash
+    # Create MongoDB backup
+    mongodump --uri="mongodb://lendsmart_user:secure_password@localhost:27017/lendsmart" --out=./backup/$(date +%Y-%m-%d)
+    ```
 
 2. **Automated Backups**:
    Configure cron job for regular backups:
-   ```
-   0 2 * * * mongodump --uri="mongodb://lendsmart_user:secure_password@localhost:27017/lendsmart" --out=/path/to/backup/$(date +%Y-%m-%d)
-   ```
+    ```
+    0 2 * * * mongodump --uri="mongodb://lendsmart_user:secure_password@localhost:27017/lendsmart" --out=/path/to/backup/$(date +%Y-%m-%d)
+    ```
 
 ## Troubleshooting
 
 ### Common Issues
 
 1. **MongoDB Connection Issues**:
-   - Verify MongoDB is running: `sudo systemctl status mongodb`
-   - Check connection string in `.env` file
-   - Ensure network connectivity and firewall settings
+    - Verify MongoDB is running: `sudo systemctl status mongodb`
+    - Check connection string in `.env` file
+    - Ensure network connectivity and firewall settings
 
 2. **Smart Contract Deployment Failures**:
-   - Check Ethereum client connection
-   - Verify wallet has sufficient funds for gas
-   - Ensure contract compilation is successful
+    - Check Ethereum client connection
+    - Verify wallet has sufficient funds for gas
+    - Ensure contract compilation is successful
 
 3. **API Connection Issues**:
-   - Verify backend server is running
-   - Check CORS configuration
-   - Ensure API URL is correctly set in frontend `.env`
+    - Verify backend server is running
+    - Check CORS configuration
+    - Ensure API URL is correctly set in frontend `.env`
 
 4. **Docker Issues**:
-   - Check Docker logs: `docker-compose logs`
-   - Verify Docker service is running: `sudo systemctl status docker`
-   - Ensure sufficient disk space and memory
+    - Check Docker logs: `docker-compose logs`
+    - Verify Docker service is running: `sudo systemctl status docker`
+    - Ensure sufficient disk space and memory
 
 ### Support Resources
 

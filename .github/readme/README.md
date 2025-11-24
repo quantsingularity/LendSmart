@@ -5,7 +5,7 @@ This directory contains GitHub Actions workflow configurations that automate the
 ## Directory Structure
 
 - `workflows/` - Contains GitHub Actions workflow definition files
-  - `ci-cd.yml` - Main CI/CD pipeline configuration
+    - `ci-cd.yml` - Main CI/CD pipeline configuration
 
 ## CI/CD Pipeline
 

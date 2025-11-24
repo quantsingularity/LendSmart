@@ -17,24 +17,24 @@ This subdirectory contains structured and unstructured data used for training, v
 #### Contents:
 
 - **Credit Scoring Datasets**
-  - Historical loan performance data
-  - Alternative credit scoring features
-  - Anonymized borrower behavior patterns
-  - Default prediction benchmarks
-  - Cross-validation datasets
+    - Historical loan performance data
+    - Alternative credit scoring features
+    - Anonymized borrower behavior patterns
+    - Default prediction benchmarks
+    - Cross-validation datasets
 
 - **Market Analysis Data**
-  - Interest rate historical trends
-  - Market liquidity indicators
-  - Competitive lending rates
-  - Regional lending activity statistics
-  - Seasonal lending pattern data
+    - Interest rate historical trends
+    - Market liquidity indicators
+    - Competitive lending rates
+    - Regional lending activity statistics
+    - Seasonal lending pattern data
 
 - **Synthetic Test Data**
-  - Generated test cases for edge scenarios
-  - Stress testing datasets
-  - Performance benchmarking data
-  - Integration testing datasets
+    - Generated test cases for edge scenarios
+    - Stress testing datasets
+    - Performance benchmarking data
+    - Integration testing datasets
 
 #### Usage Guidelines:
 
@@ -58,32 +58,32 @@ This subdirectory contains design assets, mockups, and UI/UX specifications for 
 #### Contents:
 
 - **Web Interface Designs**
-  - High-fidelity mockups for all web pages
-  - Component library and design system
-  - Responsive design specifications
-  - User flow diagrams
-  - Interactive prototypes
+    - High-fidelity mockups for all web pages
+    - Component library and design system
+    - Responsive design specifications
+    - User flow diagrams
+    - Interactive prototypes
 
 - **Mobile App Designs**
-  - iOS and Android interface designs
-  - Mobile-specific component library
-  - Touch interaction specifications
-  - App navigation flows
-  - Splash screens and app icons
+    - iOS and Android interface designs
+    - Mobile-specific component library
+    - Touch interaction specifications
+    - App navigation flows
+    - Splash screens and app icons
 
 - **Brand Assets**
-  - Logo files in various formats (SVG, PNG, PDF)
-  - Color palette definitions
-  - Typography specifications
-  - Iconography library
-  - Marketing materials templates
+    - Logo files in various formats (SVG, PNG, PDF)
+    - Color palette definitions
+    - Typography specifications
+    - Iconography library
+    - Marketing materials templates
 
 - **User Experience Documentation**
-  - Usability research findings
-  - User persona definitions
-  - Accessibility guidelines
-  - User journey maps
-  - A/B testing results
+    - Usability research findings
+    - User persona definitions
+    - Accessibility guidelines
+    - User journey maps
+    - A/B testing results
 
 #### Design Tools:
 
@@ -108,39 +108,39 @@ This subdirectory contains documentation, research papers, technical references,
 #### Contents:
 
 - **Technical Documentation**
-  - API specifications and standards
-  - Protocol definitions
-  - Architecture decision records (ADRs)
-  - System integration diagrams
-  - Performance benchmarks
+    - API specifications and standards
+    - Protocol definitions
+    - Architecture decision records (ADRs)
+    - System integration diagrams
+    - Performance benchmarks
 
 - **Research Papers**
-  - Academic papers on credit scoring algorithms
-  - Blockchain consensus mechanisms
-  - Smart contract security research
-  - Machine learning in financial services
-  - Decentralized finance innovations
+    - Academic papers on credit scoring algorithms
+    - Blockchain consensus mechanisms
+    - Smart contract security research
+    - Machine learning in financial services
+    - Decentralized finance innovations
 
 - **Regulatory Compliance**
-  - Financial regulations by jurisdiction
-  - KYC/AML compliance requirements
-  - Data protection standards
-  - Smart contract legal frameworks
-  - Lending license requirements
+    - Financial regulations by jurisdiction
+    - KYC/AML compliance requirements
+    - Data protection standards
+    - Smart contract legal frameworks
+    - Lending license requirements
 
 - **Industry Standards**
-  - Financial data exchange formats
-  - Security best practices
-  - Blockchain interoperability standards
-  - Identity verification protocols
-  - Risk assessment methodologies
+    - Financial data exchange formats
+    - Security best practices
+    - Blockchain interoperability standards
+    - Identity verification protocols
+    - Risk assessment methodologies
 
 - **Market Research**
-  - Competitive analysis reports
-  - Target market demographics
-  - User needs assessment
-  - Market opportunity analysis
-  - Adoption barrier studies
+    - Competitive analysis reports
+    - Target market demographics
+    - User needs assessment
+    - Market opportunity analysis
+    - Adoption barrier studies
 
 #### Usage Guidelines:
 

@@ -191,25 +191,25 @@ The MongoDB database uses the following schema:
 LendSmart uses JWT (JSON Web Tokens) for authentication:
 
 1. **Registration Process**:
-   - User submits registration data
-   - Password is hashed using bcrypt
-   - User record is created in the database
-   - JWT token is generated and returned
+    - User submits registration data
+    - Password is hashed using bcrypt
+    - User record is created in the database
+    - JWT token is generated and returned
 
 2. **Login Process**:
-   - User submits credentials
-   - Password is verified against stored hash
-   - JWT token is generated and returned
+    - User submits credentials
+    - Password is verified against stored hash
+    - JWT token is generated and returned
 
 3. **Token Validation**:
-   - JWT token is included in Authorization header
-   - Token is validated for authenticity and expiration
-   - User information is attached to request object
+    - JWT token is included in Authorization header
+    - Token is validated for authenticity and expiration
+    - User information is attached to request object
 
 4. **Refresh Token**:
-   - Separate refresh token with longer expiration
-   - Used to obtain new access tokens
-   - Stored securely with HTTP-only cookies
+    - Separate refresh token with longer expiration
+    - Used to obtain new access tokens
+    - Stored securely with HTTP-only cookies
 
 ## API Endpoints
 
@@ -255,109 +255,109 @@ For detailed API documentation, see the [API Reference](../api/README.md).
 The backend integrates with Ethereum/Polygon blockchain using Web3.js:
 
 1. **Smart Contract Interaction**:
-   - `LoanManager.sol`: Central contract for loan management
-   - `BorrowerContract.sol`: Individual borrower contracts
+    - `LoanManager.sol`: Central contract for loan management
+    - `BorrowerContract.sol`: Individual borrower contracts
 
 2. **Transaction Handling**:
-   - Creating loan contracts
-   - Processing funding transactions
-   - Managing repayments
-   - Handling contract events
+    - Creating loan contracts
+    - Processing funding transactions
+    - Managing repayments
+    - Handling contract events
 
 3. **Event Listeners**:
-   - Monitoring blockchain events
-   - Updating database based on contract events
-   - Triggering notifications
+    - Monitoring blockchain events
+    - Updating database based on contract events
+    - Triggering notifications
 
 ## AI/ML Integration
 
 The backend integrates with AI/ML services for:
 
 1. **Risk Assessment**:
-   - Evaluating borrower creditworthiness
-   - Calculating default probability
-   - Determining appropriate interest rates
+    - Evaluating borrower creditworthiness
+    - Calculating default probability
+    - Determining appropriate interest rates
 
 2. **Fraud Detection**:
-   - Identifying suspicious activities
-   - Flagging potentially fraudulent applications
+    - Identifying suspicious activities
+    - Flagging potentially fraudulent applications
 
 3. **Market Analysis**:
-   - Analyzing lending trends
-   - Providing market insights
+    - Analyzing lending trends
+    - Providing market insights
 
 ## Error Handling
 
 The backend implements a centralized error handling system:
 
 1. **Error Types**:
-   - `ValidationError`: Input validation errors
-   - `AuthenticationError`: Authentication failures
-   - `AuthorizationError`: Permission issues
-   - `ResourceNotFoundError`: Missing resources
-   - `BlockchainError`: Blockchain interaction issues
-   - `ServiceError`: External service failures
+    - `ValidationError`: Input validation errors
+    - `AuthenticationError`: Authentication failures
+    - `AuthorizationError`: Permission issues
+    - `ResourceNotFoundError`: Missing resources
+    - `BlockchainError`: Blockchain interaction issues
+    - `ServiceError`: External service failures
 
 2. **Error Response Format**:
-   ```json
-   {
-     "status": "error",
-     "code": 400,
-     "message": "Validation failed",
-     "details": [
-       {
-         "field": "amount",
-         "message": "Amount must be greater than 0"
-       }
-     ]
-   }
-   ```
+    ```json
+    {
+        "status": "error",
+        "code": 400,
+        "message": "Validation failed",
+        "details": [
+            {
+                "field": "amount",
+                "message": "Amount must be greater than 0"
+            }
+        ]
+    }
+    ```
 
 ## Logging
 
 The backend uses a structured logging system:
 
 1. **Log Levels**:
-   - `error`: System errors and exceptions
-   - `warn`: Warning conditions
-   - `info`: Informational messages
-   - `debug`: Detailed debugging information
+    - `error`: System errors and exceptions
+    - `warn`: Warning conditions
+    - `info`: Informational messages
+    - `debug`: Detailed debugging information
 
 2. **Log Format**:
 
-   ```json
-   {
-     "timestamp": "2025-04-25T10:30:00.000Z",
-     "level": "info",
-     "message": "Loan application created",
-     "context": {
-       "userId": "60a6c3e45f1d2c001c8e4b7a",
-       "loanId": "60a6c3e45f1d2c001c8e4b7b"
-     }
-   }
-   ```
+    ```json
+    {
+        "timestamp": "2025-04-25T10:30:00.000Z",
+        "level": "info",
+        "message": "Loan application created",
+        "context": {
+            "userId": "60a6c3e45f1d2c001c8e4b7a",
+            "loanId": "60a6c3e45f1d2c001c8e4b7b"
+        }
+    }
+    ```
 
 3. **Log Storage**:
-   - Console output in development
-   - File storage in production
-   - External logging service integration
+    - Console output in development
+    - File storage in production
+    - External logging service integration
 
 ## Testing
 
 The backend includes comprehensive testing:
 
 1. **Unit Tests**:
-   - Testing individual functions and methods
-   - Mocking external dependencies
+    - Testing individual functions and methods
+    - Mocking external dependencies
 
 2. **Integration Tests**:
-   - Testing API endpoints
-   - Testing database interactions
+    - Testing API endpoints
+    - Testing database interactions
 
 3. **Contract Tests**:
-   - Testing smart contract interactions
-   - Simulating blockchain transactions
+    - Testing smart contract interactions
+    - Simulating blockchain transactions
 
 4. **Load Tests**:
-   - Testing system performance under load
-   - Identifying bottlenecks
+    - Testing system performance under load
+    - Identifying bottlenecks

@@ -75,23 +75,23 @@ For detailed AI/ML architecture, see [AI/ML Architecture](./ai_ml_architecture.m
 The data flow in LendSmart follows these patterns:
 
 1. **User Registration and Authentication**:
-   - User data flows from frontend to backend
-   - Authentication tokens are generated and validated
+    - User data flows from frontend to backend
+    - Authentication tokens are generated and validated
 
 2. **Loan Application Process**:
-   - Borrower data flows from frontend to backend
-   - Backend sends data to AI/ML services for risk assessment
-   - Loan terms are generated and presented to the borrower
+    - Borrower data flows from frontend to backend
+    - Backend sends data to AI/ML services for risk assessment
+    - Loan terms are generated and presented to the borrower
 
 3. **Loan Funding Process**:
-   - Lender browses available loans
-   - Funding transactions are processed through blockchain
-   - Smart contracts handle fund disbursement
+    - Lender browses available loans
+    - Funding transactions are processed through blockchain
+    - Smart contracts handle fund disbursement
 
 4. **Loan Repayment Process**:
-   - Repayment transactions are processed through blockchain
-   - Smart contracts handle payment distribution
-   - Repayment status is updated in the database
+    - Repayment transactions are processed through blockchain
+    - Smart contracts handle payment distribution
+    - Repayment status is updated in the database
 
 For detailed data flow diagrams, see [Data Flow Documentation](./data_flow.md).
 
@@ -112,22 +112,22 @@ For detailed design pattern implementations, see [Design Patterns](./design_patt
 Security is a critical aspect of LendSmart's architecture:
 
 1. **Authentication and Authorization**:
-   - JWT-based authentication
-   - Role-based access control
+    - JWT-based authentication
+    - Role-based access control
 
 2. **Smart Contract Security**:
-   - Formal verification
-   - Security audits
-   - Reentrancy protection
+    - Formal verification
+    - Security audits
+    - Reentrancy protection
 
 3. **Data Security**:
-   - Encryption at rest and in transit
-   - PII data handling compliance
+    - Encryption at rest and in transit
+    - PII data handling compliance
 
 4. **API Security**:
-   - Rate limiting
-   - Input validation
-   - CORS policies
+    - Rate limiting
+    - Input validation
+    - CORS policies
 
 For detailed security architecture, see [Security Architecture](./security_architecture.md).
 
@@ -136,19 +136,19 @@ For detailed security architecture, see [Security Architecture](./security_archi
 LendSmart is designed for scalability:
 
 1. **Horizontal Scaling**:
-   - Stateless services for easy replication
-   - Load balancing across multiple instances
+    - Stateless services for easy replication
+    - Load balancing across multiple instances
 
 2. **Database Scaling**:
-   - Sharding strategies
-   - Read replicas for query optimization
+    - Sharding strategies
+    - Read replicas for query optimization
 
 3. **Blockchain Scaling**:
-   - Layer 2 solutions
-   - Optimistic rollups
+    - Layer 2 solutions
+    - Optimistic rollups
 
 4. **Caching Strategies**:
-   - Redis for high-performance caching
-   - CDN for static assets
+    - Redis for high-performance caching
+    - CDN for static assets
 
 For detailed scalability documentation, see [Scalability Architecture](./scalability.md).
