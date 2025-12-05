@@ -1,0 +1,28 @@
+# Core Data Science and ML
+pandas
+numpy
+scikit-learn
+joblib
+matplotlib
+seaborn
+
+# Web/API Framework
+fastapi
+uvicorn
+pydantic
+requests
+
+# Database and Messaging
+sqlalchemy
+psycopg2-binary
+pika
+
+# Blockchain/Smart Contract
+web3
+solcx
+
+# Cloud/AWS
+boto3
+
+# Testing
+pytest
