@@ -9,6 +9,10 @@ import json
 import os
 from datetime import datetime
 
+from core.logging import get_logger
+
+logger = get_logger(__name__)
+
 # Define paths
 VALIDATION_DIR = os.path.join(
     os.path.dirname(os.path.abspath(__file__)), "validation_results"
@@ -109,4 +113,4 @@ The enhanced credit scoring system successfully integrates alternative data sour
 
 if __name__ == "__main__":
     report_path = generate_validation_summary()
-    print(f"Validation summary report generated: {report_path}")
+    logger.info(f"Validation summary report generated: {report_path}")

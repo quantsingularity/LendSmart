@@ -5,6 +5,10 @@ import os
 import joblib
 import pandas as pd
 
+from core.logging import get_logger
+
+logger = get_logger(__name__)
+
 # Define paths
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 SAVED_MODELS_DIR = os.path.join(BASE_DIR, "saved_models")
@@ -24,27 +28,29 @@ def load_model_and_preprocessor():
 
     if _model is None:
         if not os.path.exists(MODEL_PATH):
-            print(f"Error: Model file not found at {MODEL_PATH}")
+            logger.info(f"Error: Model file not found at {MODEL_PATH}")
         else:
             try:
                 _model = joblib.load(MODEL_PATH)
-                print(f"Model loaded successfully from {MODEL_PATH}")
+                logger.info(f"Model loaded successfully from {MODEL_PATH}")
                 model_loaded = True
             except Exception as e:
-                print(f"Error loading model: {e}")
+                logger.info(f"Error loading model: {e}")
     else:
         model_loaded = True  # Already in cache
 
     if _preprocessor is None:
         if not os.path.exists(PREPROCESSOR_PATH):
-            print(f"Error: Preprocessor file not found at {PREPROCESSOR_PATH}")
+            logger.info(f"Error: Preprocessor file not found at {PREPROCESSOR_PATH}")
         else:
             try:
                 _preprocessor = joblib.load(PREPROCESSOR_PATH)
-                print(f"Preprocessor loaded successfully from {PREPROCESSOR_PATH}")
+                logger.info(
+                    f"Preprocessor loaded successfully from {PREPROCESSOR_PATH}"
+                )
                 preprocessor_loaded = True
             except Exception as e:
-                print(f"Error loading preprocessor: {e}")
+                logger.info(f"Error loading preprocessor: {e}")
     else:
         preprocessor_loaded = True  # Already in cache
 
@@ -77,8 +83,7 @@ def predict_credit_score(applicant_data):
                 "error": "Invalid input data format. Expected dict, pd.Series, or pd.DataFrame."
             }
 
-        print(f"Original applicant data:\n{applicant_df}")
-
+        logger.info(f"Original applicant data:\n{applicant_df}")
         # Preprocess the applicant data
         # Ensure the columns in applicant_df match what the preprocessor was trained on.
         # The preprocessor expects specific column names for numerical and categorical features.
@@ -95,8 +100,7 @@ def predict_credit_score(applicant_data):
         # For simplicity, we assume `applicant_df` is already structured correctly.
 
         applicant_processed = _preprocessor.transform(applicant_df)
-        print(f"Processed applicant data shape: {applicant_processed.shape}")
-
+        logger.info(f"Processed applicant data shape: {applicant_processed.shape}")
         # Make prediction
         prediction = _model.predict(applicant_processed)
         probability = _model.predict_proba(applicant_processed)
@@ -117,7 +121,7 @@ def predict_credit_score(applicant_data):
         }
 
     except Exception as e:
-        print(f"Error during prediction: {e}")
+        logger.info(f"Error during prediction: {e}")
         import traceback
 
         traceback.print_exc()
@@ -138,10 +142,9 @@ def main():
 
     args = parser.parse_args()
 
-    print("--- Credit Scoring Prediction Script ---")
-
+    logger.info("--- Credit Scoring Prediction Script ---")
     if not load_model_and_preprocessor():
-        print("Exiting due to failure in loading model or preprocessor.")
+        logger.info("Exiting due to failure in loading model or preprocessor.")
         return
 
     if args.input_data:
@@ -151,17 +154,19 @@ def main():
             try:
                 with open(input_str, "r") as f:
                     applicant_data_dict = json.load(f)
-                print(f"Loaded applicant data from file: {input_str}")
+                logger.info(f"Loaded applicant data from file: {input_str}")
             except Exception as e:
-                print(f"Error reading JSON file {input_str}: {e}")
+                logger.info(f"Error reading JSON file {input_str}: {e}")
                 return
         else:
             try:
                 applicant_data_dict = json.loads(input_str)
-                print("Loaded applicant data from JSON string.")
+                logger.info("Loaded applicant data from JSON string.")
             except json.JSONDecodeError as e:
-                print(f"Error decoding JSON string: {e}")
-                print("Please provide a valid JSON string or a path to a JSON file.")
+                logger.info(f"Error decoding JSON string: {e}")
+                logger.info(
+                    "Please provide a valid JSON string or a path to a JSON file."
+                )
                 return
 
         if applicant_data_dict:
@@ -170,20 +175,19 @@ def main():
                 if len(applicant_data_dict) == 1:
                     applicant_data_dict = applicant_data_dict[0]
                 else:
-                    print(
+                    logger.info(
                         "Error: For CLI, please provide data for a single applicant, not a list."
                     )
                     return
 
             result = predict_credit_score(applicant_data_dict)
-            print("\nPrediction Result:")
-            print(json.dumps(result, indent=4))
+            logger.info("\nPrediction Result:")
+            logger.info(json.dumps(result, indent=4))
         else:
-            print("No applicant data provided or failed to parse.")
-
+            logger.info("No applicant data provided or failed to parse.")
     else:
         # Example usage with dummy data if no input is provided
-        print("\nNo input data provided. Running with an example...")
+        logger.info("\nNo input data provided. Running with an example...")
         # IMPORTANT: This dummy data MUST have the same features/columns
         # that the preprocessor was trained on in data_preprocessing.py.
         # The actual column names depend on your `borrower_data.csv` and `feature_engineering` steps.
@@ -205,22 +209,22 @@ def main():
             # "defaulted_sum": 0,
             # "defaulted_mean": 0.0
         }
-        print(f"Example Applicant Data:\n{json.dumps(example_applicant, indent=2)}")
-
+        logger.info(
+            f"Example Applicant Data:\n{json.dumps(example_applicant, indent=2)}"
+        )
         # To make this example runnable, we need to know the *exact* features the preprocessor expects.
         # This is a common failure point if not handled carefully.
         # For now, this example will likely fail unless `example_applicant` perfectly matches the schema.
-        print(
+        logger.info(
             "\nNote: The example prediction below might fail if the dummy data fields do not perfectly match the features the model was trained on."
         )
-        print(
+        logger.info(
             "You should provide actual data via --input_data for a meaningful prediction."
         )
         result = predict_credit_score(example_applicant)
-        print("\nExample Prediction Result:")
-        print(json.dumps(result, indent=4))
-
-    print("\n--- Prediction Script Finished ---")
+        logger.info("\nExample Prediction Result:")
+        logger.info(json.dumps(result, indent=4))
+    logger.info("\n--- Prediction Script Finished ---")
 
 
 if __name__ == "__main__":

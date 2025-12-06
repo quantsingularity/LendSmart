@@ -4,6 +4,10 @@ import pandas as pd
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import StandardScaler
 
+from core.logging import get_logger
+
+logger = get_logger(__name__)
+
 
 def preprocess_data(input_path=None, data=None):
     """
@@ -83,4 +87,4 @@ if __name__ == "__main__":
         os.path.dirname(__file__), "../../resources/datasets/borrower_data.csv"
     )
     processed_data = preprocess_data(input_path=input_path)
-    print(processed_data.head())
+    logger.info(processed_data.head())

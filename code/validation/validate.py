@@ -14,6 +14,10 @@ from datetime import datetime
 
 import pandas as pd
 
+from core.logging import get_logger
+
+logger = get_logger(__name__)
+
 # Add paths to modules
 sys.path.append(
     os.path.join(
@@ -364,5 +368,5 @@ try:
         run_all_validations()
 
 except ImportError as e:
-    print(f"Validation failed: Could not import required modules: {e}")
+    logger.info(f"Validation failed: Could not import required modules: {e}")
     sys.exit(1)

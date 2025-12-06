@@ -7,6 +7,10 @@ from sklearn.model_selection import GridSearchCV, train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
+from core.logging import get_logger
+
+logger = get_logger(__name__)
+
 
 class LoanRiskModel:
     """
@@ -149,13 +153,12 @@ class LoanRiskModel:
         y_prob = self.model.predict_proba(X_val)[:, 1]
 
         # Print evaluation metrics
-        print("Model Evaluation on Validation Set:")
-        print(classification_report(y_val, y_pred))
-        print("Confusion Matrix:")
-        print(confusion_matrix(y_val, y_pred))
-        print(f"ROC AUC Score: {roc_auc_score(y_val, y_prob):.4f}")
-        print(f"Best Parameters: {grid_search.best_params_}")
-
+        logger.info("Model Evaluation on Validation Set:")
+        logger.info(classification_report(y_val, y_pred))
+        logger.info("Confusion Matrix:")
+        logger.info(confusion_matrix(y_val, y_pred))
+        logger.info(f"ROC AUC Score: {roc_auc_score(y_val, y_prob):.4f}")
+        logger.info(f"Best Parameters: {grid_search.best_params_}")
         return self
 
     def predict_risk_score(self, loan_data):
@@ -231,7 +234,7 @@ class LoanRiskModel:
             raise ValueError("No trained model to save")
 
         joblib.dump(self.model, filepath)
-        print(f"Model saved to {filepath}")
+        logger.info(f"Model saved to {filepath}")
 
     def load_model(self, filepath):
         """
@@ -244,7 +247,7 @@ class LoanRiskModel:
             self: Model instance with loaded model
         """
         self.model = joblib.load(filepath)
-        print(f"Model loaded from {filepath}")
+        logger.info(f"Model loaded from {filepath}")
         return self
 
     def generate_synthetic_training_data(self, n_samples=1000):

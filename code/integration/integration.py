@@ -45,6 +45,10 @@ from data_sources import AlternativeDataManager
 from enhanced_models import ModelIntegrator
 from scoring import AlternativeDataScoreAggregator
 
+from core.logging import get_logger
+
+logger = get_logger(__name__)
+
 # Import from existing modules
 # Assuming the existing risk model is in the following location
 sys.path.append(
@@ -626,15 +630,15 @@ def example_usage():
     results = system.process_loan_application(application_data)
 
     # Print results
-    print(f"Application ID: {results['application_id']}")
-    print(f"Traditional Score: {results['traditional_score']}")
-    print(f"Alternative Data Score: {results['alternative_data_score']}")
-    print(f"Enhanced Score: {results['enhanced_score']}")
-    print(f"Decision: {results['decision']}")
-    print(f"Is Compliant: {results['is_compliant']}")
-    print(f"Documents Generated:")
+    logger.info(f"Application ID: {results['application_id']}")
+    logger.info(f"Traditional Score: {results['traditional_score']}")
+    logger.info(f"Alternative Data Score: {results['alternative_data_score']}")
+    logger.info(f"Enhanced Score: {results['enhanced_score']}")
+    logger.info(f"Decision: {results['decision']}")
+    logger.info(f"Is Compliant: {results['is_compliant']}")
+    logger.info(f"Documents Generated:")
     for doc_type, doc_path in results["documents"].items():
-        print(f"  - {doc_type}: {doc_path}")
+        logger.info(f"  - {doc_type}: {doc_path}")
 
 
 if __name__ == "__main__":
