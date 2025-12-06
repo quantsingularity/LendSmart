@@ -11,11 +11,9 @@ import os
 from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import Any, Dict, List, Optional
-
 import numpy as np
 import pandas as pd
 
-# Configure logging
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
@@ -29,7 +27,7 @@ class DataSourceError(Exception):
 class AlternativeDataSource(ABC):
     """Abstract base class for all alternative data sources"""
 
-    def __init__(self, config: Dict[str, Any] = None):
+    def __init__(self, config: Dict[str, Any] = None) -> Any:
         """
         Initialize the data source with configuration
 
@@ -78,18 +76,14 @@ class AlternativeDataSource(ABC):
             data: DataFrame containing the data to cache
         """
         cache_file = os.path.join(self.cache_dir, f"{borrower_id}.json")
-
-        # Create cache metadata
         cache_data = {
             "timestamp": datetime.now().isoformat(),
             "source": self.name,
             "borrower_id": borrower_id,
             "data": data.to_dict(orient="records") if not data.empty else [],
         }
-
         with open(cache_file, "w") as f:
             json.dump(cache_data, f, indent=2)
-
         logger.info(f"Cached data for borrower {borrower_id} from {self.name}")
 
     def get_cached_data(
@@ -106,30 +100,22 @@ class AlternativeDataSource(ABC):
             DataFrame with cached data or None if not available/expired
         """
         cache_file = os.path.join(self.cache_dir, f"{borrower_id}.json")
-
         if not os.path.exists(cache_file):
             return None
-
         try:
             with open(cache_file, "r") as f:
                 cache_data = json.load(f)
-
-            # Check cache age
             cache_time = datetime.fromisoformat(cache_data["timestamp"])
             age_days = (datetime.now() - cache_time).days
-
             if age_days > max_age_days:
                 logger.info(
                     f"Cached data for borrower {borrower_id} is {age_days} days old (max {max_age_days})"
                 )
                 return None
-
-            # Convert cached data back to DataFrame
             if cache_data["data"]:
                 return pd.DataFrame(cache_data["data"])
             else:
                 return pd.DataFrame()
-
         except Exception as e:
             logger.warning(f"Error reading cached data: {e}")
             return None
@@ -146,7 +132,7 @@ class DigitalFootprintDataSource(AlternativeDataSource):
     - Online behavior
     """
 
-    def __init__(self, config: Dict[str, Any] = None):
+    def __init__(self, config: Dict[str, Any] = None) -> Any:
         super().__init__(config)
         self.api_key = self.config.get(
             "api_key", os.environ.get("DIGITAL_FOOTPRINT_API_KEY", "")
@@ -154,7 +140,6 @@ class DigitalFootprintDataSource(AlternativeDataSource):
         self.api_url = self.config.get(
             "api_url", "https://api.digitalfootprint.example.com/v1"
         )
-
         if not self.api_key:
             logger.warning("No API key provided for DigitalFootprintDataSource")
 
@@ -172,24 +157,15 @@ class DigitalFootprintDataSource(AlternativeDataSource):
         Returns:
             DataFrame with digital footprint features
         """
-        # Check for cached data first
         cached_data = self.get_cached_data(borrower_id)
         if cached_data is not None:
             logger.info(
                 f"Using cached digital footprint data for borrower {borrower_id}"
             )
             return cached_data
-
-        # In a real implementation, this would call an actual API
-        # For now, we'll simulate the API response
         logger.info(f"Fetching digital footprint data for borrower {borrower_id}")
-
         try:
-            # Simulate API call delay and response
-            # In production, this would be a real API call
             kwargs.get("email", f"{borrower_id}@example.com")
-
-            # Generate synthetic data for demonstration
             data = {
                 "email_domain_age_days": np.random.randint(30, 5000),
                 "email_account_age_days": np.random.randint(30, 3000),
@@ -214,36 +190,26 @@ class DigitalFootprintDataSource(AlternativeDataSource):
                 ),
                 "typical_geolocation_stability": np.random.uniform(0, 1),
             }
-
-            # Convert categorical variables to numeric
             data["online_shopping_frequency_score"] = {
                 "low": 0.3,
                 "medium": 0.6,
                 "high": 0.9,
             }[data["online_shopping_frequency"]]
-
             data["device_price_category_score"] = {
                 "budget": 0.3,
                 "mid-range": 0.6,
                 "premium": 0.9,
             }[data["device_price_category"]]
-
             data["typical_online_hours_score"] = {
                 "morning": 0.7,
                 "afternoon": 0.8,
                 "evening": 0.6,
                 "night": 0.4,
             }[data["typical_online_hours"]]
-
-            # Create DataFrame
             df = pd.DataFrame([data])
-
-            # Cache the data for future use
             self.cache_data(borrower_id, df)
             self.last_fetch_time = datetime.now()
-
             return df
-
         except Exception as e:
             logger.error(f"Error fetching digital footprint data: {e}")
             raise DataSourceError(f"Failed to fetch digital footprint data: {e}")
@@ -287,7 +253,7 @@ class TransactionDataSource(AlternativeDataSource):
     - Financial behavior
     """
 
-    def __init__(self, config: Dict[str, Any] = None):
+    def __init__(self, config: Dict[str, Any] = None) -> Any:
         super().__init__(config)
         self.api_key = self.config.get(
             "api_key", os.environ.get("TRANSACTION_API_KEY", "")
@@ -295,7 +261,6 @@ class TransactionDataSource(AlternativeDataSource):
         self.api_url = self.config.get(
             "api_url", "https://api.transactiondata.example.com/v1"
         )
-
         if not self.api_key:
             logger.warning("No API key provided for TransactionDataSource")
 
@@ -312,33 +277,20 @@ class TransactionDataSource(AlternativeDataSource):
         Returns:
             DataFrame with transaction-based features
         """
-        # Check for cached data first
         cached_data = self.get_cached_data(borrower_id)
         if cached_data is not None:
             logger.info(f"Using cached transaction data for borrower {borrower_id}")
             return cached_data
-
-        # In a real implementation, this would call an actual API
-        # For now, we'll simulate the API response
         logger.info(f"Fetching transaction data for borrower {borrower_id}")
-
         try:
-            # Simulate API call delay and response
-            # In production, this would be a real API call
             months = kwargs.get("months", 6)
-
-            # Generate synthetic data for demonstration
             base_income = np.random.uniform(3000, 8000)
             income_volatility = np.random.uniform(0, 0.3)
-
-            # Generate monthly income with some volatility
             monthly_income = [
                 base_income
                 * (1 + np.random.uniform(-income_volatility, income_volatility))
                 for _ in range(months)
             ]
-
-            # Generate expense categories
             expense_categories = {
                 "housing": np.random.uniform(0.2, 0.4),
                 "utilities": np.random.uniform(0.05, 0.1),
@@ -350,34 +302,17 @@ class TransactionDataSource(AlternativeDataSource):
                 "savings": np.random.uniform(0, 0.2),
                 "other": np.random.uniform(0.05, 0.1),
             }
-
-            # Normalize expense percentages to sum to 1
             total = sum(expense_categories.values())
             expense_categories = {k: v / total for k, v in expense_categories.items()}
-
-            # Calculate average monthly expenses
             avg_monthly_expense = (
                 sum(monthly_income) / len(monthly_income) * np.random.uniform(0.7, 1.1)
             )
-
-            # Generate late payment frequency
             late_payment_freq = np.random.uniform(0, 0.2)
-
-            # Generate overdraft frequency
             overdraft_freq = np.random.uniform(0, 0.1)
-
-            # Calculate savings rate
             savings_rate = expense_categories["savings"]
-
-            # Calculate recurring income stability
             income_stability = 1 - income_volatility
-
-            # Calculate debt service ratio
             debt_service_ratio = expense_categories["debt_payments"]
-
-            # Calculate cash buffer (in months)
             cash_buffer_months = np.random.uniform(0, 6)
-
             data = {
                 "avg_monthly_income": np.mean(monthly_income),
                 "income_volatility": income_volatility,
@@ -399,16 +334,10 @@ class TransactionDataSource(AlternativeDataSource):
                 + expense_categories["utilities"]
                 + expense_categories["food"],
             }
-
-            # Create DataFrame
             df = pd.DataFrame([data])
-
-            # Cache the data for future use
             self.cache_data(borrower_id, df)
             self.last_fetch_time = datetime.now()
-
             return df
-
         except Exception as e:
             logger.error(f"Error fetching transaction data: {e}")
             raise DataSourceError(f"Failed to fetch transaction data: {e}")
@@ -451,13 +380,12 @@ class UtilityPaymentDataSource(AlternativeDataSource):
     - Rent payments
     """
 
-    def __init__(self, config: Dict[str, Any] = None):
+    def __init__(self, config: Dict[str, Any] = None) -> Any:
         super().__init__(config)
         self.api_key = self.config.get("api_key", os.environ.get("UTILITY_API_KEY", ""))
         self.api_url = self.config.get(
             "api_url", "https://api.utilitypayments.example.com/v1"
         )
-
         if not self.api_key:
             logger.warning("No API key provided for UtilityPaymentDataSource")
 
@@ -474,39 +402,21 @@ class UtilityPaymentDataSource(AlternativeDataSource):
         Returns:
             DataFrame with utility payment features
         """
-        # Check for cached data first
         cached_data = self.get_cached_data(borrower_id)
         if cached_data is not None:
             logger.info(f"Using cached utility payment data for borrower {borrower_id}")
             return cached_data
-
-        # In a real implementation, this would call an actual API
-        # For now, we'll simulate the API response
         logger.info(f"Fetching utility payment data for borrower {borrower_id}")
-
         try:
-            # Simulate API call delay and response
-            # In production, this would be a real API call
             months = kwargs.get("months", 24)
-
-            # Generate synthetic data for demonstration
-            # Payment consistency (percentage of on-time payments)
             electricity_consistency = np.random.uniform(0.7, 1.0)
             water_consistency = np.random.uniform(0.7, 1.0)
             gas_consistency = np.random.uniform(0.7, 1.0)
             internet_consistency = np.random.uniform(0.7, 1.0)
             rent_consistency = np.random.uniform(0.7, 1.0)
-
-            # Average days late (when late)
             avg_days_late = np.random.uniform(1, 15)
-
-            # Payment history length in months
             history_length = np.random.randint(6, months)
-
-            # Number of missed payments
             missed_payments = int(np.random.uniform(0, 0.1) * history_length)
-
-            # Calculate overall consistency score
             overall_consistency = np.mean(
                 [
                     electricity_consistency,
@@ -516,7 +426,6 @@ class UtilityPaymentDataSource(AlternativeDataSource):
                     rent_consistency,
                 ]
             )
-
             data = {
                 "utility_history_length_months": history_length,
                 "electricity_payment_consistency": electricity_consistency,
@@ -532,23 +441,15 @@ class UtilityPaymentDataSource(AlternativeDataSource):
                 ),
                 "utility_accounts_count": np.random.randint(2, 6),
             }
-
-            # Convert categorical variables to numeric
             data["utility_payment_trend_score"] = {
                 "improving": 0.9,
                 "stable": 0.7,
                 "declining": 0.3,
             }[data["utility_payment_trend"]]
-
-            # Create DataFrame
             df = pd.DataFrame([data])
-
-            # Cache the data for future use
             self.cache_data(borrower_id, df)
             self.last_fetch_time = datetime.now()
-
             return df
-
         except Exception as e:
             logger.error(f"Error fetching utility payment data: {e}")
             raise DataSourceError(f"Failed to fetch utility payment data: {e}")
@@ -587,7 +488,7 @@ class EducationEmploymentDataSource(AlternativeDataSource):
     - Industry and job stability
     """
 
-    def __init__(self, config: Dict[str, Any] = None):
+    def __init__(self, config: Dict[str, Any] = None) -> Any:
         super().__init__(config)
         self.api_key = self.config.get(
             "api_key", os.environ.get("EDUCATION_EMPLOYMENT_API_KEY", "")
@@ -595,7 +496,6 @@ class EducationEmploymentDataSource(AlternativeDataSource):
         self.api_url = self.config.get(
             "api_url", "https://api.eduemploy.example.com/v1"
         )
-
         if not self.api_key:
             logger.warning("No API key provided for EducationEmploymentDataSource")
 
@@ -612,27 +512,16 @@ class EducationEmploymentDataSource(AlternativeDataSource):
         Returns:
             DataFrame with education and employment features
         """
-        # Check for cached data first
         cached_data = self.get_cached_data(borrower_id)
         if cached_data is not None:
             logger.info(
                 f"Using cached education/employment data for borrower {borrower_id}"
             )
             return cached_data
-
-        # In a real implementation, this would call an actual API
-        # For now, we'll simulate the API response
         logger.info(f"Fetching education/employment data for borrower {borrower_id}")
-
         try:
-            # Simulate API call delay and response
-            # In production, this would be a real API call
-
-            # Generate synthetic data for demonstration
             education_levels = ["High School", "Associate", "Bachelor", "Master", "PhD"]
             education_level = np.random.choice(education_levels)
-
-            # Map education level to numeric score
             education_level_score = {
                 "High School": 0.2,
                 "Associate": 0.4,
@@ -640,22 +529,12 @@ class EducationEmploymentDataSource(AlternativeDataSource):
                 "Master": 0.8,
                 "PhD": 1.0,
             }[education_level]
-
-            # Generate employment data
             employment_years = np.random.exponential(5)
             job_changes_last_5y = np.random.randint(0, 4)
-
-            # Industry stability (higher is more stable)
             industry_stability = np.random.uniform(0.3, 1.0)
-
-            # Professional certifications
             professional_certifications = np.random.randint(0, 5)
-
-            # Job level
             job_levels = ["Entry", "Mid", "Senior", "Management", "Executive"]
             job_level = np.random.choice(job_levels)
-
-            # Map job level to numeric score
             job_level_score = {
                 "Entry": 0.2,
                 "Mid": 0.4,
@@ -663,28 +542,21 @@ class EducationEmploymentDataSource(AlternativeDataSource):
                 "Management": 0.8,
                 "Executive": 1.0,
             }[job_level]
-
-            # Remote work status
             remote_work_status = np.random.choice(["On-site", "Hybrid", "Remote"])
-
-            # Company size
             company_sizes = ["Small", "Medium", "Large", "Enterprise"]
             company_size = np.random.choice(company_sizes)
-
-            # Map company size to numeric score
             company_size_score = {
                 "Small": 0.25,
                 "Medium": 0.5,
                 "Large": 0.75,
                 "Enterprise": 1.0,
             }[company_size]
-
             data = {
                 "education_level": education_level,
                 "education_level_score": education_level_score,
                 "employment_years": employment_years,
                 "job_changes_last_5y": job_changes_last_5y,
-                "job_stability_score": 1.0 - (job_changes_last_5y / 5.0),
+                "job_stability_score": 1.0 - job_changes_last_5y / 5.0,
                 "industry_stability": industry_stability,
                 "professional_certifications": professional_certifications,
                 "job_level": job_level,
@@ -695,16 +567,10 @@ class EducationEmploymentDataSource(AlternativeDataSource):
                 "career_growth_trajectory": np.random.uniform(0, 1),
                 "skill_demand_score": np.random.uniform(0.3, 1.0),
             }
-
-            # Create DataFrame
             df = pd.DataFrame([data])
-
-            # Cache the data for future use
             self.cache_data(borrower_id, df)
             self.last_fetch_time = datetime.now()
-
             return df
-
         except Exception as e:
             logger.error(f"Error fetching education/employment data: {e}")
             raise DataSourceError(f"Failed to fetch education/employment data: {e}")
@@ -742,7 +608,7 @@ class AlternativeDataManager:
     multiple alternative data sources.
     """
 
-    def __init__(self, config_path: str = None):
+    def __init__(self, config_path: str = None) -> Any:
         """
         Initialize the alternative data manager
 
@@ -751,13 +617,9 @@ class AlternativeDataManager:
         """
         self.data_sources = {}
         self.config = {}
-
-        # Load configuration if provided
         if config_path and os.path.exists(config_path):
             with open(config_path, "r") as f:
                 self.config = json.load(f)
-
-        # Initialize default data sources
         self._init_default_sources()
 
     def _init_default_sources(self) -> None:
@@ -813,22 +675,15 @@ class AlternativeDataManager:
             DataFrame with combined alternative data
         """
         all_data = {}
-
         for name, source in self.data_sources.items():
             try:
                 logger.info(f"Collecting data from {name} for borrower {borrower_id}")
                 data = source.fetch_data(borrower_id, **kwargs)
-
-                # Add source prefix to column names to avoid conflicts
                 data_dict = data.to_dict(orient="records")[0] if not data.empty else {}
                 prefixed_data = {f"{name}_{k}": v for k, v in data_dict.items()}
-
                 all_data.update(prefixed_data)
             except Exception as e:
                 logger.error(f"Error collecting data from {name}: {e}")
-                # Continue with other sources even if one fails
-
-        # Create DataFrame from combined data
         return pd.DataFrame([all_data]) if all_data else pd.DataFrame()
 
     def collect_specific_data(
@@ -846,27 +701,19 @@ class AlternativeDataManager:
             DataFrame with combined alternative data from specified sources
         """
         all_data = {}
-
         for name in sources:
             source = self.get_data_source(name)
             if not source:
                 logger.warning(f"Data source not found: {name}")
                 continue
-
             try:
                 logger.info(f"Collecting data from {name} for borrower {borrower_id}")
                 data = source.fetch_data(borrower_id, **kwargs)
-
-                # Add source prefix to column names to avoid conflicts
                 data_dict = data.to_dict(orient="records")[0] if not data.empty else {}
                 prefixed_data = {f"{name}_{k}": v for k, v in data_dict.items()}
-
                 all_data.update(prefixed_data)
             except Exception as e:
                 logger.error(f"Error collecting data from {name}: {e}")
-                # Continue with other sources even if one fails
-
-        # Create DataFrame from combined data
         return pd.DataFrame([all_data]) if all_data else pd.DataFrame()
 
     def get_all_features(self) -> Dict[str, List[str]]:
@@ -877,12 +724,10 @@ class AlternativeDataManager:
             Dictionary mapping data source names to their feature lists
         """
         features = {}
-
         for name, source in self.data_sources.items():
             try:
                 source_features = source.get_features()
                 features[name] = source_features
             except Exception as e:
                 logger.error(f"Error getting features from {name}: {e}")
-
         return features

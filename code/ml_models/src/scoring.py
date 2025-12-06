@@ -8,7 +8,6 @@ to enhance traditional credit scoring with non-traditional data points.
 import logging
 import os
 from typing import Any, Dict, Optional, Tuple
-
 import joblib
 import numpy as np
 import pandas as pd
@@ -16,7 +15,6 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import Ridge
 from sklearn.preprocessing import MinMaxScaler, StandardScaler
 
-# Configure logging
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
@@ -30,7 +28,7 @@ class AlternativeDataScorer:
     Provides common functionality for all alternative data scoring algorithms
     """
 
-    def __init__(self, config: Dict[str, Any] = None):
+    def __init__(self, config: Dict[str, Any] = None) -> Any:
         """
         Initialize the scorer with configuration
 
@@ -54,7 +52,6 @@ class AlternativeDataScorer:
         Returns:
             Preprocessed DataFrame
         """
-        # Default implementation - override in subclasses
         return data
 
     def score(self, data: pd.DataFrame) -> float:
@@ -67,7 +64,6 @@ class AlternativeDataScorer:
         Returns:
             Score value (typically 0-100, higher is better)
         """
-        # Default implementation - override in subclasses
         raise NotImplementedError("Subclasses must implement score method")
 
     def save_model(self, filepath: str) -> None:
@@ -77,7 +73,6 @@ class AlternativeDataScorer:
         Args:
             filepath: Path to save the model
         """
-        # Default implementation - override in subclasses if needed
 
     def load_model(self, filepath: str) -> None:
         """
@@ -86,7 +81,6 @@ class AlternativeDataScorer:
         Args:
             filepath: Path to the saved model
         """
-        # Default implementation - override in subclasses if needed
 
 
 class DigitalFootprintScorer(AlternativeDataScorer):
@@ -96,19 +90,19 @@ class DigitalFootprintScorer(AlternativeDataScorer):
     Analyzes digital presence and behavior to assess creditworthiness
     """
 
-    def __init__(self, config: Dict[str, Any] = None):
+    def __init__(self, config: Dict[str, Any] = None) -> Any:
         super().__init__(config)
         self.weights = self.config.get(
             "weights",
             {
-                "email_domain_age_days": 0.10,
+                "email_domain_age_days": 0.1,
                 "email_account_age_days": 0.15,
                 "device_age_months": 0.05,
-                "social_media_accounts": 0.10,
+                "social_media_accounts": 0.1,
                 "social_media_followers": 0.05,
-                "digital_subscription_count": 0.10,
+                "digital_subscription_count": 0.1,
                 "has_professional_email": 0.15,
-                "device_price_category_score": 0.10,
+                "device_price_category_score": 0.1,
                 "typical_online_hours_score": 0.05,
                 "typical_geolocation_stability": 0.15,
             },
@@ -126,31 +120,21 @@ class DigitalFootprintScorer(AlternativeDataScorer):
         Returns:
             Preprocessed DataFrame
         """
-        # Extract relevant columns with digital_footprint prefix
         df_cols = [col for col in data.columns if col.startswith("digital_footprint_")]
-
         if not df_cols:
             logger.warning("No digital footprint features found in data")
             return pd.DataFrame()
-
         df_data = data[df_cols].copy()
-
-        # Remove prefix for easier processing
         df_data.columns = [col.replace("digital_footprint_", "") for col in df_cols]
-
-        # Handle missing values
         for col in df_data.columns:
             if df_data[col].dtype == "object":
                 df_data[col] = df_data[col].fillna("unknown")
             else:
                 df_data[col] = df_data[col].fillna(0)
-
-        # Convert boolean columns to int if needed
         if "has_professional_email" in df_data.columns:
             df_data["has_professional_email"] = df_data[
                 "has_professional_email"
             ].astype(int)
-
         return df_data
 
     def score(self, data: pd.DataFrame) -> float:
@@ -163,62 +147,41 @@ class DigitalFootprintScorer(AlternativeDataScorer):
         Returns:
             Score from 0-100 (higher is better)
         """
-        # Preprocess features
         df_data = self.preprocess_features(data)
-
         if df_data.empty:
             logger.warning("No digital footprint data available for scoring")
-            return 50.0  # Default neutral score
-
-        # Extract features used in scoring
+            return 50.0
         score_features = {}
-
         for feature, weight in self.weights.items():
             if feature in df_data.columns:
                 value = df_data[feature].iloc[0]
-
-                # Normalize certain features
                 if feature == "email_domain_age_days":
-                    # Cap at 10 years (3650 days)
                     value = min(value, 3650) / 3650
                 elif feature == "email_account_age_days":
-                    # Cap at 5 years (1825 days)
                     value = min(value, 1825) / 1825
                 elif feature == "device_age_months":
-                    # Inverse relationship - newer is better, cap at 60 months
-                    value = 1 - (min(value, 60) / 60)
+                    value = 1 - min(value, 60) / 60
                 elif feature == "social_media_accounts":
-                    # Cap at 5 accounts
                     value = min(value, 5) / 5
                 elif feature == "social_media_followers":
-                    # Log scale, cap at 5000
                     value = np.log1p(min(value, 5000)) / np.log1p(5000)
                 elif feature == "digital_subscription_count":
-                    # Cap at 10 subscriptions
                     value = min(value, 10) / 10
-
                 score_features[feature] = value
             else:
                 logger.warning(f"Feature {feature} not found in digital footprint data")
                 score_features[feature] = 0.0
-
-        # Calculate weighted score
         weighted_score = 0.0
         total_weight = 0.0
-
         for feature, value in score_features.items():
             weight = self.weights.get(feature, 0.0)
             weighted_score += value * weight
             total_weight += weight
-
         if total_weight > 0:
             normalized_score = weighted_score / total_weight
         else:
-            normalized_score = 0.5  # Default neutral score
-
-        # Convert to 0-100 scale
+            normalized_score = 0.5
         final_score = normalized_score * 100
-
         logger.info(f"Digital footprint score: {final_score:.2f}")
         return final_score
 
@@ -230,24 +193,22 @@ class TransactionDataScorer(AlternativeDataScorer):
     Analyzes financial behavior and stability based on transaction history
     """
 
-    def __init__(self, config: Dict[str, Any] = None):
+    def __init__(self, config: Dict[str, Any] = None) -> Any:
         super().__init__(config)
         self.model = None
         self.scaler = StandardScaler()
         self.feature_importance = {}
-
-        # Default feature weights if no model is trained
         self.weights = self.config.get(
             "weights",
             {
-                "income_stability": 0.20,
+                "income_stability": 0.2,
                 "expense_to_income_ratio": 0.15,
                 "debt_service_ratio": 0.15,
-                "savings_rate": 0.10,
-                "late_payment_frequency": 0.10,
-                "overdraft_frequency": 0.10,
-                "cash_buffer_months": 0.10,
-                "recurring_bill_payment_consistency": 0.10,
+                "savings_rate": 0.1,
+                "late_payment_frequency": 0.1,
+                "overdraft_frequency": 0.1,
+                "cash_buffer_months": 0.1,
+                "recurring_bill_payment_consistency": 0.1,
             },
         )
 
@@ -261,19 +222,12 @@ class TransactionDataScorer(AlternativeDataScorer):
         Returns:
             Preprocessed DataFrame
         """
-        # Extract relevant columns with transaction prefix
         tx_cols = [col for col in data.columns if col.startswith("transaction_")]
-
         if not tx_cols:
             logger.warning("No transaction data features found in data")
             return pd.DataFrame()
-
         tx_data = data[tx_cols].copy()
-
-        # Remove prefix for easier processing
         tx_data.columns = [col.replace("transaction_", "") for col in tx_cols]
-
-        # Handle missing values
         for col in tx_data.columns:
             if tx_data[col].dtype == "object":
                 tx_data[col] = tx_data[col].fillna("unknown")
@@ -281,24 +235,15 @@ class TransactionDataScorer(AlternativeDataScorer):
                 tx_data[col] = tx_data[col].fillna(
                     tx_data[col].median() if len(tx_data) > 1 else 0
                 )
-
-        # Feature transformations
         if "late_payment_frequency" in tx_data.columns:
-            # Inverse relationship - lower is better
             tx_data["late_payment_frequency"] = 1 - tx_data["late_payment_frequency"]
-
         if "overdraft_frequency" in tx_data.columns:
-            # Inverse relationship - lower is better
             tx_data["overdraft_frequency"] = 1 - tx_data["overdraft_frequency"]
-
         if "expense_to_income_ratio" in tx_data.columns:
-            # Cap at 1.0 (expenses = income)
             tx_data["expense_to_income_ratio"] = tx_data[
                 "expense_to_income_ratio"
             ].clip(0, 1)
-            # Inverse relationship - lower is better
             tx_data["expense_to_income_ratio"] = 1 - tx_data["expense_to_income_ratio"]
-
         return tx_data
 
     def train(self, data: pd.DataFrame, target: pd.Series) -> None:
@@ -309,26 +254,17 @@ class TransactionDataScorer(AlternativeDataScorer):
             data: DataFrame with transaction features
             target: Series with target values (e.g., repayment status)
         """
-        # Preprocess features
         tx_data = self.preprocess_features(data)
-
         if tx_data.empty:
             logger.warning("No transaction data available for training")
             return
-
-        # Scale features
         X = self.scaler.fit_transform(tx_data)
-
-        # Train a Random Forest model
         self.model = RandomForestRegressor(
             n_estimators=100, max_depth=5, random_state=42
         )
         self.model.fit(X, target)
-
-        # Store feature importance
         for i, col in enumerate(tx_data.columns):
             self.feature_importance[col] = self.model.feature_importances_[i]
-
         logger.info(f"Transaction data model trained with {len(tx_data)} samples")
         logger.info(f"Feature importance: {self.feature_importance}")
 
@@ -342,27 +278,17 @@ class TransactionDataScorer(AlternativeDataScorer):
         Returns:
             Score from 0-100 (higher is better)
         """
-        # Preprocess features
         tx_data = self.preprocess_features(data)
-
         if tx_data.empty:
             logger.warning("No transaction data available for scoring")
-            return 50.0  # Default neutral score
-
+            return 50.0
         if self.model:
-            # Use trained model for scoring
             X = self.scaler.transform(tx_data)
             score = self.model.predict(X)[0]
-
-            # Ensure score is in 0-1 range
             score = np.clip(score, 0, 1)
-
-            # Convert to 0-100 scale
             final_score = score * 100
         else:
-            # Use weighted scoring if no model is available
             score_features = {}
-
             for feature, weight in self.weights.items():
                 if feature in tx_data.columns:
                     value = tx_data[feature].iloc[0]
@@ -370,24 +296,17 @@ class TransactionDataScorer(AlternativeDataScorer):
                 else:
                     logger.warning(f"Feature {feature} not found in transaction data")
                     score_features[feature] = 0.0
-
-            # Calculate weighted score
             weighted_score = 0.0
             total_weight = 0.0
-
             for feature, value in score_features.items():
                 weight = self.weights.get(feature, 0.0)
                 weighted_score += value * weight
                 total_weight += weight
-
             if total_weight > 0:
                 normalized_score = weighted_score / total_weight
             else:
-                normalized_score = 0.5  # Default neutral score
-
-            # Convert to 0-100 scale
+                normalized_score = 0.5
             final_score = normalized_score * 100
-
         logger.info(f"Transaction data score: {final_score:.2f}")
         return final_score
 
@@ -401,17 +320,13 @@ class TransactionDataScorer(AlternativeDataScorer):
         if self.model is None:
             logger.warning("No model to save")
             return
-
         if filepath is None:
             filepath = os.path.join(self.model_dir, "transaction_scorer.joblib")
-
-        # Create a dictionary with all necessary components
         model_data = {
             "model": self.model,
             "scaler": self.scaler,
             "feature_importance": self.feature_importance,
         }
-
         joblib.dump(model_data, filepath)
         logger.info(f"Transaction data model saved to {filepath}")
 
@@ -424,11 +339,9 @@ class TransactionDataScorer(AlternativeDataScorer):
         """
         if filepath is None:
             filepath = os.path.join(self.model_dir, "transaction_scorer.joblib")
-
         if not os.path.exists(filepath):
             logger.warning(f"Model file not found: {filepath}")
             return
-
         try:
             model_data = joblib.load(filepath)
             self.model = model_data["model"]
@@ -446,17 +359,17 @@ class UtilityPaymentScorer(AlternativeDataScorer):
     Analyzes utility payment history to assess payment reliability
     """
 
-    def __init__(self, config: Dict[str, Any] = None):
+    def __init__(self, config: Dict[str, Any] = None) -> Any:
         super().__init__(config)
         self.weights = self.config.get(
             "weights",
             {
-                "overall_utility_payment_consistency": 0.30,
-                "utility_missed_payments_count": 0.20,
+                "overall_utility_payment_consistency": 0.3,
+                "utility_missed_payments_count": 0.2,
                 "avg_days_late_when_late": 0.15,
                 "utility_payment_trend_score": 0.15,
-                "utility_history_length_months": 0.10,
-                "utility_accounts_count": 0.10,
+                "utility_history_length_months": 0.1,
+                "utility_accounts_count": 0.1,
             },
         )
 
@@ -470,19 +383,12 @@ class UtilityPaymentScorer(AlternativeDataScorer):
         Returns:
             Preprocessed DataFrame
         """
-        # Extract relevant columns with utility_payment prefix
         up_cols = [col for col in data.columns if col.startswith("utility_payment_")]
-
         if not up_cols:
             logger.warning("No utility payment features found in data")
             return pd.DataFrame()
-
         up_data = data[up_cols].copy()
-
-        # Remove prefix for easier processing
         up_data.columns = [col.replace("utility_payment_", "") for col in up_cols]
-
-        # Handle missing values
         for col in up_data.columns:
             if up_data[col].dtype == "object":
                 up_data[col] = up_data[col].fillna("unknown")
@@ -490,10 +396,7 @@ class UtilityPaymentScorer(AlternativeDataScorer):
                 up_data[col] = up_data[col].fillna(
                     up_data[col].median() if len(up_data) > 1 else 0
                 )
-
-        # Feature transformations
         if "utility_missed_payments_count" in up_data.columns:
-            # Normalize by history length if available
             if (
                 "utility_history_length_months" in up_data.columns
                 and up_data["utility_history_length_months"].iloc[0] > 0
@@ -502,26 +405,17 @@ class UtilityPaymentScorer(AlternativeDataScorer):
                 missed_rate = (
                     up_data["utility_missed_payments_count"].iloc[0] / history_length
                 )
-                # Inverse relationship - lower is better
                 up_data["missed_payment_rate"] = 1 - np.clip(missed_rate, 0, 1)
             else:
-                # Assume 24 months if history length not available
                 missed_rate = up_data["utility_missed_payments_count"].iloc[0] / 24
-                # Inverse relationship - lower is better
                 up_data["missed_payment_rate"] = 1 - np.clip(missed_rate, 0, 1)
-
         if "avg_days_late_when_late" in up_data.columns:
-            # Normalize to 0-1 scale (0-30 days)
             days_late_norm = up_data["avg_days_late_when_late"] / 30
-            # Inverse relationship - lower is better
             up_data["days_late_score"] = 1 - np.clip(days_late_norm, 0, 1)
-
         if "utility_history_length_months" in up_data.columns:
-            # Normalize to 0-1 scale (0-36 months)
             up_data["history_length_score"] = np.clip(
                 up_data["utility_history_length_months"] / 36, 0, 1
             )
-
         return up_data
 
     def score(self, data: pd.DataFrame) -> float:
@@ -534,16 +428,11 @@ class UtilityPaymentScorer(AlternativeDataScorer):
         Returns:
             Score from 0-100 (higher is better)
         """
-        # Preprocess features
         up_data = self.preprocess_features(data)
-
         if up_data.empty:
             logger.warning("No utility payment data available for scoring")
-            return 50.0  # Default neutral score
-
-        # Extract features used in scoring
+            return 50.0
         score_features = {}
-
         for feature, weight in self.weights.items():
             if feature in up_data.columns:
                 value = up_data[feature].iloc[0]
@@ -552,44 +441,34 @@ class UtilityPaymentScorer(AlternativeDataScorer):
                 feature == "utility_missed_payments_count"
                 and "missed_payment_rate" in up_data.columns
             ):
-                # Use transformed feature instead
                 value = up_data["missed_payment_rate"].iloc[0]
                 score_features[feature] = value
             elif (
                 feature == "avg_days_late_when_late"
                 and "days_late_score" in up_data.columns
             ):
-                # Use transformed feature instead
                 value = up_data["days_late_score"].iloc[0]
                 score_features[feature] = value
             elif (
                 feature == "utility_history_length_months"
                 and "history_length_score" in up_data.columns
             ):
-                # Use transformed feature instead
                 value = up_data["history_length_score"].iloc[0]
                 score_features[feature] = value
             else:
                 logger.warning(f"Feature {feature} not found in utility payment data")
                 score_features[feature] = 0.0
-
-        # Calculate weighted score
         weighted_score = 0.0
         total_weight = 0.0
-
         for feature, value in score_features.items():
             weight = self.weights.get(feature, 0.0)
             weighted_score += value * weight
             total_weight += weight
-
         if total_weight > 0:
             normalized_score = weighted_score / total_weight
         else:
-            normalized_score = 0.5  # Default neutral score
-
-        # Convert to 0-100 scale
+            normalized_score = 0.5
         final_score = normalized_score * 100
-
         logger.info(f"Utility payment score: {final_score:.2f}")
         return final_score
 
@@ -601,18 +480,18 @@ class EducationEmploymentScorer(AlternativeDataScorer):
     Analyzes educational background and employment history to assess stability and potential
     """
 
-    def __init__(self, config: Dict[str, Any] = None):
+    def __init__(self, config: Dict[str, Any] = None) -> Any:
         super().__init__(config)
         self.weights = self.config.get(
             "weights",
             {
                 "education_level_score": 0.15,
-                "employment_years": 0.20,
-                "job_stability_score": 0.20,
-                "industry_stability": 0.10,
+                "employment_years": 0.2,
+                "job_stability_score": 0.2,
+                "industry_stability": 0.1,
                 "job_level_score": 0.15,
                 "company_size_score": 0.05,
-                "career_growth_trajectory": 0.10,
+                "career_growth_trajectory": 0.1,
                 "skill_demand_score": 0.05,
             },
         )
@@ -628,21 +507,14 @@ class EducationEmploymentScorer(AlternativeDataScorer):
         Returns:
             Preprocessed DataFrame
         """
-        # Extract relevant columns with education_employment prefix
         ee_cols = [
             col for col in data.columns if col.startswith("education_employment_")
         ]
-
         if not ee_cols:
             logger.warning("No education/employment features found in data")
             return pd.DataFrame()
-
         ee_data = data[ee_cols].copy()
-
-        # Remove prefix for easier processing
         ee_data.columns = [col.replace("education_employment_", "") for col in ee_cols]
-
-        # Handle missing values
         for col in ee_data.columns:
             if ee_data[col].dtype == "object":
                 ee_data[col] = ee_data[col].fillna("unknown")
@@ -650,14 +522,10 @@ class EducationEmploymentScorer(AlternativeDataScorer):
                 ee_data[col] = ee_data[col].fillna(
                     ee_data[col].median() if len(ee_data) > 1 else 0
                 )
-
-        # Feature transformations
         if "employment_years" in ee_data.columns:
-            # Normalize to 0-1 scale (0-20 years)
             ee_data["employment_years_score"] = np.clip(
                 ee_data["employment_years"] / 20, 0, 1
             )
-
         return ee_data
 
     def train(self, data: pd.DataFrame, target: pd.Series) -> None:
@@ -668,21 +536,14 @@ class EducationEmploymentScorer(AlternativeDataScorer):
             data: DataFrame with education and employment features
             target: Series with target values (e.g., repayment status)
         """
-        # Preprocess features
         ee_data = self.preprocess_features(data)
-
         if ee_data.empty:
             logger.warning("No education/employment data available for training")
             return
-
-        # Select only numeric columns for training
         numeric_cols = ee_data.select_dtypes(include=["number"]).columns.tolist()
         X = ee_data[numeric_cols].values
-
-        # Train a Ridge regression model
         self.model = Ridge(alpha=1.0)
         self.model.fit(X, target)
-
         logger.info(f"Education/employment model trained with {len(ee_data)} samples")
 
     def score(self, data: pd.DataFrame) -> float:
@@ -695,28 +556,18 @@ class EducationEmploymentScorer(AlternativeDataScorer):
         Returns:
             Score from 0-100 (higher is better)
         """
-        # Preprocess features
         ee_data = self.preprocess_features(data)
-
         if ee_data.empty:
             logger.warning("No education/employment data available for scoring")
-            return 50.0  # Default neutral score
-
+            return 50.0
         if self.model:
-            # Use trained model for scoring
             numeric_cols = ee_data.select_dtypes(include=["number"]).columns.tolist()
             X = ee_data[numeric_cols].values
             score = self.model.predict(X)[0]
-
-            # Ensure score is in 0-1 range
             score = np.clip(score, 0, 1)
-
-            # Convert to 0-100 scale
             final_score = score * 100
         else:
-            # Use weighted scoring if no model is available
             score_features = {}
-
             for feature, weight in self.weights.items():
                 if feature in ee_data.columns:
                     value = ee_data[feature].iloc[0]
@@ -725,7 +576,6 @@ class EducationEmploymentScorer(AlternativeDataScorer):
                     feature == "employment_years"
                     and "employment_years_score" in ee_data.columns
                 ):
-                    # Use transformed feature instead
                     value = ee_data["employment_years_score"].iloc[0]
                     score_features[feature] = value
                 else:
@@ -733,24 +583,17 @@ class EducationEmploymentScorer(AlternativeDataScorer):
                         f"Feature {feature} not found in education/employment data"
                     )
                     score_features[feature] = 0.0
-
-            # Calculate weighted score
             weighted_score = 0.0
             total_weight = 0.0
-
             for feature, value in score_features.items():
                 weight = self.weights.get(feature, 0.0)
                 weighted_score += value * weight
                 total_weight += weight
-
             if total_weight > 0:
                 normalized_score = weighted_score / total_weight
             else:
-                normalized_score = 0.5  # Default neutral score
-
-            # Convert to 0-100 scale
+                normalized_score = 0.5
             final_score = normalized_score * 100
-
         logger.info(f"Education/employment score: {final_score:.2f}")
         return final_score
 
@@ -764,12 +607,10 @@ class EducationEmploymentScorer(AlternativeDataScorer):
         if self.model is None:
             logger.warning("No model to save")
             return
-
         if filepath is None:
             filepath = os.path.join(
                 self.model_dir, "education_employment_scorer.joblib"
             )
-
         joblib.dump(self.model, filepath)
         logger.info(f"Education/employment model saved to {filepath}")
 
@@ -784,11 +625,9 @@ class EducationEmploymentScorer(AlternativeDataScorer):
             filepath = os.path.join(
                 self.model_dir, "education_employment_scorer.joblib"
             )
-
         if not os.path.exists(filepath):
             logger.warning(f"Model file not found: {filepath}")
             return
-
         try:
             self.model = joblib.load(filepath)
             logger.info(f"Education/employment model loaded from {filepath}")
@@ -803,7 +642,7 @@ class AlternativeDataScoreAggregator:
     Combines individual scores into a comprehensive alternative data score
     """
 
-    def __init__(self, config: Dict[str, Any] = None):
+    def __init__(self, config: Dict[str, Any] = None) -> Any:
         """
         Initialize the score aggregator
 
@@ -815,14 +654,12 @@ class AlternativeDataScoreAggregator:
         self.weights = self.config.get(
             "weights",
             {
-                "digital_footprint": 0.20,
+                "digital_footprint": 0.2,
                 "transaction": 0.35,
                 "utility_payment": 0.25,
-                "education_employment": 0.20,
+                "education_employment": 0.2,
             },
         )
-
-        # Initialize default scorers
         self._init_default_scorers()
 
     def _init_default_scorers(self) -> None:
@@ -877,7 +714,6 @@ class AlternativeDataScoreAggregator:
             Dictionary mapping scorer names to their scores
         """
         scores = {}
-
         for name, scorer in self.scorers.items():
             try:
                 logger.info(f"Calculating score from {name}")
@@ -885,8 +721,7 @@ class AlternativeDataScoreAggregator:
                 scores[name] = score
             except Exception as e:
                 logger.error(f"Error calculating score from {name}: {e}")
-                scores[name] = 50.0  # Default neutral score
-
+                scores[name] = 50.0
         return scores
 
     def aggregate_score(
@@ -905,28 +740,21 @@ class AlternativeDataScoreAggregator:
         if individual_scores is None:
             if data is None:
                 logger.error("Either individual_scores or data must be provided")
-                return 50.0, {}
-
+                return (50.0, {})
             individual_scores = self.calculate_scores(data)
-
-        # Calculate weighted aggregate score
         weighted_score = 0.0
         total_weight = 0.0
-
         for name, score in individual_scores.items():
             weight = self.weights.get(name, 0.0)
             weighted_score += score * weight
             total_weight += weight
-
         if total_weight > 0:
             aggregate_score = weighted_score / total_weight
         else:
-            aggregate_score = 50.0  # Default neutral score
-
+            aggregate_score = 50.0
         logger.info(f"Aggregate alternative data score: {aggregate_score:.2f}")
         logger.info(f"Individual scores: {individual_scores}")
-
-        return aggregate_score, individual_scores
+        return (aggregate_score, individual_scores)
 
     def generate_score_report(
         self, aggregate_score: float, individual_scores: Dict[str, float]
@@ -941,7 +769,6 @@ class AlternativeDataScoreAggregator:
         Returns:
             Dictionary with score report details
         """
-        # Map score to risk level
         if aggregate_score >= 80:
             risk_level = "Very Low"
             approval_recommendation = "Strong Approve"
@@ -960,8 +787,6 @@ class AlternativeDataScoreAggregator:
         else:
             risk_level = "Very High"
             approval_recommendation = "Decline"
-
-        # Generate report
         report = {
             "aggregate_score": aggregate_score,
             "risk_level": risk_level,
@@ -971,5 +796,4 @@ class AlternativeDataScoreAggregator:
             "timestamp": pd.Timestamp.now().isoformat(),
             "version": "1.0",
         }
-
         return report
