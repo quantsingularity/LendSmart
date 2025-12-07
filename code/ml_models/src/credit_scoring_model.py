@@ -1,14 +1,17 @@
 """
-Enhanced Machine Learning Models for Credit Scoring
+Machine Learning Models for Credit Scoring
 
-This module provides advanced machine learning models for credit scoring
-that leverage both traditional credit data and alternative data sources.
+This module provides machine learning models for credit scoring that leverage both
+traditional credit data and alternative data sources. It includes preprocessing,
+feature engineering, training, evaluation, SHAP explanations, plotting, and model
+persistence utilities.
 """
 
 import logging
 import os
 from datetime import datetime
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, List, Optional, Tuple
+
 import joblib
 import lightgbm as lgb
 import matplotlib.pyplot as plt
@@ -35,6 +38,7 @@ from sklearn.metrics import (
     precision_score,
     recall_score,
     roc_auc_score,
+    roc_curve,
 )
 from sklearn.model_selection import (
     GridSearchCV,
@@ -46,51 +50,66 @@ from sklearn.neural_network import MLPClassifier
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, PowerTransformer
 
+# Logging
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
-logger = logging.getLogger("ml_enhanced_models")
+logger = logging.getLogger("ml_models")
 
 
-class EnhancedCreditScoringModel:
+class CreditScoringModel:
     """
-    Enhanced credit scoring model that combines traditional and alternative data
+    Credit scoring model that combines traditional and alternative data.
 
-    This model leverages advanced machine learning techniques and feature engineering
-    to improve credit risk assessment accuracy.
+    The class provides:
+      - automatic feature type identification
+      - preprocessing pipelines (numeric + categorical)
+      - optional feature engineering
+      - multiple model choices (rf, gb, xgb, lgb, nn, stacking, voting, ensemble)
+      - hyperparameter grid search
+      - SHAP explainer creation and plotting utilities
+      - model save/load
+      - reporting utilities
     """
 
-    def __init__(self, config: Dict[str, Any] = None) -> Any:
+    def __init__(self, config: Optional[Dict[str, Any]] = None) -> None:
         """
-        Initialize the enhanced credit scoring model
+        Initialize the credit scoring model.
 
         Args:
-            config: Configuration dictionary for the model
+            config: optional configuration dictionary. Supported keys:
+                - model_type: str, one of ("rf","gb","xgb","lgb","nn","stacking","voting","ensemble")
+                - cv_folds: int, folds for grid-search / stacking
+                - random_state: int
+                - n_jobs: int
         """
-        self.config = config or {}
-        self.model = None
-        self.preprocessor = None
-        self.feature_importance = {}
-        self.model_dir = os.path.join(
-            os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "models"
+        self.config: Dict[str, Any] = config or {}
+        self.model: Optional[Pipeline] = None
+        self.preprocessor: Optional[ColumnTransformer] = None
+        self.feature_importance: Dict[str, float] = {}
+        self.model_dir: str = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)), "models"
         )
         os.makedirs(self.model_dir, exist_ok=True)
-        self.model_type = self.config.get("model_type", "ensemble")
-        self.cv_folds = self.config.get("cv_folds", 5)
-        self.random_state = self.config.get("random_state", 42)
-        self.n_jobs = self.config.get("n_jobs", -1)
-        self.traditional_features = []
-        self.alternative_features = []
-        self.categorical_features = []
-        self.numeric_features = []
-        self.explainer = None
+
+        self.model_type: str = str(self.config.get("model_type", "ensemble"))
+        self.cv_folds: int = int(self.config.get("cv_folds", 5))
+        self.random_state: int = int(self.config.get("random_state", 42))
+        self.n_jobs: int = int(self.config.get("n_jobs", -1))
+
+        self.traditional_features: List[str] = []
+        self.alternative_features: List[str] = []
+        self.categorical_features: List[str] = []
+        self.numeric_features: List[str] = []
+
+        self.explainer: Optional[Any] = None
 
     def _identify_feature_types(self, X: pd.DataFrame) -> None:
         """
-        Identify feature types in the dataset
+        Identify traditional, alternative, numeric and categorical features based on column names and dtypes.
 
         Args:
-            X: Feature DataFrame
+            X: DataFrame of features.
         """
         traditional_patterns = [
             "credit_score",
@@ -119,19 +138,25 @@ class EnhancedCreditScoringModel:
             "geolocation",
             "alternative",
         ]
+
         self.traditional_features = []
         self.alternative_features = []
+
         for col in X.columns:
-            if any((pattern in col.lower() for pattern in traditional_patterns)):
+            low = col.lower()
+            if any(p in low for p in traditional_patterns):
                 self.traditional_features.append(col)
-            elif any((pattern in col.lower() for pattern in alternative_patterns)):
+            elif any(p in low for p in alternative_patterns):
                 self.alternative_features.append(col)
             else:
+                # default to traditional if nothing matches
                 self.traditional_features.append(col)
+
         self.categorical_features = X.select_dtypes(
             include=["object", "category"]
         ).columns.tolist()
         self.numeric_features = X.select_dtypes(include=["number"]).columns.tolist()
+
         logger.info(f"Identified {len(self.traditional_features)} traditional features")
         logger.info(f"Identified {len(self.alternative_features)} alternative features")
         logger.info(f"Identified {len(self.categorical_features)} categorical features")
@@ -139,15 +164,16 @@ class EnhancedCreditScoringModel:
 
     def _create_preprocessor(self, X: pd.DataFrame) -> ColumnTransformer:
         """
-        Create a preprocessor for feature transformation
+        Build ColumnTransformer with numeric and categorical pipelines.
 
         Args:
-            X: Feature DataFrame
+            X: DataFrame used to identify feature groups.
 
         Returns:
-            ColumnTransformer for preprocessing
+            ColumnTransformer instance.
         """
         self._identify_feature_types(X)
+
         numeric_transformer = Pipeline(
             steps=[
                 ("imputer", SimpleImputer(strategy="median")),
@@ -160,6 +186,7 @@ class EnhancedCreditScoringModel:
                 ("onehot", OneHotEncoder(handle_unknown="ignore", sparse_output=False)),
             ]
         )
+
         preprocessor = ColumnTransformer(
             transformers=[
                 ("num", numeric_transformer, self.numeric_features),
@@ -174,13 +201,14 @@ class EnhancedCreditScoringModel:
 
     def _create_model(self) -> Any:
         """
-        Create the machine learning model based on configuration
+        Instantiate the classifier based on self.model_type.
 
         Returns:
-            Configured model instance
+            An sklearn-compatible estimator instance (not the full pipeline).
         """
-        if self.model_type == "rf":
-            model = RandomForestClassifier(
+        mt = self.model_type.lower()
+        if mt == "rf":
+            return RandomForestClassifier(
                 n_estimators=100,
                 max_depth=None,
                 min_samples_split=2,
@@ -189,15 +217,15 @@ class EnhancedCreditScoringModel:
                 random_state=self.random_state,
                 n_jobs=self.n_jobs,
             )
-        elif self.model_type == "gb":
-            model = GradientBoostingClassifier(
+        if mt == "gb":
+            return GradientBoostingClassifier(
                 n_estimators=100,
                 learning_rate=0.1,
                 max_depth=3,
                 random_state=self.random_state,
             )
-        elif self.model_type == "xgb":
-            model = xgb.XGBClassifier(
+        if mt == "xgb":
+            return xgb.XGBClassifier(
                 n_estimators=100,
                 learning_rate=0.1,
                 max_depth=3,
@@ -207,8 +235,8 @@ class EnhancedCreditScoringModel:
                 random_state=self.random_state,
                 n_jobs=self.n_jobs,
             )
-        elif self.model_type == "lgb":
-            model = lgb.LGBMClassifier(
+        if mt == "lgb":
+            return lgb.LGBMClassifier(
                 n_estimators=100,
                 learning_rate=0.1,
                 max_depth=3,
@@ -218,8 +246,8 @@ class EnhancedCreditScoringModel:
                 random_state=self.random_state,
                 n_jobs=self.n_jobs,
             )
-        elif self.model_type == "nn":
-            model = MLPClassifier(
+        if mt == "nn":
+            return MLPClassifier(
                 hidden_layer_sizes=(100, 50),
                 activation="relu",
                 solver="adam",
@@ -229,7 +257,7 @@ class EnhancedCreditScoringModel:
                 max_iter=200,
                 random_state=self.random_state,
             )
-        elif self.model_type == "stacking":
+        if mt in {"stacking", "voting", "ensemble"}:
             estimators = [
                 (
                     "rf",
@@ -248,88 +276,73 @@ class EnhancedCreditScoringModel:
                     xgb.XGBClassifier(n_estimators=100, random_state=self.random_state),
                 ),
             ]
-            model = StackingClassifier(
-                estimators=estimators,
-                final_estimator=LogisticRegression(),
-                cv=self.cv_folds,
+            if mt == "stacking":
+                # StackingClassifier accepts n_jobs in newer versions of sklearn
+                return StackingClassifier(
+                    estimators=estimators,
+                    final_estimator=LogisticRegression(),
+                    cv=self.cv_folds,
+                    n_jobs=self.n_jobs,
+                )
+            # voting
+            return VotingClassifier(
+                estimators=estimators, voting="soft", n_jobs=self.n_jobs
+            )
+
+        # default ensemble (voting)
+        base_models = {
+            "rf": RandomForestClassifier(
+                n_estimators=100,
+                max_depth=None,
+                min_samples_split=2,
+                class_weight="balanced",
+                random_state=self.random_state,
                 n_jobs=self.n_jobs,
-            )
-        elif self.model_type == "voting":
-            estimators = [
-                (
-                    "rf",
-                    RandomForestClassifier(
-                        n_estimators=100, random_state=self.random_state
-                    ),
-                ),
-                (
-                    "gb",
-                    GradientBoostingClassifier(
-                        n_estimators=100, random_state=self.random_state
-                    ),
-                ),
-                (
-                    "xgb",
-                    xgb.XGBClassifier(n_estimators=100, random_state=self.random_state),
-                ),
-            ]
-            model = VotingClassifier(
-                estimators=estimators, voting="soft", n_jobs=self.n_jobs
-            )
-        else:
-            base_models = {
-                "rf": RandomForestClassifier(
-                    n_estimators=100,
-                    max_depth=None,
-                    min_samples_split=2,
-                    class_weight="balanced",
-                    random_state=self.random_state,
-                    n_jobs=self.n_jobs,
-                ),
-                "gb": GradientBoostingClassifier(
-                    n_estimators=100,
-                    learning_rate=0.1,
-                    max_depth=3,
-                    random_state=self.random_state,
-                ),
-                "xgb": xgb.XGBClassifier(
-                    n_estimators=100,
-                    learning_rate=0.1,
-                    max_depth=3,
-                    subsample=0.8,
-                    colsample_bytree=0.8,
-                    objective="binary:logistic",
-                    random_state=self.random_state,
-                    n_jobs=self.n_jobs,
-                ),
-                "lgb": lgb.LGBMClassifier(
-                    n_estimators=100,
-                    learning_rate=0.1,
-                    max_depth=3,
-                    subsample=0.8,
-                    colsample_bytree=0.8,
-                    objective="binary",
-                    random_state=self.random_state,
-                    n_jobs=self.n_jobs,
-                ),
-            }
-            estimators = [(name, model) for name, model in base_models.items()]
-            model = VotingClassifier(
-                estimators=estimators, voting="soft", n_jobs=self.n_jobs
-            )
-        return model
+            ),
+            "gb": GradientBoostingClassifier(
+                n_estimators=100,
+                learning_rate=0.1,
+                max_depth=3,
+                random_state=self.random_state,
+            ),
+            "xgb": xgb.XGBClassifier(
+                n_estimators=100,
+                learning_rate=0.1,
+                max_depth=3,
+                subsample=0.8,
+                colsample_bytree=0.8,
+                objective="binary:logistic",
+                random_state=self.random_state,
+                n_jobs=self.n_jobs,
+            ),
+            "lgb": lgb.LGBMClassifier(
+                n_estimators=100,
+                learning_rate=0.1,
+                max_depth=3,
+                subsample=0.8,
+                colsample_bytree=0.8,
+                objective="binary",
+                random_state=self.random_state,
+                n_jobs=self.n_jobs,
+            ),
+        }
+        estimators = list(base_models.items())
+        return VotingClassifier(
+            estimators=estimators, voting="soft", n_jobs=self.n_jobs
+        )
 
     def _perform_feature_engineering(self, X: pd.DataFrame) -> pd.DataFrame:
         """
-        Perform feature engineering on the dataset
+        Perform feature engineering on X and return a new DataFrame.
 
-        Args:
-            X: Feature DataFrame
-
-        Returns:
-            DataFrame with engineered features
+        Adds:
+          - interactions between top traditional and alt features
+          - ratios where safe (non-zero denominators)
+          - squared and log transforms for skewed/score features
+          - aggregated alt data scores (mean/min/max/range)
         """
         X_engineered = X.copy()
+
         if self.traditional_features and self.alternative_features:
             trad_subset = (
                 self.traditional_features[:5]
@@ -341,6 +354,7 @@ class EnhancedCreditScoringModel:
                 if len(self.alternative_features) > 5
                 else self.alternative_features
             )
+
             for trad_feat in trad_subset:
                 if trad_feat in X_engineered.columns and X_engineered[
                     trad_feat
@@ -352,10 +366,12 @@ class EnhancedCreditScoringModel:
                             X_engineered[f"interaction_{trad_feat}_{alt_feat}"] = (
                                 X_engineered[trad_feat] * X_engineered[alt_feat]
                             )
+                            # safe ratio
                             if (X_engineered[alt_feat] != 0).all():
                                 X_engineered[f"ratio_{trad_feat}_to_{alt_feat}"] = (
                                     X_engineered[trad_feat] / X_engineered[alt_feat]
                                 )
+
         important_numeric = [
             col
             for col in X_engineered.columns
@@ -364,6 +380,7 @@ class EnhancedCreditScoringModel:
         for col in important_numeric[:5]:
             if col in X_engineered.columns:
                 X_engineered[f"{col}_squared"] = X_engineered[col] ** 2
+
         if len(self.alternative_features) > 1:
             alt_scores = [
                 col
@@ -385,83 +402,95 @@ class EnhancedCreditScoringModel:
                     X_engineered["alt_data_score_max"]
                     - X_engineered["alt_data_score_min"]
                 )
-        skewed_features = []
+
+        skewed_features: List[str] = []
         for col in self.numeric_features:
             if col in X_engineered.columns:
                 skewness = X_engineered[col].skew()
                 if abs(skewness) > 1.0:
                     skewed_features.append(col)
+
         for col in skewed_features:
             if (X_engineered[col] > 0).all():
                 X_engineered[f"{col}_log"] = np.log(X_engineered[col])
             elif (X_engineered[col] >= 0).all():
                 X_engineered[f"{col}_log"] = np.log1p(X_engineered[col])
+
         logger.info(
             f"Feature engineering added {len(X_engineered.columns) - len(X.columns)} new features"
         )
         return X_engineered
 
     def train(
-        self, X: pd.DataFrame, y: pd.Series, perform_feature_engineering: bool = True
+        self,
+        X: pd.DataFrame,
+        y: pd.Series,
+        perform_feature_engineering: bool = True,
+        grid_search: bool = True,
     ) -> None:
         """
-        Train the enhanced credit scoring model
+        Train the model pipeline.
 
         Args:
-            X: Feature DataFrame
-            y: Target Series (1 for default, 0 for repaid)
-            perform_feature_engineering: Whether to perform feature engineering
+            X: features DataFrame
+            y: target Series (1 default, 0 repaid)
+            perform_feature_engineering: whether to perform engineered features before training
+            grid_search: whether to run hyperparameter grid search for supported models
         """
-        logger.info("Starting enhanced credit scoring model training")
+        logger.info("Starting credit scoring model training")
+
         if perform_feature_engineering:
             X = self._perform_feature_engineering(X)
+
         self.preprocessor = self._create_preprocessor(X)
         base_model = self._create_model()
         pipeline = Pipeline(
             [("preprocessor", self.preprocessor), ("classifier", base_model)]
         )
+
         X_train, X_val, y_train, y_val = train_test_split(
             X, y, test_size=0.2, random_state=self.random_state, stratify=y
         )
         logger.info(
             f"Training set size: {X_train.shape}, Validation set size: {X_val.shape}"
         )
-        param_grid = {}
-        if self.model_type == "rf":
+
+        param_grid: Dict[str, List[Any]] = {}
+        mt = self.model_type.lower()
+        if mt == "rf":
             param_grid = {
                 "classifier__n_estimators": [100, 200],
                 "classifier__max_depth": [None, 10, 20],
                 "classifier__min_samples_split": [2, 5, 10],
             }
-        elif self.model_type == "gb":
+        elif mt == "gb":
             param_grid = {
                 "classifier__n_estimators": [100, 200],
                 "classifier__learning_rate": [0.01, 0.1],
                 "classifier__max_depth": [3, 5, 7],
             }
-        elif self.model_type == "xgb":
-            param_grid = {
-                "classifier__n_estimators": [100, 200],
-                "classifier__learning_rate": [0.01, 0.1],
-                "classifier__max_depth": [3, 5, 7],
-                "classifier__subsample": [0.7, 0.8, 0.9],
-            }
-        elif self.model_type == "lgb":
+        elif mt == "xgb":
             param_grid = {
                 "classifier__n_estimators": [100, 200],
                 "classifier__learning_rate": [0.01, 0.1],
                 "classifier__max_depth": [3, 5, 7],
                 "classifier__subsample": [0.7, 0.8, 0.9],
             }
-        elif self.model_type == "nn":
+        elif mt == "lgb":
+            param_grid = {
+                "classifier__n_estimators": [100, 200],
+                "classifier__learning_rate": [0.01, 0.1],
+                "classifier__max_depth": [3, 5, 7],
+                "classifier__subsample": [0.7, 0.8, 0.9],
+            }
+        elif mt == "nn":
             param_grid = {
                 "classifier__hidden_layer_sizes": [(50, 25), (100, 50), (100, 50, 25)],
                 "classifier__alpha": [0.0001, 0.001, 0.01],
                 "classifier__learning_rate_init": [0.001, 0.01],
             }
-        elif self.model_type in ["stacking", "voting", "ensemble"]:
-            param_grid = {}
-        if param_grid:
+
+        if grid_search and param_grid:
             logger.info("Performing grid search for hyperparameter tuning")
             cv = StratifiedKFold(
                 n_splits=self.cv_folds, shuffle=True, random_state=self.random_state
@@ -481,6 +510,8 @@ class EnhancedCreditScoringModel:
             logger.info("Training model without grid search")
             pipeline.fit(X_train, y_train)
             self.model = pipeline
+
+        # Validation metrics
         y_pred = self.model.predict(X_val)
         y_prob = self.model.predict_proba(X_val)[:, 1]
         accuracy = accuracy_score(y_val, y_pred)
@@ -489,6 +520,7 @@ class EnhancedCreditScoringModel:
         f1 = f1_score(y_val, y_pred, zero_division=0)
         roc_auc = roc_auc_score(y_val, y_prob)
         avg_precision = average_precision_score(y_val, y_prob)
+
         logger.info("Validation metrics:")
         logger.info(f"  Accuracy: {accuracy:.4f}")
         logger.info(f"  Precision: {precision:.4f}")
@@ -498,66 +530,71 @@ class EnhancedCreditScoringModel:
         logger.info(f"  Average Precision: {avg_precision:.4f}")
         logger.info("Classification Report:")
         logger.info("\n" + classification_report(y_val, y_pred))
+
         self._extract_feature_importance()
         self._create_explainer(X_train)
         logger.info("Model training completed")
 
     def _extract_feature_importance(self) -> None:
-        """Extract feature importance from the trained model"""
+        """
+        Extract feature importance from the pipeline's classifier if available.
+        Fills self.feature_importance as an ordered dict-like mapping.
+        """
         if self.model is None:
             logger.warning("Model not trained, cannot extract feature importance")
             return
+
         try:
-            classifier = self.model.named_steps["classifier"]
-            if hasattr(classifier, "feature_importances_"):
-                feature_names = []
-                preprocessor = self.model.named_steps["preprocessor"]
-                if hasattr(preprocessor, "get_feature_names_out"):
-                    feature_names = preprocessor.get_feature_names_out()
-                else:
+            clf = self.model.named_steps["classifier"]
+            if hasattr(clf, "feature_importances_"):
+                pre = self.model.named_steps["preprocessor"]
+                feature_names: List[str] = []
+                if hasattr(pre, "get_feature_names_out"):
+                    try:
+                        feature_names = list(pre.get_feature_names_out())
+                    except Exception:
+                        feature_names = []
+                if not feature_names:
                     feature_names = [
-                        f"feature_{i}"
-                        for i in range(len(classifier.feature_importances_))
+                        f"feature_{i}" for i in range(len(clf.feature_importances_))
                     ]
-                for i, feature in enumerate(feature_names):
-                    self.feature_importance[feature] = classifier.feature_importances_[
-                        i
-                    ]
+
                 self.feature_importance = {
-                    k: v
-                    for k, v in sorted(
+                    fn: imp for fn, imp in zip(feature_names, clf.feature_importances_)
+                }
+                # sort descending
+                self.feature_importance = dict(
+                    sorted(
                         self.feature_importance.items(),
                         key=lambda item: item[1],
                         reverse=True,
                     )
-                }
+                )
                 logger.info("Feature importance extracted successfully")
             else:
-                logger.info("Model does not provide feature importance")
+                logger.info("Trained classifier does not expose feature_importances_")
         except Exception as e:
             logger.error(f"Error extracting feature importance: {e}")
 
     def _create_explainer(self, X_sample: pd.DataFrame) -> None:
         """
-        Create a SHAP explainer for the model
-
-        Args:
-            X_sample: Sample data for initializing the explainer
+        Create a SHAP explainer for the trained model using a sample of X.
         """
         if self.model is None:
             logger.warning("Model not trained, cannot create explainer")
             return
+
         try:
-            X_processed = self.model.named_steps["preprocessor"].transform(
-                X_sample.iloc[:100]
-            )
-            classifier = self.model.named_steps["classifier"]
-            if self.model_type in ["rf", "gb", "xgb", "lgb"]:
-                self.explainer = shap.TreeExplainer(classifier, X_processed)
+            pre = self.model.named_steps["preprocessor"]
+            X_processed = pre.transform(X_sample.iloc[:100])
+            clf = self.model.named_steps["classifier"]
+
+            if self.model_type.lower() in ["rf", "gb", "xgb", "lgb"]:
+                # TreeExplainer works for tree models
+                self.explainer = shap.TreeExplainer(clf)
             else:
-                self.explainer = shap.KernelExplainer(
-                    classifier.predict_proba, X_processed
-                )
+                # KernelExplainer requires a background dataset
+                self.explainer = shap.KernelExplainer(clf.predict_proba, X_processed)
             logger.info("SHAP explainer created successfully")
         except Exception as e:
             logger.error(f"Error creating SHAP explainer: {e}")
@@ -566,95 +603,120 @@ class EnhancedCreditScoringModel:
         self, X: pd.DataFrame, perform_feature_engineering: bool = True
     ) -> np.ndarray:
         """
-        Predict default probability for new data
+        Predict default probabilities for given features.
 
         Args:
-            X: Feature DataFrame
-            perform_feature_engineering: Whether to perform feature engineering
+            X: features DataFrame
+            perform_feature_engineering: whether to add engineered features prior to prediction
 
         Returns:
-            Array of default probabilities
+            numpy array of probabilities for the positive class
         """
         if self.model is None:
             raise ValueError("Model not trained. Call train() first.")
         if perform_feature_engineering:
             X = self._perform_feature_engineering(X)
-        y_prob = self.model.predict_proba(X)[:, 1]
-        return y_prob
+        return self.model.predict_proba(X)[:, 1]
 
     def predict_with_explanation(
         self, X: pd.DataFrame, perform_feature_engineering: bool = True
-    ) -> Tuple[np.ndarray, Dict]:
+    ) -> Tuple[np.ndarray, Dict[str, Any]]:
         """
-        Predict with explanation for interpretability
+        Predict probabilities and return SHAP explanations (if available).
 
         Args:
-            X: Feature DataFrame
-            perform_feature_engineering: Whether to perform feature engineering
+            X: features DataFrame
+            perform_feature_engineering: whether to add engineered features prior to prediction
 
         Returns:
-            Tuple of (predictions, explanations)
+            (probabilities, explanations_dict)
         """
         if self.model is None:
             raise ValueError("Model not trained. Call train() first.")
+
+        if perform_feature_engineering:
+            X = self._perform_feature_engineering(X)
+
+        y_prob = self.model.predict_proba(X)[:, 1]
+
         if self.explainer is None:
             logger.warning(
                 "Explainer not available, returning predictions without explanations"
             )
-            return (self.predict(X, perform_feature_engineering), {})
-        if perform_feature_engineering:
-            X = self._perform_feature_engineering(X)
-        y_prob = self.model.predict_proba(X)[:, 1]
+            return y_prob, {}
+
         try:
-            X_processed = self.model.named_steps["preprocessor"].transform(X)
-            shap_values = self.explainer.shap_values(X_processed)
+            pre = self.model.named_steps["preprocessor"]
+            X_processed = pre.transform(X)
+            # shap_values API differs by explainer type; try to handle common cases
+            shap_values = None
+            if hasattr(self.explainer, "shap_values"):
+                shap_values = self.explainer.shap_values(X_processed)
+            else:
+                # callable explainer
+                shap_values = self.explainer(X_processed)
+
+            # If shap_values is list (multi-class), pick positive class entry if present
             if isinstance(shap_values, list):
-                shap_values = shap_values[1]
+                # many shap explainer return [class0_vals, class1_vals]
+                if len(shap_values) > 1:
+                    shap_vals = shap_values[1]
+                else:
+                    shap_vals = shap_values[0]
+            else:
+                shap_vals = shap_values
+
+            expected_value = None
+            if hasattr(self.explainer, "expected_value"):
+                ev = self.explainer.expected_value
+                if isinstance(ev, (list, tuple, np.ndarray)) and len(ev) > 1:
+                    expected_value = ev[1]
+                else:
+                    expected_value = ev
+
+            feature_names = None
+            try:
+                feature_names = pre.get_feature_names_out()
+            except Exception:
+                feature_names = None
+
             explanations = {
-                "shap_values": shap_values,
-                "expected_value": (
-                    self.explainer.expected_value
-                    if not isinstance(self.explainer.expected_value, list)
-                    else self.explainer.expected_value[1]
-                ),
-                "feature_names": (
-                    self.model.named_steps["preprocessor"].get_feature_names_out()
-                    if hasattr(
-                        self.model.named_steps["preprocessor"], "get_feature_names_out"
-                    )
-                    else None
-                ),
+                "shap_values": shap_vals,
+                "expected_value": expected_value,
+                "feature_names": feature_names,
             }
-            return (y_prob, explanations)
+            return y_prob, explanations
         except Exception as e:
             logger.error(f"Error generating explanations: {e}")
-            return (y_prob, {})
+            return y_prob, {}
 
     def calculate_credit_score(self, default_prob: float) -> int:
         """
-        Convert default probability to a credit score
+        Convert a default probability (0-1) into a credit score in the typical 300-850 range.
 
         Args:
-            default_prob: Probability of default (0-1)
+            default_prob: probability of default
 
         Returns:
-            Credit score (300-850)
+            integer credit score between 300 and 850
         """
         score = int(850 - default_prob * 550)
         return max(300, min(850, score))
 
-    def save_model(self, filepath: str = None) -> None:
+    def save_model(self, filepath: Optional[str] = None) -> None:
         """
-        Save the model to a file
+        Save model, metadata, and (optionally) explainer to disk.
 
         Args:
-            filepath: Path to save the model, defaults to standard location
+            filepath: optional path to save the model bundle. If None, a standard filename under model_dir is used.
         """
         if self.model is None:
             logger.warning("No model to save")
             return
+
         if filepath is None:
-            filepath = os.path.join(self.model_dir, "enhanced_credit_model.joblib")
+            filepath = os.path.join(self.model_dir, "credit_model.joblib")
+
         model_data = {
             "model": self.model,
             "feature_importance": self.feature_importance,
@@ -667,38 +729,38 @@ class EnhancedCreditScoringModel:
         }
         joblib.dump(model_data, filepath)
         logger.info(f"Model saved to {filepath}")
-        if self.explainer is not None:
-            explainer_path = os.path.join(
-                self.model_dir, "enhanced_credit_explainer.joblib"
-            )
-            joblib.dump(self.explainer, explainer_path)
-            logger.info(f"Explainer saved to {explainer_path}")
 
-    def load_model(self, filepath: str = None) -> None:
+        if self.explainer is not None:
+            explainer_path = os.path.join(self.model_dir, "credit_explainer.joblib")
+            try:
+                joblib.dump(self.explainer, explainer_path)
+                logger.info(f"Explainer saved to {explainer_path}")
+            except Exception as e:
+                logger.error(f"Could not save explainer: {e}")
+
+    def load_model(self, filepath: Optional[str] = None) -> None:
         """
-        Load the model from a file
+        Load model metadata and explainer (if present) from disk.
 
         Args:
-            filepath: Path to the saved model, defaults to standard location
+            filepath: path to saved model. If None, a default path under model_dir is used.
         """
         if filepath is None:
-            filepath = os.path.join(self.model_dir, "enhanced_credit_model.joblib")
+            filepath = os.path.join(self.model_dir, "credit_model.joblib")
         if not os.path.exists(filepath):
             logger.warning(f"Model file not found: {filepath}")
             return
         try:
             model_data = joblib.load(filepath)
-            self.model = model_data["model"]
-            self.feature_importance = model_data["feature_importance"]
-            self.traditional_features = model_data["traditional_features"]
-            self.alternative_features = model_data["alternative_features"]
-            self.categorical_features = model_data["categorical_features"]
-            self.numeric_features = model_data["numeric_features"]
-            self.model_type = model_data["model_type"]
+            self.model = model_data.get("model")
+            self.feature_importance = model_data.get("feature_importance", {})
+            self.traditional_features = model_data.get("traditional_features", [])
+            self.alternative_features = model_data.get("alternative_features", [])
+            self.categorical_features = model_data.get("categorical_features", [])
+            self.numeric_features = model_data.get("numeric_features", [])
+            self.model_type = model_data.get("model_type", self.model_type)
             logger.info(f"Model loaded from {filepath}")
-            explainer_path = os.path.join(
-                self.model_dir, "enhanced_credit_explainer.joblib"
-            )
+            explainer_path = os.path.join(self.model_dir, "credit_explainer.joblib")
             if os.path.exists(explainer_path):
                 self.explainer = joblib.load(explainer_path)
                 logger.info(f"Explainer loaded from {explainer_path}")
@@ -707,19 +769,21 @@ class EnhancedCreditScoringModel:
 
     def generate_model_report(self, X: pd.DataFrame, y: pd.Series) -> Dict[str, Any]:
         """
-        Generate a comprehensive model performance report
+        Generate a performance report (metrics + CV scores + confusion matrix).
 
         Args:
-            X: Feature DataFrame
-            y: Target Series
+            X: feature DataFrame
+            y: true labels
 
         Returns:
-            Dictionary with report data
+            dictionary containing metrics, cv scores and feature importance
         """
         if self.model is None:
             raise ValueError("Model not trained. Call train() first.")
+
         y_pred = self.model.predict(X)
         y_prob = self.model.predict_proba(X)[:, 1]
+
         accuracy = accuracy_score(y, y_pred)
         precision = precision_score(y, y_pred, zero_division=0)
         recall = recall_score(y, y_pred, zero_division=0)
@@ -727,10 +791,20 @@ class EnhancedCreditScoringModel:
         roc_auc = roc_auc_score(y, y_prob)
         avg_precision = average_precision_score(y, y_prob)
         cm = confusion_matrix(y, y_pred)
+
         cv = StratifiedKFold(
             n_splits=self.cv_folds, shuffle=True, random_state=self.random_state
         )
-        cv_scores = cross_val_score(self.model, X, y, cv=cv, scoring="roc_auc")
+        try:
+            cv_scores = cross_val_score(self.model, X, y, cv=cv, scoring="roc_auc")
+            cv_scores_list = cv_scores.tolist()
+            cv_mean = float(cv_scores.mean())
+            cv_std = float(cv_scores.std())
+        except Exception:
+            cv_scores_list = []
+            cv_mean = float("nan")
+            cv_std = float("nan")
+
         report = {
             "model_type": self.model_type,
             "metrics": {
@@ -741,9 +815,9 @@ class EnhancedCreditScoringModel:
                 "roc_auc": roc_auc,
                 "average_precision": avg_precision,
                 "confusion_matrix": cm.tolist(),
-                "cv_scores": cv_scores.tolist(),
-                "cv_mean": cv_scores.mean(),
-                "cv_std": cv_scores.std(),
+                "cv_scores": cv_scores_list,
+                "cv_mean": cv_mean,
+                "cv_std": cv_std,
             },
             "feature_importance": self.feature_importance,
             "timestamp": datetime.now().isoformat(),
@@ -751,13 +825,15 @@ class EnhancedCreditScoringModel:
         }
         return report
 
-    def plot_feature_importance(self, top_n: int = 20, save_path: str = None) -> None:
+    def plot_feature_importance(
+        self, top_n: int = 20, save_path: Optional[str] = None
+    ) -> None:
         """
-        Plot feature importance
+        Plot horizontal bar chart of top feature importances.
 
         Args:
-            top_n: Number of top features to plot
-            save_path: Path to save the plot
+            top_n: number of top features to plot
+            save_path: optional file path to save the figure
         """
         if not self.feature_importance:
             logger.warning("No feature importance available")
@@ -780,15 +856,15 @@ class EnhancedCreditScoringModel:
         plt.close()
 
     def plot_roc_curve(
-        self, X: pd.DataFrame, y: pd.Series, save_path: str = None
+        self, X: pd.DataFrame, y: pd.Series, save_path: Optional[str] = None
     ) -> None:
         """
-        Plot ROC curve
+        Plot ROC curve for given data.
 
         Args:
-            X: Feature DataFrame
-            y: Target Series
-            save_path: Path to save the plot
+            X: features DataFrame
+            y: true labels
+            save_path: optional path to save the figure
         """
         if self.model is None:
             logger.warning("Model not trained, cannot plot ROC curve")
@@ -820,29 +896,28 @@ class EnhancedCreditScoringModel:
         plt.close()
 
     def plot_precision_recall_curve(
-        self, X: pd.DataFrame, y: pd.Series, save_path: str = None
+        self, X: pd.DataFrame, y: pd.Series, save_path: Optional[str] = None
     ) -> None:
         """
-        Plot precision-recall curve
+        Plot Precision-Recall curve.
 
         Args:
-            X: Feature DataFrame
-            y: Target Series
-            save_path: Path to save the plot
+            X: features DataFrame
+            y: true labels
+            save_path: optional path to save the figure
         """
         if self.model is None:
             logger.warning("Model not trained, cannot plot precision-recall curve")
             return
         y_prob = self.model.predict_proba(X)[:, 1]
-        precision, recall, _ = precision_recall_curve(y, y_prob)
+        precision_vals, recall_vals, _ = precision_recall_curve(y, y_prob)
         avg_precision = average_precision_score(y, y_prob)
         plt.figure(figsize=(10, 8))
         plt.plot(
-            recall,
-            precision,
-            color="blue",
+            recall_vals,
+            precision_vals,
             lw=2,
-            label=f"Precision-Recall curve (AP = {avg_precision:.2f})",
+            label=f"Precision-Recall (AP = {avg_precision:.2f})",
         )
         plt.xlabel("Recall")
         plt.ylabel("Precision")
@@ -857,33 +932,36 @@ class EnhancedCreditScoringModel:
         plt.close()
 
     def plot_shap_summary(
-        self, X: pd.DataFrame, max_display: int = 20, save_path: str = None
+        self, X: pd.DataFrame, max_display: int = 20, save_path: Optional[str] = None
     ) -> None:
         """
-        Plot SHAP summary
+        Plot SHAP summary using the created explainer.
 
         Args:
-            X: Feature DataFrame
-            max_display: Maximum number of features to display
-            save_path: Path to save the plot
+            X: features DataFrame
+            max_display: maximum number of features to display
+            save_path: optional path to save the figure
         """
         if self.model is None or self.explainer is None:
             logger.warning("Model or explainer not available, cannot plot SHAP summary")
             return
         try:
-            X_processed = self.model.named_steps["preprocessor"].transform(X)
-            shap_values = self.explainer.shap_values(X_processed)
+            pre = self.model.named_steps["preprocessor"]
+            X_processed = pre.transform(X)
+            shap_values = None
+            if hasattr(self.explainer, "shap_values"):
+                shap_values = self.explainer.shap_values(X_processed)
+            else:
+                shap_values = self.explainer(X_processed)
             if isinstance(shap_values, list):
-                shap_values = shap_values[1]
+                shap_values = shap_values[1] if len(shap_values) > 1 else shap_values[0]
             plt.figure(figsize=(12, 10))
             shap.summary_plot(
                 shap_values,
                 X_processed,
                 feature_names=(
-                    self.model.named_steps["preprocessor"].get_feature_names_out()
-                    if hasattr(
-                        self.model.named_steps["preprocessor"], "get_feature_names_out"
-                    )
+                    pre.get_feature_names_out()
+                    if hasattr(pre, "get_feature_names_out")
                     else None
                 ),
                 max_display=max_display,
@@ -901,120 +979,123 @@ class EnhancedCreditScoringModel:
 
 class ModelIntegrator:
     """
-    Integrates traditional credit scoring with alternative data scoring
+    Integrates traditional credit scoring with alternative data scoring.
 
-    This class combines the enhanced credit scoring model with alternative data
-    to provide a comprehensive credit risk assessment.
+    This class wraps a CreditScoringModel and makes it convenient to work with
+    separate traditional/alternative DataFrames.
     """
 
-    def __init__(self, config: Dict[str, Any] = None) -> Any:
+    def __init__(self, config: Optional[Dict[str, Any]] = None) -> None:
         """
-        Initialize the model integrator
+        Initialize the integrator.
 
         Args:
-            config: Configuration dictionary for the integrator
+            config: optional dict containing 'credit_model' config and 'alt_data_weight'
         """
         self.config = config or {}
-        self.enhanced_model = None
-        self.alt_data_weight = self.config.get("alt_data_weight", 0.3)
-        self.trad_data_weight = 1.0 - self.alt_data_weight
-        self._init_models()
-
-    def _init_models(self) -> None:
-        """Initialize models"""
-        self.enhanced_model = EnhancedCreditScoringModel(
-            self.config.get("enhanced_model", {})
-        )
+        self.credit_model = CreditScoringModel(self.config.get("credit_model", {}))
+        self.alt_data_weight: float = float(self.config.get("alt_data_weight", 0.3))
+        self.trad_data_weight: float = 1.0 - self.alt_data_weight
 
     def train(
         self, X_traditional: pd.DataFrame, X_alternative: pd.DataFrame, y: pd.Series
     ) -> None:
         """
-        Train the integrated model
+        Train the integrated model using combined feature set.
 
         Args:
-            X_traditional: DataFrame with traditional credit features
-            X_alternative: DataFrame with alternative data features
-            y: Target Series (1 for default, 0 for repaid)
+            X_traditional: DataFrame of traditional features
+            X_alternative: DataFrame of alternative features
+            y: target Series
         """
-        X_combined = pd.concat([X_traditional, X_alternative], axis=1)
-        self.enhanced_model.train(X_combined, y)
+        X_combined = pd.concat(
+            [
+                X_traditional.reset_index(drop=True),
+                X_alternative.reset_index(drop=True),
+            ],
+            axis=1,
+        )
+        self.credit_model.train(X_combined, y)
 
     def predict(
         self, X_traditional: pd.DataFrame, X_alternative: pd.DataFrame
-    ) -> Tuple[float, Dict[str, Any]]:
+    ) -> Tuple[int, Dict[str, Any]]:
         """
-        Predict default probability and credit score
-
-        Args:
-            X_traditional: DataFrame with traditional credit features
-            X_alternative: DataFrame with alternative data features
+        Predict credit score and provide a detailed assessment.
 
         Returns:
-            Tuple of (credit_score, detailed_assessment)
+            (credit_score, assessment_dict)
         """
-        if self.enhanced_model.model is None:
+        if self.credit_model.model is None:
             raise ValueError("Model not trained. Call train() first.")
-        X_combined = pd.concat([X_traditional, X_alternative], axis=1)
-        default_prob, explanations = self.enhanced_model.predict_with_explanation(
+        X_combined = pd.concat(
+            [
+                X_traditional.reset_index(drop=True),
+                X_alternative.reset_index(drop=True),
+            ],
+            axis=1,
+        )
+        default_prob, explanations = self.credit_model.predict_with_explanation(
             X_combined
         )
-        credit_score = self.enhanced_model.calculate_credit_score(default_prob[0])
+        # default_prob may be an array; take first if array-like
+        prob0 = (
+            float(default_prob[0])
+            if hasattr(default_prob, "__len__")
+            else float(default_prob)
+        )
+        credit_score = self.credit_model.calculate_credit_score(prob0)
         assessment = {
             "credit_score": credit_score,
-            "default_probability": float(default_prob[0]),
+            "default_probability": prob0,
             "explanations": explanations,
             "timestamp": datetime.now().isoformat(),
         }
-        return (credit_score, assessment)
+        return credit_score, assessment
 
-    def save_models(self, base_dir: str = None) -> None:
+    def save_models(self, base_dir: Optional[str] = None) -> None:
         """
-        Save all models
+        Save underlying credit model and explainer.
 
         Args:
-            base_dir: Base directory to save models
+            base_dir: directory to save models; defaults to module's models directory
         """
         if base_dir is None:
             base_dir = os.path.join(
-                os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "models"
+                os.path.dirname(os.path.abspath(__file__)), "models"
             )
         os.makedirs(base_dir, exist_ok=True)
-        self.enhanced_model.save_model(
-            os.path.join(base_dir, "enhanced_credit_model.joblib")
-        )
+        self.credit_model.save_model(os.path.join(base_dir, "credit_model.joblib"))
 
-    def load_models(self, base_dir: str = None) -> None:
+    def load_models(self, base_dir: Optional[str] = None) -> None:
         """
-        Load all models
+        Load underlying credit model and explainer from disk.
 
         Args:
-            base_dir: Base directory to load models from
+            base_dir: directory to load from
         """
         if base_dir is None:
             base_dir = os.path.join(
-                os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "models"
+                os.path.dirname(os.path.abspath(__file__)), "models"
             )
-        self.enhanced_model.load_model(
-            os.path.join(base_dir, "enhanced_credit_model.joblib")
-        )
+        self.credit_model.load_model(os.path.join(base_dir, "credit_model.joblib"))
 
 
 def generate_synthetic_data(
     n_samples: int = 1000, include_alternative: bool = True
 ) -> Tuple[pd.DataFrame, pd.Series]:
     """
-    Generate synthetic data for testing
+    Generate synthetic dataset with traditional and optional alternative features.
 
     Args:
-        n_samples: Number of samples to generate
-        include_alternative: Whether to include alternative data features
+        n_samples: number of rows to generate
+        include_alternative: whether to include alternative features
 
     Returns:
-        Tuple of (X, y) where X is features DataFrame and y is target Series
+        (X, y) where X is DataFrame and y is pd.Series of binary outcomes
     """
     np.random.seed(42)
-    trad_data = {
+    trad_data: Dict[str, Any] = {
         "loan_amount": np.random.uniform(1000, 50000, n_samples),
         "interest_rate": np.random.uniform(1, 20, n_samples),
         "term_days": np.random.choice([30, 60, 90, 180, 365, 730], n_samples),
@@ -1026,12 +1107,15 @@ def generate_synthetic_data(
         "previous_loans": np.random.poisson(2, n_samples),
         "previous_defaults": np.random.poisson(0.5, n_samples),
     }
-    trad_data["collateral_value"] = 0
+    # collateral_value computed when collateral exists
+    collateral_value = np.zeros(n_samples)
     mask = trad_data["is_collateralized"] == 1
-    trad_data["collateral_value"][mask] = trad_data["loan_amount"][
-        mask
-    ] * np.random.uniform(1, 2, mask.sum())
+    collateral_value[mask] = trad_data["loan_amount"][mask] * np.random.uniform(
+        1, 2, mask.sum()
+    )
+    trad_data["collateral_value"] = collateral_value
     X_trad = pd.DataFrame(trad_data)
+
     if include_alternative:
         digital_data = {
             "digital_footprint_email_domain_age_days": np.random.randint(
@@ -1081,9 +1165,12 @@ def generate_synthetic_data(
         }
         alt_data = {**digital_data, **transaction_data, **utility_data, **edu_emp_data}
         X_alt = pd.DataFrame(alt_data)
-        X = pd.concat([X_trad, X_alt], axis=1)
+        X = pd.concat(
+            [X_trad.reset_index(drop=True), X_alt.reset_index(drop=True)], axis=1
+        )
     else:
         X = X_trad
+
     default_prob = (
         0.05
         + 0.1 * (X_trad["loan_amount"] > 30000).astype(int)
@@ -1094,6 +1181,7 @@ def generate_synthetic_data(
         + 0.1 * (X_trad["is_collateralized"] == 0).astype(int)
         + 0.2 * (X_trad["previous_defaults"] > 0).astype(int)
     )
+
     if include_alternative:
         default_prob += (
             0.1 * (X_alt["transaction_income_stability"] < 0.5).astype(int)
@@ -1105,6 +1193,7 @@ def generate_synthetic_data(
             + 0.05
             * (X_alt["education_employment_job_stability_score"] < 0.5).astype(int)
         )
+
     default_prob = np.clip(default_prob, 0, 0.95)
     y = np.random.binomial(1, default_prob)
-    return (X, pd.Series(y))
+    return X, pd.Series(y)
