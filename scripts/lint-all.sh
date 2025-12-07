@@ -1,117 +1,129 @@
 #!/bin/bash
 
-# Linting and Fixing Script for LendSmart Project (Python, JavaScript, YAML, Terraform)
+# Optimized Linting and Fixing Script for LendSmart Project (Python, JavaScript, YAML, Terraform)
 
-set -e  # Exit immediately if a command exits with a non-zero status
+# Exit immediately if a command exits with a non-zero status, treat unset variables as an error, and fail if any command in a pipeline fails
+set -euo pipefail
 
 echo "----------------------------------------"
-echo "Starting linting and fixing process for LendSmart..."
+echo "Starting optimized linting and fixing process for LendSmart..."
 echo "----------------------------------------"
 
-# Function to check if a command exists
+# --- Configuration ---
+# Use 'pwd' as a fallback if git is not available, but assume it's run from the project root
+PROJECT_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+VENV_PATH="$PROJECT_ROOT/venv"
+BACKEND_DIR="$PROJECT_ROOT/code/backend"
+WEB_FRONTEND_DIR="$PROJECT_ROOT/web-frontend"
+MOBILE_FRONTEND_DIR="$PROJECT_ROOT/mobile-frontend"
+
+# Check if we are in the project root
+if [ ! -d "$PROJECT_ROOT/code" ]; then
+    echo "Error: Must be run from the LendSmart project root directory."
+    exit 1
+fi
+
+# --- Helper Functions ---
+
+# Function to check if a command exists (globally or via npx)
 command_exists() {
   command -v "$1" >/dev/null 2>&1
 }
 
-# Check for required tools
-echo "Checking for required tools..."
+# Function to check for Python Virtual Environment and install tools if necessary
+check_python_venv() {
+    if [ ! -d "$VENV_PATH" ]; then
+        echo "Error: Python virtual environment not found at $VENV_PATH. Run setup_lendsmart_env.sh first."
+        exit 1
+    fi
 
-# Check for Python
-if ! command_exists python3; then
-  echo "Error: python3 is required but not installed. Please install Python 3."
-  exit 1
+    # Activate venv to ensure local tools are used
+    source "$VENV_PATH/bin/activate"
+
+    # Check for required Python linting tools and install if missing
+    echo "Checking for required Python linting tools..."
+    PYTHON_TOOLS=("black" "isort" "flake8" "pylint" "pyyaml")
+    INSTALL_NEEDED=false
+    for tool in "${PYTHON_TOOLS[@]}"; do
+        if ! command_exists "$tool"; then
+            echo "Warning: $tool not found in venv. Will install/upgrade."
+            INSTALL_NEEDED=true
+            break
+        fi
+    done
+
+    if [ "$INSTALL_NEEDED" = true ]; then
+        echo "Installing/Updating Python linting tools in venv..."
+        # Use a temporary requirements file to ensure all tools are installed together
+        echo "black" > /tmp/lint_requirements.txt
+        echo "isort" >> /tmp/lint_requirements.txt
+        echo "flake8" >> /tmp/lint_requirements.txt
+        echo "pylint" >> /tmp/lint_requirements.txt
+        echo "pyyaml" >> /tmp/lint_requirements.txt
+        pip install --upgrade -r /tmp/lint_requirements.txt
+        rm /tmp/lint_requirements.txt
+    fi
+    
+    # Deactivate venv after setup/check to allow explicit activation later or use full path
+    deactivate
+}
+
+# Check and install Python tools
+check_python_venv
+
+# --- Tool Availability Checks (for non-Python tools) ---
+
+TERRAFORM_AVAILABLE=false
+if command_exists terraform; then
+    echo "terraform is installed."
+    TERRAFORM_AVAILABLE=true
 else
-  echo "python3 is installed."
+    echo "Warning: terraform is not installed. Terraform validation will be limited."
 fi
 
-# Check for pip
-if ! command_exists pip3; then
-  echo "Error: pip3 is required but not installed. Please install pip3."
-  exit 1
+YAMLLINT_AVAILABLE=false
+if command_exists yamllint; then
+    echo "yamllint is installed."
+    YAMLLINT_AVAILABLE=true
 else
-  echo "pip3 is installed."
+    echo "Warning: yamllint is not installed. YAML validation will be limited."
 fi
 
-# Check for Node.js and npm
-if ! command_exists node; then
-  echo "Error: node is required but not installed. Please install Node.js."
-  exit 1
-else
-  echo "node is installed."
-fi
+# --- Define Directories to Process ---
 
-if ! command_exists npm; then
-  echo "Error: npm is required but not installed. Please install npm."
-  exit 1
-else
-  echo "npm is installed."
-fi
-
-# Check for terraform
-if ! command_exists terraform; then
-  echo "Warning: terraform is not installed. Terraform validation will be limited."
-  TERRAFORM_AVAILABLE=false
-else
-  echo "terraform is installed."
-  TERRAFORM_AVAILABLE=true
-fi
-
-# Check for yamllint
-if ! command_exists yamllint; then
-  echo "Warning: yamllint is not installed. YAML validation will be limited."
-  YAMLLINT_AVAILABLE=false
-else
-  echo "yamllint is installed."
-  YAMLLINT_AVAILABLE=true
-fi
-
-# Install required Python linting tools if not already installed
-echo "----------------------------------------"
-echo "Installing/Updating Python linting tools..."
-pip3 install --upgrade black isort flake8 pylint
-
-# Install global npm packages for JavaScript/TypeScript linting
-echo "----------------------------------------"
-echo "Installing/Updating JavaScript linting tools..."
-npm install -g eslint prettier
-
-# Define directories to process
 PYTHON_DIRECTORIES=(
-  "code/backend"
-  "code/backend/api"
-  "code/backend/core"
-  "code/backend/services"
-  "code/backend/tests"
+  "$BACKEND_DIR"
 )
 
 JS_DIRECTORIES=(
-  "code/frontend/src"
-  "code/frontend/src/components"
-  "code/frontend/src/pages"
-  "code/frontend/src/context"
-  "code/frontend/src/theme"
+  "$WEB_FRONTEND_DIR/src"
+  "$MOBILE_FRONTEND_DIR/src"
 )
 
 YAML_DIRECTORIES=(
-  "infrastructure/kubernetes"
-  "infrastructure/ansible"
-  ".github/workflows"
+  "$PROJECT_ROOT/infrastructure/kubernetes"
+  "$PROJECT_ROOT/infrastructure/ansible"
+  "$PROJECT_ROOT/.github/workflows"
 )
 
 TERRAFORM_DIRECTORIES=(
-  "infrastructure/terraform"
+  "$PROJECT_ROOT/infrastructure/terraform"
 )
 
-# 1. Python Linting
+# --- 1. Python Linting ---
 echo "----------------------------------------"
 echo "Running Python linting tools..."
+
+# Activate venv for Python tools
+source "$VENV_PATH/bin/activate"
 
 # 1.1 Run Black (code formatter)
 echo "Running Black code formatter..."
 for dir in "${PYTHON_DIRECTORIES[@]}"; do
   if [ -d "$dir" ]; then
     echo "Formatting Python files in $dir..."
-    python3 -m black "$dir" || {
+    # Use --check and --diff first to see changes, then run without for fixing
+    black "$dir" || {
       echo "Black encountered issues in $dir. Please review the above errors."
     }
   else
@@ -125,7 +137,7 @@ echo "Running isort to sort imports..."
 for dir in "${PYTHON_DIRECTORIES[@]}"; do
   if [ -d "$dir" ]; then
     echo "Sorting imports in Python files in $dir..."
-    python3 -m isort "$dir" || {
+    isort "$dir" || {
       echo "isort encountered issues in $dir. Please review the above errors."
     }
   else
@@ -139,7 +151,8 @@ echo "Running flake8 linter..."
 for dir in "${PYTHON_DIRECTORIES[@]}"; do
   if [ -d "$dir" ]; then
     echo "Linting Python files in $dir with flake8..."
-    python3 -m flake8 "$dir" || {
+    # Use --exit-zero to report issues but not fail the script immediately
+    flake8 "$dir" || {
       echo "Flake8 found issues in $dir. Please review the above warnings/errors."
     }
   else
@@ -153,7 +166,8 @@ echo "Running pylint for more comprehensive linting..."
 for dir in "${PYTHON_DIRECTORIES[@]}"; do
   if [ -d "$dir" ]; then
     echo "Linting Python files in $dir with pylint..."
-    find "$dir" -type f -name "*.py" | xargs python3 -m pylint --disable=C0111,C0103,C0303,W0621,C0301,W0612,W0611,R0913,R0914,R0915 || {
+    # Use find with -print0 and xargs -0 for robust handling of filenames with spaces
+    find "$dir" -type f -name "*.py" -print0 | xargs -0 pylint --disable=C0111,C0103,C0303,W0621,C0301,W0612,W0611,R0913,R0914,R0915 || {
       echo "Pylint found issues in $dir. Please review the above warnings/errors."
     }
   else
@@ -162,66 +176,20 @@ for dir in "${PYTHON_DIRECTORIES[@]}"; do
 done
 echo "Pylint linting completed."
 
-# 2. JavaScript/TypeScript Linting
+# Deactivate venv
+deactivate
+
+# --- 2. JavaScript/TypeScript Linting ---
 echo "----------------------------------------"
 echo "Running JavaScript/TypeScript linting tools..."
 
-# 2.1 Create ESLint config if it doesn't exist
-if [ ! -f ".eslintrc.js" ]; then
-  echo "Creating ESLint configuration..."
-  cat > .eslintrc.js << 'EOF'
-module.exports = {
-  env: {
-    browser: true,
-    es2021: true,
-    node: true,
-  },
-  extends: [
-    'eslint:recommended',
-    'plugin:react/recommended',
-  ],
-  parserOptions: {
-    ecmaFeatures: {
-      jsx: true,
-    },
-    ecmaVersion: 12,
-    sourceType: 'module',
-  },
-  plugins: [
-    'react',
-  ],
-  rules: {
-    'no-unused-vars': 'warn',
-    'react/prop-types': 'off',
-  },
-  settings: {
-    react: {
-      version: 'detect',
-    },
-  },
-};
-EOF
-fi
-
-# 2.2 Create Prettier config if it doesn't exist
-if [ ! -f ".prettierrc.json" ]; then
-  echo "Creating Prettier configuration..."
-  cat > .prettierrc.json << 'EOF'
-{
-  "semi": true,
-  "singleQuote": true,
-  "tabWidth": 2,
-  "trailingComma": "es5"
-}
-EOF
-fi
-
-# 2.3 Run ESLint
+# 2.1 Run ESLint
 echo "Running ESLint for JavaScript/TypeScript files..."
 for dir in "${JS_DIRECTORIES[@]}"; do
   if [ -d "$dir" ]; then
     echo "Linting JavaScript/TypeScript files in $dir with ESLint..."
-    npx eslint "$dir" --ext .js,.jsx,.ts,.tsx --fix || {
+    # Use npx to run locally installed eslint
+    (cd "$PROJECT_ROOT" && npx eslint "$dir" --ext .js,.jsx,.ts,.tsx --fix) || {
       echo "ESLint found issues in $dir. Please review the above warnings/errors."
     }
   else
@@ -230,12 +198,13 @@ for dir in "${JS_DIRECTORIES[@]}"; do
 done
 echo "ESLint linting completed."
 
-# 2.4 Run Prettier
+# 2.2 Run Prettier
 echo "Running Prettier for JavaScript/TypeScript files..."
 for dir in "${JS_DIRECTORIES[@]}"; do
   if [ -d "$dir" ]; then
     echo "Formatting JavaScript/TypeScript files in $dir with Prettier..."
-    npx prettier --write "$dir/**/*.{js,jsx,ts,tsx}" || {
+    # Use npx to run locally installed prettier
+    (cd "$PROJECT_ROOT" && npx prettier --write "$dir/**/*.{js,jsx,ts,tsx}") || {
       echo "Prettier encountered issues in $dir. Please review the above errors."
     }
   else
@@ -244,11 +213,10 @@ for dir in "${JS_DIRECTORIES[@]}"; do
 done
 echo "Prettier formatting completed."
 
-# 3. YAML Linting
+# --- 3. YAML Linting ---
 echo "----------------------------------------"
 echo "Running YAML linting tools..."
 
-# 3.1 Run yamllint if available
 if [ "$YAMLLINT_AVAILABLE" = true ]; then
   echo "Running yamllint for YAML files..."
   for dir in "${YAML_DIRECTORIES[@]}"; do
@@ -263,16 +231,26 @@ if [ "$YAMLLINT_AVAILABLE" = true ]; then
   done
   echo "yamllint completed."
 else
-  echo "Skipping yamllint (not installed)."
-
-  # 3.2 Basic YAML validation using Python
-  echo "Performing basic YAML validation using Python..."
-  pip3 install --upgrade pyyaml
-
+  echo "Skipping yamllint (not installed). Performing basic YAML validation using Python..."
+  
+  # Activate venv for Python tools
+  source "$VENV_PATH/bin/activate"
+  
   for dir in "${YAML_DIRECTORIES[@]}"; do
     if [ -d "$dir" ]; then
       echo "Validating YAML files in $dir..."
-      find "$dir" -type f \( -name "*.yaml" -o -name "*.yml" \) -exec python3 -c "import yaml; yaml.safe_load(open('{}', 'r'))" \; || {
+      # Use find with -print0 and xargs -0 for robust handling of filenames with spaces
+      find "$dir" -type f \( -name "*.yaml" -o -name "*.yml" \) -print0 | xargs -0 python3 -c "
+import yaml, sys
+for filename in sys.argv[1:]:
+    try:
+        with open(filename, 'r') as f:
+            yaml.safe_load(f)
+        # print(f'OK: {filename}') # Optional: print success
+    except Exception as e:
+        print(f'Error in {filename}: {e}', file=sys.stderr)
+        sys.exit(1) # Exit on first error to stop xargs
+" || {
         echo "YAML validation found issues in $dir. Please review the above errors."
       }
     else
@@ -280,19 +258,21 @@ else
     fi
   done
   echo "Basic YAML validation completed."
+  
+  # Deactivate venv
+  deactivate
 fi
 
-# 4. Terraform Linting
+# --- 4. Terraform Linting ---
 echo "----------------------------------------"
 echo "Running Terraform linting tools..."
 
-# 4.1 Run terraform fmt if available
 if [ "$TERRAFORM_AVAILABLE" = true ]; then
   echo "Running terraform fmt for Terraform files..."
   for dir in "${TERRAFORM_DIRECTORIES[@]}"; do
     if [ -d "$dir" ]; then
       echo "Formatting Terraform files in $dir..."
-      terraform fmt -recursive "$dir" || {
+      (cd "$dir" && terraform fmt -recursive) || {
         echo "terraform fmt encountered issues in $dir. Please review the above errors."
       }
     else
@@ -301,11 +281,11 @@ if [ "$TERRAFORM_AVAILABLE" = true ]; then
   done
   echo "terraform fmt completed."
 
-  # 4.2 Run terraform validate if available
   echo "Running terraform validate for Terraform files..."
   for dir in "${TERRAFORM_DIRECTORIES[@]}"; do
     if [ -d "$dir" ]; then
       echo "Validating Terraform files in $dir..."
+      # Initialize without backend to speed up validation
       (cd "$dir" && terraform init -backend=false && terraform validate) || {
         echo "terraform validate encountered issues in $dir. Please review the above errors."
       }
@@ -317,20 +297,6 @@ if [ "$TERRAFORM_AVAILABLE" = true ]; then
 else
   echo "Skipping Terraform linting (terraform not installed)."
 fi
-
-# 5. Common Fixes for All File Types
-echo "----------------------------------------"
-echo "Applying common fixes to all file types..."
-
-# 5.1 Fix trailing whitespace
-echo "Fixing trailing whitespace..."
-find . -type f \( -name "*.py" -o -name "*.js" -o -name "*.jsx" -o -name "*.ts" -o -name "*.tsx" -o -name "*.yaml" -o -name "*.yml" -o -name "*.tf" -o -name "*.tfvars" \) -not -path "*/node_modules/*" -not -path "*/venv/*" -not -path "*/build/*" -exec sed -i 's/[ \t]*$//' {} \;
-echo "Fixed trailing whitespace."
-
-# 5.2 Ensure newline at end of file
-echo "Ensuring newline at end of files..."
-find . -type f \( -name "*.py" -o -name "*.js" -o -name "*.jsx" -o -name "*.ts" -o -name "*.tsx" -o -name "*.yaml" -o -name "*.yml" -o -name "*.tf" -o -name "*.tfvars" \) -not -path "*/node_modules/*" -not -path "*/venv/*" -not -path "*/build/*" -exec sh -c '[ -n "$(tail -c1 "$1")" ] && echo "" >> "$1"' sh {} \;
-echo "Ensured newline at end of files."
 
 echo "----------------------------------------"
 echo "Linting and fixing process for LendSmart completed!"

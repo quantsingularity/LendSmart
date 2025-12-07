@@ -88,10 +88,3 @@ These scripts are designed to complement existing automation in the LendSmart re
 - They extend the functionality of current scripts like `lint-all.sh`
 - They provide local alternatives to GitHub Actions workflows
 
-## Customization
-
-Each script can be customized to better fit your specific workflow:
-
-- Edit directory paths in the script headers if your project structure differs
-- Modify commands to match your specific toolchain
-- Add or remove components as your project evolves
