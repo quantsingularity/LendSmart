@@ -87,4 +87,3 @@ These scripts are designed to complement existing automation in the LendSmart re
 - They work alongside the existing CI/CD pipeline
 - They extend the functionality of current scripts like `lint-all.sh`
 - They provide local alternatives to GitHub Actions workflows
-
