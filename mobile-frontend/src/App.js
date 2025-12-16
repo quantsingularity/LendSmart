@@ -11,8 +11,16 @@ import '@walletconnect/react-native-compat'; // Polyfill for compatibility
 import 'react-native-get-random-values'; // Required for crypto operations
 
 // --- WalletConnect Configuration ---
-// IMPORTANT: Replace with your actual Project ID from https://cloud.walletconnect.com/
-const walletConnectProjectId = 'YOUR_WALLETCONNECT_PROJECT_ID'; // <<< MUST BE REPLACED
+// Get from environment or use default for development
+const walletConnectProjectId =
+  process.env.WALLETCONNECT_PROJECT_ID || 'YOUR_WALLETCONNECT_PROJECT_ID';
+
+// Warn if using default value
+if (walletConnectProjectId === 'YOUR_WALLETCONNECT_PROJECT_ID') {
+  console.warn(
+    'WalletConnect: Using default project ID. Get your own from https://cloud.walletconnect.com/',
+  );
+}
 
 // Configure Provider Metadata (Information about your DApp)
 const providerMetadata = {

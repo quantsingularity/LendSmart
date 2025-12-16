@@ -12,78 +12,83 @@ import {Text, Card, Button, useTheme, Divider, List} from 'react-native-paper';
 // Removed unused MaterialCommunityIcons import
 import PropTypes from 'prop-types';
 import {useWallet} from '../../../contexts/WalletContext'; // To check connection status
-// import apiService from '../../../services/apiService'; // For fetching real data
-// import blockchainService from '../../../services/blockchainService'; // For blockchain interactions
+import {getLoanDetails, fundLoan} from '../../../services/apiService';
+import blockchainService from '../../../services/blockchainService';
 
-// Placeholder function to get loan details by ID
+// Placeholder function for fallback
+const placeholderLoans = [
+  {
+    id: '1',
+    amount: 1500,
+    interestRate: 8.5,
+    term: 12,
+    purpose: 'Debt Consolidation',
+    creditScoreRange: '650-700',
+    status: 'Available',
+    borrower: '0x123...abc',
+    description:
+      'Looking to consolidate high-interest credit card debt into a single, manageable loan.',
+    collateral: 'None',
+    fundedAmount: 0,
+  },
+  {
+    id: '2',
+    amount: 500,
+    interestRate: 12.0,
+    term: 6,
+    purpose: 'Small Business',
+    creditScoreRange: '600-650',
+    status: 'Available',
+    borrower: '0x456...def',
+    description:
+      'Need short-term funding for inventory purchase for my online store.',
+    collateral: 'None',
+    fundedAmount: 100,
+  },
+  {
+    id: '3',
+    amount: 3000,
+    interestRate: 7.0,
+    term: 24,
+    purpose: 'Home Improvement',
+    creditScoreRange: '700+',
+    status: 'Available',
+    borrower: '0x789...ghi',
+    description:
+      'Funding needed for kitchen renovation project. Stable income and good credit history.',
+    collateral: 'None',
+    fundedAmount: 0,
+  },
+  {
+    id: '4',
+    amount: 1000,
+    interestRate: 9.0,
+    term: 9,
+    purpose: 'Education',
+    creditScoreRange: '680-720',
+    status: 'Funded',
+    borrower: '0xabc...123',
+    description: 'Loan to cover costs for a professional certification course.',
+    collateral: 'None',
+    fundedAmount: 1000,
+  },
+];
+
+// Get loan details by ID
 const getLoanDetailsById = async loanId => {
   console.log('Fetching details for loan:', loanId);
-  // Simulate API call
-  await new Promise(resolve => setTimeout(resolve, 500));
-  // Find loan in placeholder data (replace with actual API call)
-  const placeholderLoans = [
-    {
-      id: '1',
-      amount: 1500,
-      interestRate: 8.5,
-      term: 12,
-      purpose: 'Debt Consolidation',
-      creditScoreRange: '650-700',
-      status: 'Available',
-      borrower: '0x123...abc',
-      description:
-        'Looking to consolidate high-interest credit card debt into a single, manageable loan.',
-      collateral: 'None',
-      fundedAmount: 0,
-    },
-    {
-      id: '2',
-      amount: 500,
-      interestRate: 12.0,
-      term: 6,
-      purpose: 'Small Business',
-      creditScoreRange: '600-650',
-      status: 'Available',
-      borrower: '0x456...def',
-      description:
-        'Need short-term funding for inventory purchase for my online store.',
-      collateral: 'None',
-      fundedAmount: 100,
-    },
-    {
-      id: '3',
-      amount: 3000,
-      interestRate: 7.0,
-      term: 24,
-      purpose: 'Home Improvement',
-      creditScoreRange: '700+',
-      status: 'Available',
-      borrower: '0x789...ghi',
-      description:
-        'Funding needed for kitchen renovation project. Stable income and good credit history.',
-      collateral: 'None',
-      fundedAmount: 0,
-    },
-    {
-      id: '4',
-      amount: 1000,
-      interestRate: 9.0,
-      term: 9,
-      purpose: 'Education',
-      creditScoreRange: '680-720',
-      status: 'Funded',
-      borrower: '0xabc...123',
-      description:
-        'Loan to cover costs for a professional certification course.',
-      collateral: 'None',
-      fundedAmount: 1000,
-    },
-  ];
-  const loan = placeholderLoans.find(l => l.id === loanId);
-  if (!loan) {
-    throw new Error('Loan not found');
+  try {
+    const response = await getLoanDetails(loanId);
+    return response.data;
+  } catch (error) {
+    console.error('Failed to fetch loan details:', error);
+    // Fallback to placeholder data
+    const loan = placeholderLoans.find(l => l.id === loanId);
+    if (!loan) {
+      throw new Error('Loan not found');
+    }
+    return loan;
   }
-  return loan;
 };
 
 const LoanDetailsScreen = ({route, navigation}) => {

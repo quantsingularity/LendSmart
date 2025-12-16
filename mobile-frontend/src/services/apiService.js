@@ -97,4 +97,28 @@ export const fundLoan = (loanId, fundingData) =>
 export const recordRepayment = (loanId, repaymentData) =>
   mobileApiService.post(`/loans/${loanId}/repay`, repaymentData);
 
+// --- Helper Methods ---
+// Set auth token (used by AuthContext)
+mobileApiService.setAuthToken = token => {
+  if (token) {
+    mobileApiService.defaults.headers.common['Authorization'] =
+      `Bearer ${token}`;
+  } else {
+    delete mobileApiService.defaults.headers.common['Authorization'];
+  }
+};
+
+// Clear auth token
+mobileApiService.clearAuthToken = () => {
+  delete mobileApiService.defaults.headers.common['Authorization'];
+};
+
+// Generic HTTP methods for direct use
+mobileApiService.get = (url, config) => mobileApiService.get(url, config);
+mobileApiService.post = (url, data, config) =>
+  mobileApiService.post(url, data, config);
+mobileApiService.put = (url, data, config) =>
+  mobileApiService.put(url, data, config);
+mobileApiService.delete = (url, config) => mobileApiService.delete(url, config);
+
 export default mobileApiService;

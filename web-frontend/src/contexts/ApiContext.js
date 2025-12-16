@@ -16,21 +16,8 @@ export const ApiProvider = ({ children }) => {
     // API base URL - should be environment variable in production
     const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
 
-    // Configure axios with token
-    useEffect(() => {
-        if (token) {
-            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-            setIsAuthenticated(true);
-            loadUser();
-        } else {
-            delete axios.defaults.headers.common['Authorization'];
-            setIsAuthenticated(false);
-            setUser(null);
-        }
-    }, [token, loadUser]);
-
     // Load user data
-    const loadUser = async () => {
+    const loadUser = useCallback(async () => {
         try {
             setLoading(true);
             setError(null);
@@ -49,7 +36,20 @@ export const ApiProvider = ({ children }) => {
             localStorage.removeItem('token');
             setLoading(false);
         }
-    };
+    }, [API_URL]);
+
+    // Configure axios with token
+    useEffect(() => {
+        if (token) {
+            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+            setIsAuthenticated(true);
+            loadUser();
+        } else {
+            delete axios.defaults.headers.common['Authorization'];
+            setIsAuthenticated(false);
+            setUser(null);
+        }
+    }, [token, loadUser]);
 
     // Register user
     const register = async (userData) => {

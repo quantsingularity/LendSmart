@@ -39,21 +39,18 @@ const ProfileScreen = () => {
     }
   };
 
+  const {updateProfile} = useContext(AuthContext);
+
   const handleSaveChanges = async () => {
-    // TODO: Implement API call to update user profile
     console.log('Saving changes:', {name, email});
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      // await apiService.put('/user/profile', { name, email });
+      // Call API to update user profile
+      await updateProfile({name, email});
       Alert.alert('Success', 'Profile updated successfully.');
       setIsEditing(false);
-      // Optionally update user context if API returns updated user data
-      // Example: updateUser({ ...user, name, email }); // Assuming an updateUser function exists in AuthContext
     } catch (err) {
-      // Changed variable name from error to err
-      console.error('Profile update failed:', err); // Log the error
-      Alert.alert('Update Failed', 'Could not update profile.');
+      console.error('Profile update failed:', err);
+      Alert.alert('Update Failed', err.message || 'Could not update profile.');
     }
   };
 

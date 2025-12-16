@@ -1,4 +1,4 @@
-import React, {useContext} from 'react';
+import React, {useContext, useState, useEffect, useCallback} from 'react';
 import {View, StyleSheet, ScrollView, RefreshControl} from 'react-native';
 import {
   Text,
@@ -12,61 +12,119 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import PropTypes from 'prop-types';
 // Removed direct import of spacing, use theme.spacing instead
 import {AuthContext} from '../../../contexts/AuthContext';
-
-// Placeholder data - In a real app, this would come from context or API
-const loanSummary = {
-  activeLoans: 2,
-  totalBorrowed: 5000,
-  totalLent: 3000,
-  reputation: 4.8,
-};
-
-const recentActivity = [
-  {
-    id: 1,
-    type: 'Loan Funded',
-    amount: '$1,000',
-    date: '2025-04-25',
-    status: 'Completed',
-    icon: 'cash-check',
-  },
-  {
-    id: 2,
-    type: 'Loan Repayment',
-    amount: '$250',
-    date: '2025-04-20',
-    status: 'Completed',
-    icon: 'cash-refund',
-  },
-  {
-    id: 3,
-    type: 'Loan Application',
-    amount: '$2,000',
-    date: '2025-04-15',
-    status: 'Pending',
-    icon: 'file-document-edit-outline',
-  },
-  {
-    id: 4,
-    type: 'New Listing Viewed',
-    description: 'Viewed loan #LND123',
-    date: '2025-04-28',
-    status: 'Info',
-    icon: 'eye-outline',
-  },
-];
+import {getMyLoans} from '../../../services/apiService';
 
 const DashboardScreen = ({navigation}) => {
   const {user} = useContext(AuthContext);
   const theme = useTheme();
   const styles = createStyles(theme);
-  const [refreshing, setRefreshing] = React.useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [loanSummary, setLoanSummary] = useState({
+    activeLoans: 0,
+    totalBorrowed: 0,
+    totalLent: 0,
+    reputation: 0,
+  });
+  const [recentActivity, setRecentActivity] = useState([]);
 
-  const onRefresh = React.useCallback(() => {
+  // Fetch dashboard data
+  const fetchDashboardData = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await getMyLoans();
+      const loans = response.data || [];
+
+      // Calculate summary
+      const summary = loans.reduce(
+        (acc, loan) => {
+          if (loan.status === 'active' || loan.status === 'repaying') {
+            acc.activeLoans++;
+          }
+          if (loan.borrowerId === user?.id) {
+            acc.totalBorrowed += loan.amount;
+          } else {
+            acc.totalLent += loan.fundedAmount || 0;
+          }
+          return acc;
+        },
+        {
+          activeLoans: 0,
+          totalBorrowed: 0,
+          totalLent: 0,
+          reputation: user?.reputation || 4.5,
+        },
+      );
+
+      setLoanSummary(summary);
+
+      // Convert loans to activity items
+      const activities = loans.slice(0, 5).map(loan => ({
+        id: loan.id,
+        type: loan.status === 'pending' ? 'Loan Application' : 'Loan Activity',
+        amount: `$${loan.amount.toLocaleString()}`,
+        date: new Date(loan.createdAt).toLocaleDateString(),
+        status: loan.status.charAt(0).toUpperCase() + loan.status.slice(1),
+        icon:
+          loan.status === 'active'
+            ? 'cash-check'
+            : 'file-document-edit-outline',
+      }));
+      setRecentActivity(activities);
+    } catch (error) {
+      console.error('Failed to fetch dashboard data:', error);
+      // Use placeholder data on error
+      setRecentActivity(placeholderActivity);
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, [fetchDashboardData]);
+
+  const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    // TODO: Add logic here to refetch dashboard data (API calls)
-    setTimeout(() => setRefreshing(false), 1500); // Simulate network request
-  }, []);
+    await fetchDashboardData();
+    setRefreshing(false);
+  }, [fetchDashboardData]);
+
+  // Placeholder data for fallback
+  const placeholderActivity = [
+    {
+      id: 1,
+      type: 'Loan Funded',
+      amount: '$1,000',
+      date: '2025-04-25',
+      status: 'Completed',
+      icon: 'cash-check',
+    },
+    {
+      id: 2,
+      type: 'Loan Repayment',
+      amount: '$250',
+      date: '2025-04-20',
+      status: 'Completed',
+      icon: 'cash-refund',
+    },
+    {
+      id: 3,
+      type: 'Loan Application',
+      amount: '$2,000',
+      date: '2025-04-15',
+      status: 'Pending',
+      icon: 'file-document-edit-outline',
+    },
+    {
+      id: 4,
+      type: 'New Listing Viewed',
+      description: 'Viewed loan #LND123',
+      date: '2025-04-28',
+      status: 'Info',
+      icon: 'eye-outline',
+    },
+  ];
 
   if (!user) {
     // This should ideally not happen if navigation is set up correctly,

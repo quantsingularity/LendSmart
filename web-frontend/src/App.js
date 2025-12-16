@@ -12,7 +12,7 @@ import Layout from './components/layout/Layout';
 import PrivateRoute from './components/routing/PrivateRoute';
 
 // Pages
-import Home from './pages/Home';
+import HomePage from './pages/HomePage';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -22,7 +22,7 @@ import LoanDetails from './pages/LoanDetails';
 import ApplyForLoan from './pages/ApplyForLoan';
 import MyLoans from './pages/MyLoans';
 import RiskAssessment from './pages/RiskAssessment';
-import NotFound from './pages/NotFound';
+import NotFoundPage from './pages/NotFoundPage';
 
 // Create theme
 const theme = createTheme({
@@ -51,7 +51,7 @@ function App() {
                     <Router>
                         <Layout>
                             <Routes>
-                                <Route path="/" element={<Home />} />
+                                <Route path="/" element={<HomePage />} />
                                 <Route path="/login" element={<Login />} />
                                 <Route path="/register" element={<Register />} />
                                 <Route
@@ -96,7 +96,7 @@ function App() {
                                         </PrivateRoute>
                                     }
                                 />
-                                <Route path="/404" element={<NotFound />} />
+                                <Route path="/404" element={<NotFoundPage />} />
                                 <Route path="*" element={<Navigate to="/404" replace />} />
                             </Routes>
                         </Layout>

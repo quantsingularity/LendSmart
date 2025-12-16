@@ -22,6 +22,11 @@ export const BlockchainProvider = ({ children }) => {
         process.env.REACT_APP_LEND_SMART_LOAN_ADDRESS ||
         '0x5FbDB2315678afecb367f032d93F642f64180aa3';
 
+    const handleChainChanged = useCallback(() => {
+        // Reload the page to update the network
+        window.location.reload();
+    }, []);
+
     const handleAccountsChanged = useCallback(
         async (accounts) => {
             if (accounts.length === 0) {
@@ -86,7 +91,8 @@ export const BlockchainProvider = ({ children }) => {
         };
 
         initProvider();
-    }, [LEND_SMART_LOAN_ADDRESS, handleAccountsChanged, handleChainChanged]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     // Connect wallet
     const connectWallet = useCallback(async () => {

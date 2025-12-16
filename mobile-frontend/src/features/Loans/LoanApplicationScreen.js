@@ -57,21 +57,17 @@ const LoanApplicationScreen = ({navigation}) => {
     try {
       // 1. Submit application details to backend API
       console.log('Submitting loan application to backend:', values);
-      // TODO: Replace with actual API call
-      // const apiResponse = await apiService.post('/loans/apply', values);
-      // console.log('API Response:', apiResponse.data);
+      const apiResponse = await apiService.applyLoan({
+        amount: values.amount,
+        term: values.term,
+        purpose: values.purpose,
+        userId: user.id,
+      });
+      console.log('API Response:', apiResponse.data);
 
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      const simulatedApiResponse = {
-        success: true,
-        loanId: `loan_${Date.now()}`,
-      }; // Simulate success
-
-      if (!simulatedApiResponse.success) {
+      if (!apiResponse.data || !apiResponse.data.id) {
         throw new Error(
-          simulatedApiResponse.message ||
-            'Failed to submit application via API.',
+          apiResponse.data?.message || 'Failed to submit application via API.',
         );
       }
 
@@ -79,9 +75,11 @@ const LoanApplicationScreen = ({navigation}) => {
       // This might happen on the backend, or require a signature here.
       // For simplicity, we assume backend handles blockchain interaction or it's not needed at this stage.
       console.log(
-        'Loan application submitted successfully (simulated). Loan ID:',
-        simulatedApiResponse.loanId,
+        'Loan application submitted successfully. Loan ID:',
+        apiResponse.data.id,
       );
+
+      const loanId = apiResponse.data.id;
 
       // Show success message and reset form
       Alert.alert(

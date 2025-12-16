@@ -17,7 +17,7 @@ import {
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import PropTypes from 'prop-types';
 // Removed direct import of spacing, use theme.spacing instead
-// import apiService from '../../../services/apiService'; // For fetching real data
+import {getMarketplaceLoans} from '../../../services/apiService';
 
 // Placeholder data for marketplace loans
 const placeholderLoans = [
@@ -77,18 +77,12 @@ const MarketplaceScreen = ({navigation}) => {
     if (!isRefreshing) setLoading(true);
     setError(null);
     try {
-      // TODO: Replace with actual API call to fetch loans
-      // const response = await apiService.get('/loans/marketplace', { params: { search: searchQuery /*, filters */ } });
-      // setLoans(response.data);
-
-      // Using placeholder data for now
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
-      const filteredLoans = placeholderLoans.filter(
-        loan =>
-          loan.purpose.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          loan.amount.toString().includes(searchQuery),
-      );
-      setLoans(filteredLoans);
+      // Fetch loans from API
+      const response = await getMarketplaceLoans({
+        search: searchQuery,
+        status: 'pending,approved', // Only show loans available for funding
+      });
+      setLoans(response.data || []);
     } catch (err) {
       console.error('Failed to fetch loans:', err);
       setError('Failed to load loan marketplace. Please try again.');
