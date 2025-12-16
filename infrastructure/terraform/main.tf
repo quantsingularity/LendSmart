@@ -5,10 +5,14 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 4.0"
     }
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.0"
+    }
   }
-  backend "s3" {
-    # Will be configured per environment
-  }
+  # Backend configuration moved to backend.tf
+  # Using local state for development
+  # See backend.tf for S3 backend setup instructions
 }
 
 provider "aws" {
@@ -21,35 +25,36 @@ provider "aws" {
 module "network" {
   source = "./modules/network"
 
-  environment         = var.environment
-  vpc_cidr            = var.vpc_cidr
-  availability_zones  = var.availability_zones
-  public_subnet_cidrs = var.public_subnet_cidrs
+  environment          = var.environment
+  project_name         = var.project_name
+  vpc_cidr_block       = var.vpc_cidr
+  availability_zones   = var.availability_zones
+  public_subnet_cidrs  = var.public_subnet_cidrs
   private_subnet_cidrs = var.private_subnet_cidrs
 }
 
 module "compute" {
   source = "./modules/compute"
 
-  environment       = var.environment
-  vpc_id            = module.network.vpc_id
+  environment        = var.environment
+  vpc_id             = module.network.vpc_id
   private_subnet_ids = module.network.private_subnet_ids
-  instance_type     = var.instance_type
-  key_name          = var.key_name
-  app_name          = var.app_name
+  instance_type      = var.instance_type
+  key_name           = var.key_name
+  app_name           = var.app_name
   security_group_ids = [module.security.app_security_group_id]
 }
 
 module "database" {
   source = "./modules/database"
 
-  environment       = var.environment
-  vpc_id            = module.network.vpc_id
+  environment        = var.environment
+  vpc_id             = module.network.vpc_id
   private_subnet_ids = module.network.private_subnet_ids
-  db_instance_class = var.db_instance_class
-  db_name           = var.db_name
-  db_username       = var.db_username
-  db_password       = var.db_password
+  db_instance_class  = var.db_instance_class
+  db_name            = var.db_name
+  db_username        = var.db_username
+  db_password        = var.db_password
   security_group_ids = [module.security.db_security_group_id]
 }
 
@@ -72,8 +77,7 @@ module "security" {
 module "cost_optimization" {
   source = "./modules/cost_optimization"
 
-  launch_configuration_name = module.compute.launch_configuration_name
-  subnet_ids                = module.network.private_subnet_ids
-  project_name              = var.project_name
-  s3_bucket_id              = module.storage.app_data_bucket_id
+  autoscaling_group_name = module.compute.autoscaling_group_name
+  project_name           = var.project_name
+  s3_bucket_id           = module.storage.app_data_bucket_id
 }

@@ -1,3 +1,7 @@
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
 resource "aws_vpc" "main" {
   cidr_block = var.vpc_cidr_block
 
@@ -99,9 +103,6 @@ resource "aws_route_table_association" "private" {
   route_table_id = aws_route_table.private[count.index].id
 }
 
-data "aws_availability_zones" "available" {
-  state = "available"
-}
 
 # CloudFront Distribution (CDN)
 resource "aws_cloudfront_distribution" "s3_distribution" {
@@ -133,7 +134,7 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
 
     viewer_protocol_policy = "redirect-to-https"
     min_ttl                = 0
-    default_ttl            = 86400 # 24 hours
+    default_ttl            = 86400    # 24 hours
     max_ttl                = 31536000 # 1 year
   }
 

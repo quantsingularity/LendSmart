@@ -12,3 +12,13 @@ output "load_balancer_dns" {
   description = "DNS name of the load balancer"
   value       = aws_lb.app.dns_name
 }
+
+output "autoscaling_group_name" {
+  description = "Name of the Auto Scaling group"
+  value       = aws_autoscaling_group.app.name
+}
+
+output "launch_template_id" {
+  description = "ID of the launch template"
+  value       = aws_launch_template.app.id
+}

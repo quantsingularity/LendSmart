@@ -73,10 +73,16 @@ variable "db_password" {
   sensitive   = true
 }
 
+variable "project_name" {
+  description = "Project name used for resource naming"
+  type        = string
+  default     = "lendsmart"
+}
+
 variable "default_tags" {
   description = "Default tags for all resources"
   type        = map(string)
-  default     = {
+  default = {
     Terraform   = "true"
     Environment = "dev"
   }

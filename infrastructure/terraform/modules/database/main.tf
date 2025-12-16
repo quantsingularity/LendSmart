@@ -1,19 +1,29 @@
+resource "aws_db_subnet_group" "main" {
+  name       = "${var.environment}-db-subnet-group"
+  subnet_ids = var.private_subnet_ids
+
+  tags = {
+    Name        = "${var.environment}-db-subnet-group"
+    Environment = var.environment
+  }
+}
+
 resource "aws_db_instance" "lend_smart_db" {
-  allocated_storage    = var.db_allocated_storage
-  engine               = var.db_engine
-  engine_version       = var.db_engine_version
-  instance_class       = var.db_instance_class
-  name                 = var.db_name
-  username             = var.db_username
-  password             = var.db_password
-  parameter_group_name = var.db_parameter_group_name
-  skip_final_snapshot  = var.db_skip_final_snapshot
-  db_subnet_group_name = var.db_subnet_group_name
-  vpc_security_group_ids = var.db_security_group_ids
+  allocated_storage      = var.db_allocated_storage
+  engine                 = var.db_engine
+  engine_version         = var.db_engine_version
+  instance_class         = var.db_instance_class
+  db_name                = var.db_name # 'name' is deprecated, use 'db_name'
+  username               = var.db_username
+  password               = var.db_password
+  parameter_group_name   = var.db_parameter_group_name
+  skip_final_snapshot    = var.db_skip_final_snapshot
+  db_subnet_group_name   = aws_db_subnet_group.main.name
+  vpc_security_group_ids = var.security_group_ids
 
   # Encryption at rest
-  storage_encrypted    = true
-  kms_key_id           = var.db_kms_key_id
+  storage_encrypted = true
+  kms_key_id        = var.db_kms_key_id
 
   # Backup configuration
   backup_retention_period = var.db_backup_retention_period
@@ -21,9 +31,9 @@ resource "aws_db_instance" "lend_smart_db" {
   multi_az                = var.db_multi_az
 
   # Performance Insights
-  performance_insights_enabled = var.db_performance_insights_enabled
+  performance_insights_enabled          = var.db_performance_insights_enabled
   performance_insights_retention_period = var.db_performance_insights_retention_period
-  performance_insights_kms_key_id = var.db_performance_insights_kms_key_id
+  performance_insights_kms_key_id       = var.db_performance_insights_kms_key_id
 
   tags = {
     Name = "lend-smart-db"
@@ -40,8 +50,8 @@ resource "aws_rds_cluster" "lend_smart_aurora_cluster" {
   master_password         = var.db_password
   backup_retention_period = var.db_backup_retention_period
   preferred_backup_window = var.db_backup_window
-  vpc_security_group_ids  = var.db_security_group_ids
-  db_subnet_group_name    = var.db_subnet_group_name
+  vpc_security_group_ids  = var.security_group_ids
+  db_subnet_group_name    = aws_db_subnet_group.main.name
   storage_encrypted       = true
   kms_key_id              = var.db_kms_key_id
   skip_final_snapshot     = var.db_skip_final_snapshot

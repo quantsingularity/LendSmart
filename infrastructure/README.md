@@ -4,153 +4,399 @@ This directory contains the infrastructure as code (IaC) configurations and depl
 
 ## Directory Structure
 
-- `ansible/` - Ansible playbooks and roles for server configuration and application deployment
-- `kubernetes/` - Kubernetes manifests for container orchestration and microservices management
-- `terraform/` - Terraform configurations for provisioning cloud infrastructure resources
+```
+infrastructure/
+├── README.md                    # This file
+├── DEPLOYMENT.md                # Detailed deployment guide
+├── ansible/                     # Ansible playbooks and roles
+│   ├── ansible.cfg             # Ansible configuration
+│   ├── inventory/              # Server inventories
+│   │   ├── hosts.yml           # Active inventory (not in Git)
+│   │   └── hosts.example.yml   # Example inventory template
+│   ├── playbooks/              # Ansible playbooks
+│   ├── roles/                  # Ansible roles
+│   └── group_vars/             # Group variables
+│       └── all.example.yml     # Example variables
+├── kubernetes/                  # Kubernetes manifests
+│   ├── base/                   # Base manifests
+│   │   ├── *-deployment.yaml  # Application deployments
+│   │   ├── *-service.yaml     # Kubernetes services
+│   │   ├── *-statefulset.yaml # Stateful applications
+│   │   ├── app-secrets.example.yaml  # Secret template
+│   │   ├── ingress.yaml       # Ingress configuration
+│   │   └── poddisruptionbudget.yaml  # PDB for HA
+│   ├── rbac/                   # RBAC configurations
+│   │   ├── serviceaccount.yaml
+│   │   ├── role.yaml
+│   │   └── rolebinding.yaml
+│   └── environments/           # Environment-specific values
+│       ├── dev/
+│       ├── staging/
+│       └── prod/
+├── terraform/                   # Terraform configurations
+│   ├── main.tf                 # Main configuration
+│   ├── variables.tf            # Variable definitions
+│   ├── outputs.tf              # Output definitions
+│   ├── backend.tf              # Backend configuration
+│   ├── terraform.tfvars.example  # Example variables
+│   ├── .terraform-version      # Terraform version pinning
+│   ├── .tflint.hcl             # TFLint configuration
+│   ├── modules/                # Terraform modules
+│   │   ├── compute/           # EC2, ASG, ALB
+│   │   ├── database/          # RDS, Aurora
+│   │   ├── network/           # VPC, subnets, routing
+│   │   ├── security/          # Security groups, IAM
+│   │   ├── storage/           # S3 buckets
+│   │   └── cost_optimization/ # Scaling policies
+│   └── environments/           # Environment-specific tfvars
+│       ├── dev/
+│       ├── staging/
+│       └── prod/
+├── ci-cd/                       # CI/CD pipelines
+│   └── ci-cd.yml               # GitHub Actions workflow
+├── docs/                        # Documentation
+│   └── design_document.md
+├── runbooks/                    # Operational runbooks
+│   ├── deployment_runbook.md
+│   └── incident_response.md
+└── validation_logs/             # Validation outputs
+    ├── terraform_validate.txt
+    ├── kubernetes_yamllint.txt
+    └── ansible_lint.txt
+```
+
+## Quick Start
+
+### Prerequisites
+
+Install required tools (see [DEPLOYMENT.md](DEPLOYMENT.md) for detailed instructions):
+
+- Terraform >= 1.6.6
+- kubectl >= 1.28.0
+- Ansible >= 2.14
+- yamllint
+- AWS CLI (for AWS deployments)
+
+### Basic Deployment
+
+```bash
+# 1. Deploy cloud infrastructure with Terraform
+cd terraform
+cp terraform.tfvars.example terraform.tfvars
+# Edit terraform.tfvars with your values
+terraform init -backend=false
+terraform validate
+terraform plan -out=tfplan
+terraform apply tfplan
+
+# 2. Deploy Kubernetes manifests
+cd ../kubernetes
+cp base/app-secrets.example.yaml base/app-secrets.yaml
+# Edit app-secrets.yaml (base64 encode values)
+kubectl apply -f rbac/
+kubectl apply -f base/
+
+# 3. Configure servers with Ansible
+cd ../ansible
+cp inventory/hosts.example.yml inventory/hosts.yml
+# Edit hosts.yml with your server IPs
+ansible-playbook -i inventory/hosts.yml playbooks/main.yml
+```
+
+See **[DEPLOYMENT.md](DEPLOYMENT.md)** for complete step-by-step instructions.
 
 ## Components
 
-### Ansible
+### Terraform
 
-Ansible playbooks and roles for automating server configuration and application deployment processes:
+Infrastructure as Code using Terraform for provisioning and managing cloud resources.
 
-#### Key Features:
+**Key Features:**
 
-- **Server Provisioning**: Automated setup of application servers, databases, and supporting services
-- **Configuration Management**: Consistent configuration across development, staging, and production environments
-- **Application Deployment**: Zero-downtime deployment workflows for all LendSmart components
-- **Security Hardening**: Implementation of security best practices and compliance requirements
-- **Monitoring Setup**: Configuration of monitoring agents and alerting systems
+- Multi-cloud support (AWS primary, extensible to Azure/GCP)
+- Modular architecture for reusability
+- Environment-specific configurations (dev/staging/prod)
+- Security best practices (encryption, IAM, network segmentation)
+- Cost optimization with auto-scaling and lifecycle policies
 
-#### Usage:
+**Modules:**
+
+- `network/` - VPC, subnets, IGW, NAT, routing tables
+- `compute/` - EC2 instances, Auto Scaling Groups, Launch Templates, ALB
+- `database/` - RDS MySQL/Aurora with encryption and backups
+- `storage/` - S3 buckets with versioning and lifecycle rules
+- `security/` - Security groups, IAM roles, network ACLs
+- `cost_optimization/` - Scaling policies, CloudWatch alarms
+
+**Quick Commands:**
 
 ```bash
-# Deploy to development environment
-cd infrastructure/ansible
-ansible-playbook -i inventories/dev site.yml
-
-# Deploy to production environment
-ansible-playbook -i inventories/prod site.yml --tags=deploy
+terraform fmt -recursive          # Format all files
+terraform validate                # Validate configuration
+terraform plan                    # Preview changes
+terraform apply                   # Apply changes
+terraform destroy                 # Destroy resources
 ```
 
 ### Kubernetes
 
-Kubernetes manifests and Helm charts for container orchestration and microservices management:
+Kubernetes manifests for container orchestration and microservices management.
 
-#### Key Features:
+**Key Features:**
 
-- **Microservices Architecture**: Deployment configurations for all LendSmart microservices
-- **Horizontal Scaling**: Automatic scaling based on resource utilization and demand
-- **Service Discovery**: Internal service communication and load balancing
-- **Secret Management**: Secure handling of sensitive configuration data
-- **Resource Optimization**: Efficient allocation of compute resources
-- **Health Monitoring**: Liveness and readiness probes for service reliability
+- Microservices deployment configurations
+- Horizontal Pod Autoscaling (HPA)
+- StatefulSets for databases
+- RBAC for security
+- Pod Disruption Budgets for high availability
+- Network policies for pod-to-pod communication control
+- Ingress for external access
 
-#### Components:
+**Components:**
 
-- Deployment manifests for backend services
-- StatefulSets for databases and stateful components
-- ConfigMaps and Secrets for configuration management
-- Services and Ingress resources for networking
-- PersistentVolumeClaims for data persistence
-- HorizontalPodAutoscalers for automatic scaling
+- Deployments: backend, frontend
+- StatefulSets: database, redis
+- Services: ClusterIP, LoadBalancer
+- Ingress: NGINX with TLS
+- RBAC: ServiceAccounts, Roles, RoleBindings
+- PodDisruptionBudgets: ensure availability during updates
 
-#### Usage:
-
-```bash
-# Apply Kubernetes manifests
-cd infrastructure/kubernetes
-kubectl apply -f namespaces/
-kubectl apply -f services/
-kubectl apply -f deployments/
-
-# Deploy using Helm
-helm upgrade --install lendsmart ./helm/lendsmart -f ./helm/values-prod.yaml
-```
-
-### Terraform
-
-Infrastructure as Code using Terraform for provisioning and managing cloud resources:
-
-#### Key Features:
-
-- **Multi-Cloud Support**: Configurations for AWS, Azure, and Google Cloud Platform
-- **Network Infrastructure**: VPCs, subnets, security groups, and routing tables
-- **Compute Resources**: Virtual machines, container services, and serverless functions
-- **Database Services**: Managed database instances with high availability
-- **Storage Solutions**: Object storage, block storage, and file systems
-- **Security Controls**: IAM policies, encryption settings, and network ACLs
-- **Monitoring Resources**: Logging, metrics, and alerting infrastructure
-
-#### Modules:
-
-- `vpc/` - Network infrastructure setup
-- `compute/` - Compute resources (EC2, EKS, etc.)
-- `database/` - Database services (RDS, DynamoDB)
-- `storage/` - Storage solutions (S3, EFS)
-- `security/` - Security configurations and policies
-
-#### Usage:
+**Quick Commands:**
 
 ```bash
-# Initialize Terraform
-cd infrastructure/terraform/environments/prod
-terraform init
-
-# Plan deployment
-terraform plan -out=tfplan
-
-# Apply changes
-terraform apply tfplan
+kubectl apply -f base/            # Apply manifests
+kubectl get pods                  # Check pod status
+kubectl logs -f <pod-name>        # View logs
+kubectl describe pod <pod-name>   # Debug issues
+kubectl delete -f base/           # Remove resources
 ```
+
+### Ansible
+
+Ansible playbooks and roles for automating server configuration and application deployment.
+
+**Key Features:**
+
+- Idempotent configuration management
+- Role-based organization
+- Variable-driven configuration
+- Security hardening playbooks
+- Zero-downtime deployment support
+
+**Roles:**
+
+- `common/` - Base system configuration, users, packages
+- `webserver/` - NGINX configuration and SSL setup
+- `database/` - MySQL/PostgreSQL installation and tuning
+
+**Quick Commands:**
+
+```bash
+ansible all -m ping               # Test connectivity
+ansible-playbook playbooks/main.yml --check  # Dry run
+ansible-playbook playbooks/main.yml          # Execute
+ansible-playbook playbooks/security_hardening.yml  # Harden security
+```
+
+### CI/CD
+
+GitHub Actions workflow for continuous integration and deployment.
+
+**Features:**
+
+- Infrastructure validation (Terraform, Kubernetes, Ansible)
+- Code linting (Smart contracts, backend, frontend)
+- Automated testing (unit, integration, e2e)
+- Smart contract deployment to testnets
+- Security scanning
+
+**Workflow Jobs:**
+
+1. `infrastructure-lint` - Validate all infrastructure code
+2. `lint` - Code quality checks
+3. `test` - Run all test suites
+4. `deploy-testnet` - Deploy contracts to Sepolia
 
 ## Deployment Environments
 
-The infrastructure configurations support multiple deployment environments:
+### Development
 
-- **Development**: For feature development and testing
-- **Staging**: For pre-production validation and integration testing
-- **Production**: For live user-facing services
+- Single-node deployments
+- Minimal resources for cost savings
+- Local Terraform state
+- Shared development database
 
-Each environment has its own configuration variables and scaling parameters defined in environment-specific files.
+### Staging
 
-## Disaster Recovery
+- Production-like setup
+- Multi-AZ for testing failover
+- Separate database instances
+- Integration testing environment
 
-The infrastructure includes disaster recovery capabilities:
+### Production
 
-- **Backup Automation**: Regular automated backups of databases and critical data
-- **Multi-Region Deployment**: Support for deploying across multiple geographic regions
-- **Failover Mechanisms**: Automatic failover for high-availability services
-- **Recovery Procedures**: Documented procedures for various disaster scenarios
+- High availability (Multi-AZ)
+- Auto-scaling enabled
+- Encrypted storage and backups
+- Monitoring and alerting
+- S3 backend for Terraform state
+
+## Validation
+
+### Terraform
+
+```bash
+cd terraform
+terraform fmt -check -recursive
+terraform init -backend=false
+terraform validate
+# Expected: Success! The configuration is valid.
+```
+
+### Kubernetes
+
+```bash
+cd kubernetes
+yamllint base/*.yaml rbac/*.yaml
+kubectl apply --dry-run=client -f base/
+# Expected: No errors, resources validated
+```
+
+### Ansible
+
+```bash
+cd ansible
+ansible-lint playbooks/*.yml
+ansible-playbook -i inventory/hosts.yml playbooks/main.yml --syntax-check
+# Expected: No fatal errors
+```
+
+See `validation_logs/` directory for sample validation outputs.
 
 ## Security Considerations
 
-Security is implemented at multiple layers:
+### Secrets Management
 
-- **Network Security**: Segmentation, firewalls, and access controls
-- **Data Encryption**: Encryption at rest and in transit
-- **Identity Management**: Role-based access control and least privilege principle
-- **Compliance**: Infrastructure configurations aligned with regulatory requirements
-- **Secrets Management**: Secure handling of credentials and sensitive information
+**DO NOT commit secrets to Git!**
+
+- Use `.example` files as templates
+- Store actual secrets in:
+    - AWS Secrets Manager
+    - HashiCorp Vault
+    - Kubernetes External Secrets
+    - Ansible Vault for sensitive variables
+
+### Required Secret Files (Git-ignored)
+
+- `terraform/terraform.tfvars` - Terraform variables
+- `kubernetes/base/app-secrets.yaml` - Kubernetes secrets
+- `ansible/inventory/hosts.yml` - Server inventories
+- `ansible/group_vars/all.yml` - Ansible variables
+
+### Security Features
+
+- **Network Security**: VPC isolation, security groups, network policies
+- **Data Encryption**: RDS encryption at rest, S3 encryption, TLS in transit
+- **IAM**: Least privilege roles, instance profiles
+- **Compliance**: Logging enabled, audit trails, backup retention
+- **Secrets**: Encrypted secret storage, no plain-text secrets
 
 ## Monitoring and Logging
 
-Infrastructure for observability includes:
+### Infrastructure Monitoring
 
-- **Metrics Collection**: Prometheus for metrics gathering
-- **Visualization**: Grafana dashboards for infrastructure monitoring
-- **Log Aggregation**: ELK stack or Cloud-native logging solutions
-- **Alerting**: Automated alerts for critical issues
-- **Performance Monitoring**: Resource utilization and application performance tracking
+- **CloudWatch**: AWS resource metrics
+- **Prometheus**: Kubernetes cluster metrics
+- **Grafana**: Dashboards and visualization
+
+### Application Logging
+
+- **ELK Stack**: Elasticsearch, Logstash, Kibana
+- **CloudWatch Logs**: Centralized log aggregation
+- **Kubernetes**: Pod logs via `kubectl logs`
+
+### Alerting
+
+- CloudWatch Alarms for CPU, memory, disk
+- PagerDuty/Slack integration
+- Auto-scaling based on metrics
+
+## Disaster Recovery
+
+### Backup Strategy
+
+- **Database**: Automated daily backups, 7-day retention
+- **Application Data**: S3 versioning, lifecycle policies
+- **Infrastructure**: Terraform state backups, Git version control
+
+### Recovery Procedures
+
+See `runbooks/incident_response.md` for detailed procedures:
+
+- Database restoration
+- Infrastructure recreation
+- Application redeployment
 
 ## Best Practices
 
-When working with the infrastructure code:
+1. **Version Control**: All infrastructure changes via Git
+2. **Testing**: Validate in dev/staging before production
+3. **Documentation**: Update docs for all changes
+4. **Security**: Regular security audits and updates
+5. **Monitoring**: Set up alerts for critical issues
+6. **Backups**: Regular backups and recovery testing
+7. **Immutable Infrastructure**: Replace instead of modify
+8. **CI/CD**: Automate deployments through pipelines
 
-1. Always use version control for infrastructure changes
-2. Test changes in development/staging before applying to production
-3. Use infrastructure validation tools (e.g., terraform validate, tflint)
-4. Document all infrastructure changes and deployment procedures
-5. Regularly update dependencies and security patches
-6. Follow the principle of immutable infrastructure
-7. Implement infrastructure changes through CI/CD pipelines
+## Troubleshooting
+
+### Common Issues
+
+**Terraform: "Backend initialization required"**
+
+```bash
+terraform init
+```
+
+**Kubernetes: "ImagePullBackOff"**
+
+```bash
+kubectl describe pod <pod-name>
+# Check image name and registry access
+```
+
+**Ansible: "SSH connection failed"**
+
+```bash
+# Verify SSH key permissions
+chmod 600 ~/.ssh/your-key.pem
+# Test manual connection
+ssh -i ~/.ssh/your-key.pem user@host
+```
+
+See [DEPLOYMENT.md](DEPLOYMENT.md) for more troubleshooting tips.
+
+## Documentation
+
+- [DEPLOYMENT.md](DEPLOYMENT.md) - Complete deployment guide
+- [docs/design_document.md](docs/design_document.md) - Architecture details
+- [runbooks/deployment_runbook.md](runbooks/deployment_runbook.md) - Operations guide
+- [runbooks/incident_response.md](runbooks/incident_response.md) - Incident procedures
+
+## Support
+
+For issues or questions:
+
+- Review documentation in this directory
+- Check validation logs in `validation_logs/`
+- Open an issue on GitHub
+- Contact the DevOps team
+
+## Change Log
+
+- **2024-12**: Infrastructure code audit and fixes
+    - Fixed Terraform module dependencies
+    - Added Kubernetes RBAC and PDB
+    - Created example configuration files
+    - Added comprehensive validation
+    - Updated CI/CD with infrastructure checks

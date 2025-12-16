@@ -1,32 +1,38 @@
-
-variable "launch_configuration_name" {
-  description = "The name of the launch configuration to use for the ASG."
+variable "project_name" {
+  description = "Name of the project"
   type        = string
 }
 
-variable "asg_min_size" {
-  description = "The minimum size of the Auto Scaling Group."
-  type        = number
-  default     = 1
-}
-
-variable "asg_max_size" {
-  description = "The maximum size of the Auto Scaling Group."
-  type        = number
-  default     = 3
-}
-
-variable "subnet_ids" {
-  description = "A list of subnet IDs to launch resources in."
-  type        = list(string)
-}
-
-variable "project_name" {
-  description = "The name of the project."
+variable "autoscaling_group_name" {
+  description = "Name of the existing Auto Scaling group"
   type        = string
 }
 
 variable "s3_bucket_id" {
-  description = "The ID of the S3 bucket for lifecycle policies."
+  description = "ID of the S3 bucket for lifecycle rules"
   type        = string
+}
+
+variable "scaling_adjustment" {
+  description = "Number of instances to scale up/down"
+  type        = number
+  default     = 1
+}
+
+variable "scaling_cooldown" {
+  description = "Cooldown period between scaling actions in seconds"
+  type        = number
+  default     = 300
+}
+
+variable "cpu_threshold" {
+  description = "CPU utilization threshold for scale-up"
+  type        = number
+  default     = 70
+}
+
+variable "cpu_low_threshold" {
+  description = "CPU utilization threshold for scale-down"
+  type        = number
+  default     = 30
 }

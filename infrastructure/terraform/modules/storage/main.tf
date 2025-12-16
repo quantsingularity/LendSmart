@@ -1,8 +1,17 @@
+locals {
+  bucket_name = var.bucket_name != "" ? var.bucket_name : "${var.app_name}-${var.environment}-data-${random_id.bucket_suffix.hex}"
+}
+
+resource "random_id" "bucket_suffix" {
+  byte_length = 4
+}
+
 resource "aws_s3_bucket" "app_data_bucket" {
-  bucket = var.bucket_name
+  bucket = local.bucket_name
 
   tags = {
-    Name = "${var.bucket_name}-app-data"
+    Name        = "${local.bucket_name}-app-data"
+    Environment = var.environment
   }
 }
 

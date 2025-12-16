@@ -1,0 +1,10 @@
+[31m╷[0m[0m
+[31m│[0m [0m[1m[31mError: [0m[0m[1mMissing required argument[0m
+[31m│[0m [0m
+[31m│[0m [0m[0m  on main.tf line 57, in module "storage":
+[31m│[0m [0m  57: module "storage" [4m{[0m[0m
+[31m│[0m [0m
+[31m│[0m [0mThe argument "bucket_name" is required, but no definition was found.
+[31m╵[0m[0m
+[32m[1mSuccess![0m The configuration is valid.
+[0m

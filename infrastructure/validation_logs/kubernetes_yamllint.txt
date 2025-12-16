@@ -1,0 +1,62 @@
+kubernetes/base/app-secrets.example.yaml
+  1:1       warning  missing document start "---"  (document-start)
+  10:6      error    trailing spaces  (trailing-spaces)
+  18:1      error    trailing spaces  (trailing-spaces)
+
+kubernetes/base/app-secrets.yaml
+  1:1       warning  missing document start "---"  (document-start)
+  7:121     error    line too long (125 > 120 characters)  (line-length)
+
+kubernetes/base/backend-deployment.yaml
+  1:1       warning  missing document start "---"  (document-start)
+
+kubernetes/base/backend-service.yaml
+  1:1       warning  missing document start "---"  (document-start)
+
+kubernetes/base/database-service.yaml
+  1:1       warning  missing document start "---"  (document-start)
+
+kubernetes/base/database-statefulset.yaml
+  1:1       warning  missing document start "---"  (document-start)
+
+kubernetes/base/frontend-deployment.yaml
+  1:1       warning  missing document start "---"  (document-start)
+
+kubernetes/base/frontend-service.yaml
+  1:1       warning  missing document start "---"  (document-start)
+
+kubernetes/base/ingress.yaml
+  1:1       warning  missing document start "---"  (document-start)
+
+kubernetes/base/logging-agent.yaml
+  1:1       warning  missing document start "---"  (document-start)
+
+kubernetes/base/monitoring.yaml
+  1:1       warning  missing document start "---"  (document-start)
+
+kubernetes/base/network-policy.yaml
+  1:1       warning  missing document start "---"  (document-start)
+  30:28     warning  too few spaces before comment: expected 2  (comments)
+  50:28     warning  too few spaces before comment: expected 2  (comments)
+
+kubernetes/base/poddisruptionbudget.yaml
+  1:1       warning  missing document start "---"  (document-start)
+
+kubernetes/base/redis-deployment.yaml
+  1:1       warning  missing document start "---"  (document-start)
+
+kubernetes/base/redis-pvc.yaml
+  1:1       warning  missing document start "---"  (document-start)
+
+kubernetes/base/redis-service.yaml
+  1:1       warning  missing document start "---"  (document-start)
+
+kubernetes/rbac/role.yaml
+  1:1       warning  missing document start "---"  (document-start)
+
+kubernetes/rbac/rolebinding.yaml
+  1:1       warning  missing document start "---"  (document-start)
+
+kubernetes/rbac/serviceaccount.yaml
+  1:1       warning  missing document start "---"  (document-start)
+

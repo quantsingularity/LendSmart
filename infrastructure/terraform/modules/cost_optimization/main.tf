@@ -1,26 +1,12 @@
-resource "aws_autoscaling_group" "app_asg" {
-  launch_configuration = var.launch_configuration_name
-  min_size             = var.asg_min_size
-  max_size             = var.asg_max_size
-  vpc_zone_identifier  = var.subnet_ids
-
-  tag {
-    key                 = "Name"
-    value               = "${var.project_name}-app-asg"
-    propagate_at_launch = true
-  }
-
-  lifecycle {
-    create_before_destroy = true
-  }
-}
+# Cost Optimization Module
+# Adds scaling policies and lifecycle rules to existing resources
 
 resource "aws_autoscaling_policy" "app_scaling_policy" {
   name                   = "${var.project_name}-app-scaling-policy"
-  scaling_adjustment     = 2
-  cooldown               = 300
+  scaling_adjustment     = var.scaling_adjustment
+  cooldown               = var.scaling_cooldown
   adjustment_type        = "ChangeInCapacity"
-  autoscaling_group_name = aws_autoscaling_group.app_asg.name
+  autoscaling_group_name = var.autoscaling_group_name
 }
 
 resource "aws_cloudwatch_metric_alarm" "cpu_utilization_high" {
@@ -31,11 +17,31 @@ resource "aws_cloudwatch_metric_alarm" "cpu_utilization_high" {
   namespace           = "AWS/EC2"
   period              = 300
   statistic           = "Average"
-  threshold           = 70
-  alarm_description   = "This alarm monitors EC2 CPU utilization."
+  threshold           = var.cpu_threshold
+  alarm_description   = "This alarm monitors EC2 CPU utilization for scaling"
+
   dimensions = {
-    AutoScalingGroupName = aws_autoscaling_group.app_asg.name
+    AutoScalingGroupName = var.autoscaling_group_name
   }
+
+  alarm_actions = [aws_autoscaling_policy.app_scaling_policy.arn]
+}
+
+resource "aws_cloudwatch_metric_alarm" "cpu_utilization_low" {
+  alarm_name          = "${var.project_name}-cpu-utilization-low"
+  comparison_operator = "LessThanThreshold"
+  evaluation_periods  = 2
+  metric_name         = "CPUUtilization"
+  namespace           = "AWS/EC2"
+  period              = 300
+  statistic           = "Average"
+  threshold           = var.cpu_low_threshold
+  alarm_description   = "This alarm monitors EC2 CPU utilization for scale-down"
+
+  dimensions = {
+    AutoScalingGroupName = var.autoscaling_group_name
+  }
+
   alarm_actions = [aws_autoscaling_policy.app_scaling_policy.arn]
 }
 

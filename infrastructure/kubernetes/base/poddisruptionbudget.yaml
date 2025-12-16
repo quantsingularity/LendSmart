@@ -1,0 +1,21 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+    name: lendsmart-backend-pdb
+    namespace: default
+spec:
+    minAvailable: 1
+    selector:
+        matchLabels:
+            app: lendsmart-backend
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+    name: lendsmart-frontend-pdb
+    namespace: default
+spec:
+    minAvailable: 1
+    selector:
+        matchLabels:
+            app: lendsmart-frontend

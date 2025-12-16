@@ -1,0 +1,27 @@
+---
+# Example Group Variables
+# Copy this to all.yml and customize for your environment
+
+# Application Configuration
+app_name: lendsmart
+app_user: appuser
+app_group: appgroup
+app_port: 3000
+
+# Database Configuration
+db_host: localhost
+db_port: 3306
+db_name: lendsmart_db
+# DO NOT store passwords here! Use Ansible Vault instead:
+# ansible-vault create group_vars/all/vault.yml
+
+# Webserver Configuration
+webserver_port: 80
+webserver_ssl_port: 443
+
+# System Configuration
+ntp_servers:
+    - 0.pool.ntp.org
+    - 1.pool.ntp.org
+
+swap_file_size_mb: 2048

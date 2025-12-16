@@ -1,48 +1,55 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-    name: '{{ .Values.appName }}-frontend'
+    name: lendsmart-frontend
+    namespace: default
     labels:
-        app: '{{ .Values.appName }}-frontend'
+        app: lendsmart-frontend
+        component: frontend
 spec:
-    replicas: '{{ .Values.frontend.replicas }}'
+    replicas: 2
     selector:
         matchLabels:
-            app: '{{ .Values.appName }}-frontend'
+            app: lendsmart-frontend
     template:
         metadata:
             labels:
-                app: '{{ .Values.appName }}-frontend'
+                app: lendsmart-frontend
+                component: frontend
         spec:
             containers:
-                - name: '{{ .Values.appName }}-frontend'
-                  image: '{{ .Values.frontend.image.repository }}:{{ .Values.frontend.image.tag }}'
-                  imagePullPolicy: '{{ .Values.frontend.image.pullPolicy }}'
+                - name: frontend
+                  image: lendsmart/frontend:latest # Replace with your actual image
+                  imagePullPolicy: IfNotPresent
                   ports:
-                      - containerPort: '{{ .Values.frontend.containerPort }}'
+                      - name: http
+                        containerPort: 80
+                        protocol: TCP
                   resources:
                       limits:
-                          cpu: '{{ .Values.frontend.resources.limits.cpu }}'
-                          memory: '{{ .Values.frontend.resources.limits.memory }}'
+                          cpu: 200m
+                          memory: 256Mi
                       requests:
-                          cpu: '{{ .Values.frontend.resources.requests.cpu }}'
-                          memory: '{{ .Values.frontend.resources.requests.memory }}'
+                          cpu: 100m
+                          memory: 128Mi
                   env:
                       - name: REACT_APP_API_URL
-                        value: '{{ .Values.frontend.apiUrl }}'
+                        value: http://lendsmart-backend:3000
                       - name: REACT_APP_ENV
-                        value: '{{ .Values.environment }}'
+                        value: production
                   livenessProbe:
                       httpGet:
                           path: /
-                          port: '{{ .Values.frontend.containerPort }}'
+                          port: http
                       initialDelaySeconds: 30
                       periodSeconds: 10
+                      timeoutSeconds: 5
+                      failureThreshold: 3
                   readinessProbe:
                       httpGet:
                           path: /
-                          port: '{{ .Values.frontend.containerPort }}'
+                          port: http
                       initialDelaySeconds: 5
                       periodSeconds: 5
-            imagePullSecrets:
-                - name: '{{ .Values.imagePullSecrets }}'
+                      timeoutSeconds: 3
+                      failureThreshold: 3

@@ -1,31 +1,32 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-    name: '{{ .Values.appName }}-ingress'
+    name: lendsmart-ingress
+    namespace: default
     annotations:
-        kubernetes.io/ingress.class: '{{ .Values.ingress.class }}'
-        nginx.ingress.kubernetes.io/ssl-redirect: '{{ .Values.ingress.sslRedirect }}'
-        cert-manager.io/cluster-issuer: '{{ .Values.ingress.certManager.issuer }}'
+        kubernetes.io/ingress.class: nginx
+        nginx.ingress.kubernetes.io/ssl-redirect: 'true'
+        cert-manager.io/cluster-issuer: letsencrypt-prod
 spec:
     tls:
         - hosts:
-              - '{{ .Values.ingress.host }}'
-          secretName: '{{ .Values.appName }}-tls'
+              - lendsmart.example.com # Replace with your domain
+          secretName: lendsmart-tls
     rules:
-        - host: '{{ .Values.ingress.host }}'
+        - host: lendsmart.example.com # Replace with your domain
           http:
               paths:
                   - path: /api
                     pathType: Prefix
                     backend:
                         service:
-                            name: '{{ .Values.appName }}-backend'
+                            name: lendsmart-backend
                             port:
-                                number: '{{ .Values.backend.servicePort }}'
+                                number: 3000
                   - path: /
                     pathType: Prefix
                     backend:
                         service:
-                            name: '{{ .Values.appName }}-frontend'
+                            name: lendsmart-frontend
                             port:
-                                number: '{{ .Values.frontend.servicePort }}'
+                                number: 80

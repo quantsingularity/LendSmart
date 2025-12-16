@@ -9,6 +9,7 @@ variable "app_name" {
 }
 
 variable "bucket_name" {
-  description = "The name of the S3 bucket."
+  description = "The name of the S3 bucket (auto-generated if empty)"
   type        = string
+  default     = ""
 }

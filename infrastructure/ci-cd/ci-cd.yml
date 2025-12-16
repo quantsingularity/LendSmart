@@ -7,6 +7,46 @@ on:
         branches: [main, develop]
 
 jobs:
+    # Infrastructure Validation
+    infrastructure-lint:
+        name: Infrastructure Validation
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v3
+
+            - name: Set up Terraform
+              uses: hashicorp/setup-terraform@v2
+              with:
+                  terraform_version: 1.6.6
+
+            - name: Terraform Format Check
+              run: |
+                  cd infrastructure/terraform
+                  terraform fmt -check -recursive
+
+            - name: Terraform Init
+              run: |
+                  cd infrastructure/terraform
+                  terraform init -backend=false
+
+            - name: Terraform Validate
+              run: |
+                  cd infrastructure/terraform
+                  terraform validate
+
+            - name: Install validation tools
+              run: |
+                  pip install yamllint ansible-lint
+
+            - name: Validate Kubernetes Manifests
+              run: |
+                  yamllint infrastructure/kubernetes/
+
+            - name: Validate Ansible Playbooks
+              run: |
+                  cd infrastructure/ansible
+                  ansible-lint playbooks/*.yml || true
+
     lint:
         name: Code Linting
         runs-on: ubuntu-latest
@@ -96,7 +136,7 @@ jobs:
     deploy-testnet:
         name: Deploy to Testnet
         runs-on: ubuntu-latest
-        needs: test
+        needs: [test, infrastructure-lint]
         if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
 
         steps:
@@ -131,19 +171,5 @@ jobs:
 
             - name: Update Deployment Info
               run: |
-                  echo "Contracts deployed to Sepolia testnet at $(cat smart-contracts/.deployed-address)"
+                  echo "Contracts deployed to Sepolia testnet"
                   echo "DEPLOYED_ADDRESS=$(cat smart-contracts/.deployed-address)" >> $GITHUB_ENV
-
-            - name: Create Deployment Summary
-              uses: actions/github-script@v6
-              with:
-                  script: |
-                      const deployedAddress = process.env.DEPLOYED_ADDRESS;
-                      const network = 'sepolia';
-
-                      github.rest.issues.createComment({
-                        issue_number: context.issue.number,
-                        owner: context.repo.owner,
-                        repo: context.repo.repo,
-                        body: `🚀 Deployed to ${network} testnet at address: \`${deployedAddress}\``
-                      })

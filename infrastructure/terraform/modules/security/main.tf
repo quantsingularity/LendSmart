@@ -1,30 +1,70 @@
-resource "aws_security_group" "allow_tls" {
-  name        = "allow_tls"
-  description = "Allow TLS inbound traffic"
+# Application Security Group
+resource "aws_security_group" "app" {
+  name        = "${var.app_name}-${var.environment}-app-sg"
+  description = "Security group for application servers"
   vpc_id      = var.vpc_id
 
   ingress {
-    description      = "TLS from VPC"
-    from_port        = 443
-    to_port          = 443
-    protocol         = "tcp"
-    cidr_blocks      = [var.vpc_cidr_block]
+    description = "HTTP from anywhere"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    description = "HTTPS from anywhere"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   egress {
-    from_port        = 0
-    to_port          = 0
-    protocol         = "-1"
-    cidr_blocks      = ["0.0.0.0/0"]
+    description = "Allow all outbound"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   tags = {
-    Name = "allow_tls"
+    Name        = "${var.app_name}-${var.environment}-app-sg"
+    Environment = var.environment
   }
 }
 
+# Database Security Group
+resource "aws_security_group" "db" {
+  name        = "${var.app_name}-${var.environment}-db-sg"
+  description = "Security group for database servers"
+  vpc_id      = var.vpc_id
+
+  ingress {
+    description     = "MySQL/Aurora from app servers only"
+    from_port       = 3306
+    to_port         = 3306
+    protocol        = "tcp"
+    security_groups = [aws_security_group.app.id]
+  }
+
+  egress {
+    description = "Allow all outbound"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name        = "${var.app_name}-${var.environment}-db-sg"
+    Environment = var.environment
+  }
+}
+
+# IAM Role for EC2 instances
 resource "aws_iam_role" "app_role" {
-  name = "app_role"
+  name = "${var.app_name}-${var.environment}-app-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -35,18 +75,21 @@ resource "aws_iam_role" "app_role" {
         Principal = {
           Service = "ec2.amazonaws.com"
         }
-      },
+      }
     ]
   })
 
   tags = {
-    Name = "app_role"
+    Name        = "${var.app_name}-${var.environment}-app-role"
+    Environment = var.environment
   }
 }
 
+# S3 Read-Only Policy (optional, only if s3_bucket_name is provided)
 resource "aws_iam_policy" "s3_read_only" {
-  name        = "s3_read_only_policy"
-  description = "Allows read-only access to S3 buckets"
+  count       = var.s3_bucket_name != "" ? 1 : 0
+  name        = "${var.app_name}-${var.environment}-s3-read-policy"
+  description = "Allows read-only access to specified S3 bucket"
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -56,50 +99,29 @@ resource "aws_iam_policy" "s3_read_only" {
           "s3:GetObject",
           "s3:ListBucket"
         ]
-        Effect   = "Allow"
+        Effect = "Allow"
         Resource = [
           "arn:aws:s3:::${var.s3_bucket_name}",
           "arn:aws:s3:::${var.s3_bucket_name}/*"
         ]
-      },
+      }
     ]
   })
 }
 
 resource "aws_iam_role_policy_attachment" "app_s3_read_only" {
+  count      = var.s3_bucket_name != "" ? 1 : 0
   role       = aws_iam_role.app_role.name
-  policy_arn = aws_iam_policy.s3_read_only.arn
+  policy_arn = aws_iam_policy.s3_read_only[0].arn
 }
 
-resource "aws_network_acl" "public_nacl" {
-  vpc_id = var.vpc_id
-
-  ingress {
-    protocol   = "tcp"
-    rule_no    = 100
-    action     = "allow"
-    cidr_block = "0.0.0.0/0"
-    from_port  = 80
-    to_port    = 80
-  }
-
-  ingress {
-    protocol   = "tcp"
-    rule_no    = 110
-    action     = "allow"
-    cidr_block = "0.0.0.0/0"
-    from_port  = 443
-    to_port    = 443
-  }
-
-  egress {
-    protocol   = "-1"
-    rule_no    = 100
-    action     = "allow"
-    cidr_block = "0.0.0.0/0"
-  }
+# IAM Instance Profile for EC2
+resource "aws_iam_instance_profile" "app" {
+  name = "${var.app_name}-${var.environment}-instance-profile"
+  role = aws_iam_role.app_role.name
 
   tags = {
-    Name = "public_nacl"
+    Name        = "${var.app_name}-${var.environment}-instance-profile"
+    Environment = var.environment
   }
 }

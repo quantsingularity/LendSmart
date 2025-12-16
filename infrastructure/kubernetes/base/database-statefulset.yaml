@@ -2,10 +2,12 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
     name: database
+    namespace: default
     labels:
         app: database
+        component: database
 spec:
-    serviceName: 'database'
+    serviceName: database
     replicas: 1
     selector:
         matchLabels:
@@ -14,10 +16,22 @@ spec:
         metadata:
             labels:
                 app: database
+                component: database
         spec:
             containers:
-                - name: database
+                - name: mysql
                   image: mysql:8.0
+                  ports:
+                      - name: mysql
+                        containerPort: 3306
+                        protocol: TCP
+                  resources:
+                      limits:
+                          cpu: 1000m
+                          memory: 1Gi
+                      requests:
+                          cpu: 500m
+                          memory: 512Mi
                   env:
                       - name: MYSQL_ROOT_PASSWORD
                         valueFrom:
@@ -39,15 +53,33 @@ spec:
                             secretKeyRef:
                                 name: app-secrets
                                 key: MYSQL_PASSWORD
-                  ports:
-                      - containerPort: 3306
-                        name: mysql
                   volumeMounts:
-                      - name: mysql-persistent-storage
+                      - name: mysql-data
                         mountPath: /var/lib/mysql
+                  livenessProbe:
+                      exec:
+                          command:
+                              - mysqladmin
+                              - ping
+                              - -h
+                              - localhost
+                      initialDelaySeconds: 30
+                      periodSeconds: 10
+                      timeoutSeconds: 5
+                  readinessProbe:
+                      exec:
+                          command:
+                              - mysql
+                              - -h
+                              - localhost
+                              - -e
+                              - SELECT 1
+                      initialDelaySeconds: 10
+                      periodSeconds: 5
+                      timeoutSeconds: 3
     volumeClaimTemplates:
         - metadata:
-              name: mysql-persistent-storage
+              name: mysql-data
           spec:
               accessModes: ['ReadWriteOnce']
               resources:
