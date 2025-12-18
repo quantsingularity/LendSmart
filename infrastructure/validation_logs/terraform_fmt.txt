@@ -1,9 +1,0 @@
-environments/dev/terraform.tfvars
-environments/prod/terraform.tfvars
-environments/staging/terraform.tfvars
-main.tf
-modules/cost_optimization/main.tf
-modules/database/main.tf
-modules/network/main.tf
-modules/security/main.tf
-variables.tf
