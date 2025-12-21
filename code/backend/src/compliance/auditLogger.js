@@ -747,6 +747,29 @@ class AuditLogger {
     }
 
     /**
+     * Log system events
+     * @param {string} event - Event name
+     * @param {Object} data - Event data
+     */
+    async logSystemEvent(event, data = {}) {
+        const auditEntry = await this.createAuditEntry('SYSTEM', {
+            action: event,
+            userId: 'system',
+            ip: 'system',
+            userAgent: 'system',
+            timestamp: new Date().toISOString(),
+            ...data,
+        }, {
+            category: 'system',
+            severity: 'info',
+            retention: '7_years',
+        });
+
+        this.auditLogger.info('System Event', auditEntry);
+        await this.storeAuditHash(auditEntry);
+    }
+
+    /**
      * Export audit logs for regulatory compliance
      * @param {Object} exportCriteria - Export criteria
      * @returns {Object} Export result
@@ -859,8 +882,13 @@ function auditMiddleware(options = {}) {
     };
 }
 
+// Export singleton instance directly for backward compatibility
+const singletonAuditLogger = getAuditLogger();
+
 module.exports = {
     AuditLogger,
     getAuditLogger,
     auditMiddleware,
+    auditLogger: singletonAuditLogger, // Direct export for simple imports
+    logSystemEvent: (event, data) => singletonAuditLogger.logAdminAction({ action: event, ...data }),
 };

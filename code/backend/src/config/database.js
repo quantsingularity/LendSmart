@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const Redis = require('redis');
-const { auditLogger } = require('../compliance/auditLogger');
+const { getAuditLogger } = require('../compliance/auditLogger');
+const auditLogger = getAuditLogger();
 
 /**
  * Enhanced Database Configuration
@@ -20,6 +21,13 @@ class DatabaseManager {
      * Initialize MongoDB connection with production settings
      */
     async connectMongoDB() {
+        // Skip if database connection is disabled
+        if (process.env.SKIP_DB_CONNECTION === 'true') {
+            console.log('⚠️  MongoDB connection skipped (SKIP_DB_CONNECTION=true)');
+            this.isConnected = false;
+            return null;
+        }
+
         try {
             const mongoURI =
                 process.env.MONGODB_URI || 'mongodb://localhost:27017/lendsmart_production';
@@ -124,6 +132,12 @@ class DatabaseManager {
      * Initialize Redis connection for caching and session management
      */
     async connectRedis() {
+        // Skip if database connection is disabled
+        if (process.env.SKIP_DB_CONNECTION === 'true') {
+            console.log('⚠️  Redis connection skipped (SKIP_DB_CONNECTION=true)');
+            return null;
+        }
+
         try {
             const redisConfig = {
                 host: process.env.REDIS_HOST || 'localhost',
@@ -233,6 +247,20 @@ class DatabaseManager {
                 console.error('❌ Reconnection attempt failed:', error);
             }
         }, this.retryDelay * this.connectionRetries); // Exponential backoff
+    }
+
+    /**
+     * Connect to all databases (alias for initialize)
+     */
+    async connect() {
+        return this.initialize();
+    }
+
+    /**
+     * Disconnect from all databases
+     */
+    async disconnect() {
+        return this.shutdown();
     }
 
     /**

@@ -1,8 +1,8 @@
 require('dotenv').config({ path: __dirname + '/../.env' }); // Adjust path to .env if seed script is in a subfolder
 const mongoose = require('mongoose');
 const connectDB = require('../config/db');
-const User = require('../models/UserModel');
-const Loan = require('../models/LoanModel');
+const User = require('../models/User');
+const Loan = require('../models/Loan');
 const bcrypt = require('bcryptjs');
 
 // Connect to DB

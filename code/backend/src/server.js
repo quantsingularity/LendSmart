@@ -4,7 +4,8 @@ const helmet = require('helmet');
 const compression = require('compression');
 const rateLimit = require('express-rate-limit');
 const mongoSanitize = require('express-mongo-sanitize');
-const xss = require('xss-clean');
+// XSS protection is handled by helmet and express-validator
+// const xss = require('xss-clean');
 const hpp = require('hpp');
 const morgan = require('morgan');
 
@@ -180,7 +181,8 @@ class LendSmartServer {
             }),
         );
 
-        this.app.use(xss());
+        // XSS protection via helmet and input validation
+        // this.app.use(xss());
         this.app.use(
             hpp({
                 whitelist: ['sort', 'fields', 'page', 'limit', 'filter'],

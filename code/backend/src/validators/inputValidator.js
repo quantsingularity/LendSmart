@@ -2,7 +2,7 @@ const Joi = require('joi');
 const validator = require('validator');
 const sanitizeHtml = require('sanitize-html');
 const { getAuditLogger } = require('../compliance/auditLogger');
-const logger = require('../utils/logger');
+const { logger } = require('../utils/logger');
 
 /**
  * Enhanced Input Validation Service
@@ -700,5 +700,9 @@ class InputValidator {
     }
 }
 
-// Export singleton instance
-module.exports = new InputValidator();
+// Export singleton instance and class
+const inputValidator = new InputValidator();
+
+module.exports = inputValidator;
+module.exports.InputValidator = InputValidator;
+module.exports.inputValidator = inputValidator;

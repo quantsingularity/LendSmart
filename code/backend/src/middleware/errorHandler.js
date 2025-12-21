@@ -1,5 +1,5 @@
 const { getAuditLogger } = require('../compliance/auditLogger');
-const logger = require('../utils/logger');
+const { logger } = require('../utils/logger');
 
 /**
  * Enhanced Error Handler Middleware

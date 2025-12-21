@@ -1,9 +1,9 @@
-const Loan = require('../models/LoanModel');
-const User = require('../models/UserModel');
+const Loan = require('../models/Loan');
+const User = require('../models/User');
 const { getAuditLogger } = require('../compliance/auditLogger');
 const { getEncryptionService } = require('../config/security/encryption');
 const { validateSchema } = require('../validators/inputValidator');
-const logger = require('../utils/logger');
+const { logger } = require('../utils/logger');
 const creditScoringService = require('../services/creditScoringService');
 const blockchainService = require('../services/blockchainService');
 const notificationService = require('../services/notificationService');

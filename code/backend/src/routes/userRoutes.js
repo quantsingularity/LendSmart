@@ -1,17 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const { protect, authorize } = require('../middleware/auth');
-const {
-    getUsers,
-    getUser,
-    createUser,
-    updateUser,
-    deleteUser,
-    getUsersByRole,
-    getUserByWalletAddress,
-} = require('../controllers/userController');
+const userController = require('../controllers/userController');
 
-// Admin only routes
+// Admin only userController.routes
 router.use(protect);
 router.use(authorize('admin'));
 

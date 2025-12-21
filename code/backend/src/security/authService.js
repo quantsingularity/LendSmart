@@ -4,10 +4,10 @@ const crypto = require('crypto');
 const speakeasy = require('speakeasy');
 const QRCode = require('qrcode');
 const { promisify } = require('util');
-const User = require('../models/UserModel');
+const User = require('../models/User');
 const { getEncryptionService } = require('../config/security/encryption');
 const { getAuditLogger } = require('../compliance/auditLogger');
-const logger = require('../utils/logger');
+const { logger } = require('../utils/logger');
 
 // Redis client with fallback for development
 let redisClient;

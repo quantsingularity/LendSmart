@@ -1,23 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const { protect, authorize } = require('../middleware/auth');
-const {
-    getLoans,
-    getMyLoans,
-    getLoan,
-    applyForLoan,
-    fundLoan,
-    disburseLoan,
-    repayLoan,
-    cancelLoan,
-    createRepaymentSchedule,
-    depositCollateral,
-    setRiskScore,
-    markAsDefaulted,
-    getReputationScore,
-} = require('../controllers/loanController');
+const loanController = require('../controllers/loanController');
 
-// Public routes
+// Public loanController.routes
 router.get('/', getLoans);
 router.get('/:id', getLoan);
 router.get('/reputation/:address', getReputationScore);
@@ -32,10 +18,10 @@ router.post('/:id/cancel', protect, cancelLoan);
 router.post('/:id/schedule', protect, createRepaymentSchedule);
 router.post('/:id/collateral', protect, depositCollateral);
 
-// Risk assessor only routes
+// Risk assessor only loanController.routes
 router.post('/:id/risk', protect, authorize('risk-assessor', 'admin'), setRiskScore);
 
-// Lender or admin only routes
+// Lender or admin only loanController.routes
 router.post('/:id/default', protect, authorize('lender', 'admin'), markAsDefaulted);
 
 module.exports = router;

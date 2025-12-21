@@ -1,10 +1,10 @@
 const crypto = require('crypto');
 const { getEncryptionService } = require('../config/security/encryption');
 const { getAuditLogger } = require('./auditLogger');
-const User = require('../models/UserModel');
-const Loan = require('../models/LoanModel');
+const User = require('../models/User');
+const Loan = require('../models/Loan');
 const redisClient = require('../config/redis');
-const logger = require('../utils/logger');
+const { logger } = require('../utils/logger');
 
 /**
  * GDPR Compliance Module

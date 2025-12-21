@@ -6,7 +6,7 @@ const sharp = require('sharp');
 const { getEncryptionService } = require('../config/security/encryption');
 const { getAuditLogger } = require('../compliance/auditLogger');
 const inputValidator = require('../validators/inputValidator');
-const logger = require('../utils/logger');
+const { logger } = require('../utils/logger');
 
 /**
  * Secure File Upload Service

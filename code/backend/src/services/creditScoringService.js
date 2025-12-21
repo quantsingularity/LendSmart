@@ -1,7 +1,7 @@
-const User = require('../models/UserModel');
-const Loan = require('../models/LoanModel');
+const User = require('../models/User');
+const Loan = require('../models/Loan');
 const { getAuditLogger } = require('../compliance/auditLogger');
-const logger = require('../utils/logger');
+const { logger } = require('../utils/logger');
 
 /**
  * Credit Scoring Service

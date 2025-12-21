@@ -1,18 +1,26 @@
 const rateLimit = require('express-rate-limit');
 const slowDown = require('express-slow-down');
-const RedisStore = require('rate-limit-redis');
-const redisClient = require('../../config/redis');
-const logger = require('../../utils/logger');
+const { logger } = require('../../utils/logger');
 
 /**
- * Advanced rate limiting middleware with Redis backend
+ * Advanced rate limiting middleware with optional Redis backend
  * Implements multiple rate limiting strategies for different endpoints
+ * Falls back to memory store if Redis is not available
  */
 
-// Redis store for rate limiting
-const redisStore = new RedisStore({
-    sendCommand: (...args) => redisClient.call(...args),
-});
+// Try to use Redis store for rate limiting, fallback to memory store
+let redisStore = null;
+try {
+    const RedisStore = require('rate-limit-redis');
+    const redisClient = require('../../config/redis');
+    redisStore = new RedisStore({
+        sendCommand: (...args) => redisClient.call(...args),
+    });
+    console.log('✅ Rate limiting using Redis store');
+} catch (error) {
+    console.log('⚠️  Rate limiting using memory store (Redis not available)');
+    redisStore = undefined; // Use default memory store
+}
 
 /**
  * General API rate limiter

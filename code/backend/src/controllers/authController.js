@@ -1,10 +1,10 @@
 const crypto = require('crypto');
-const User = require('../models/UserModel');
+const User = require('../models/User');
 const authService = require('../security/authService');
 const { getAuditLogger } = require('../compliance/auditLogger');
 const { getGDPRCompliance } = require('../compliance/gdprCompliance');
 const { validateSchema, validateRules, validationRules } = require('../validators/inputValidator');
-const logger = require('../utils/logger');
+const { logger } = require('../utils/logger');
 
 /**
  * Enhanced Authentication Controller

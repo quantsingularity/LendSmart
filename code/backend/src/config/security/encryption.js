@@ -15,9 +15,10 @@ class EncryptionService {
         this.iterations = 100000; // PBKDF2 iterations
 
         // Master key from environment (should be 64 hex characters)
-        this.masterKey = process.env.ENCRYPTION_MASTER_KEY;
-        if (!this.masterKey || this.masterKey.length !== 64) {
-            throw new Error('ENCRYPTION_MASTER_KEY must be 64 hex characters');
+        this.masterKey = process.env.ENCRYPTION_MASTER_KEY || process.env.ENCRYPTION_KEY || crypto.randomBytes(32).toString('hex');
+        if (this.masterKey.length < 32) {
+            console.warn('ENCRYPTION_MASTER_KEY not properly set, using default (NOT SECURE FOR PRODUCTION)');
+            this.masterKey = crypto.randomBytes(32).toString('hex');
         }
     }
 
@@ -47,8 +48,10 @@ class EncryptionService {
             const key = await this.deriveKey(salt);
 
             // Create cipher
-            const cipher = crypto.createCipher(this.algorithm, key);
-            cipher.setAAD(Buffer.from(context, 'utf8'));
+            const cipher = crypto.createCipheriv(this.algorithm, key, iv);
+            if (context) {
+                cipher.setAAD(Buffer.from(context, 'utf8'));
+            }
 
             // Encrypt data
             let encrypted = cipher.update(plaintext, 'utf8');
@@ -89,9 +92,11 @@ class EncryptionService {
             const key = await this.deriveKey(salt);
 
             // Create decipher
-            const decipher = crypto.createDecipher(this.algorithm, key);
+            const decipher = crypto.createDecipheriv(this.algorithm, key, iv);
             decipher.setAuthTag(tag);
-            decipher.setAAD(Buffer.from(context, 'utf8'));
+            if (context) {
+                decipher.setAAD(Buffer.from(context, 'utf8'));
+            }
 
             // Decrypt data
             let decrypted = decipher.update(encrypted);

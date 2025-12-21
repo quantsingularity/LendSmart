@@ -1,7 +1,7 @@
 const rateLimit = require('express-rate-limit');
 const slowDown = require('express-slow-down');
 const { getAuditLogger } = require('../compliance/auditLogger');
-const logger = require('../utils/logger');
+const { logger } = require('../utils/logger');
 
 /**
  * Enhanced Rate Limiting Middleware
