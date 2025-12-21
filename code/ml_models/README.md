@@ -97,15 +97,6 @@ The trained model (e.g., `saved_models/credit_scoring_model.joblib`) and any nec
 3.  Feed the processed features to the loaded model to get a credit score or default probability.
 4.  Use this score in the loan approval process or to determine loan terms.
 
-## Future Enhancements
-
-- Regular model retraining and monitoring for performance degradation.
-- More sophisticated feature engineering.
-- Exploration of alternative modeling techniques.
-- Integration with a feature store.
-- Deployment as a scalable microservice.
-- Explainability (e.g., using SHAP or LIME) to understand model predictions.
-
 ## License
 
 This project is licensed under the [Specify License, e.g., MIT License] - see the `LICENSE` file in the root project directory for details.
