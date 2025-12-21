@@ -6,11 +6,9 @@ Welcome to the comprehensive documentation for the LendSmart platform - a Smart 
 
 The documentation is organized into the following sections:
 
-- **[Architecture](./architecture/README.md)**: System architecture, component interactions, and design patterns
 - **[Setup](./setup/README.md)**: Installation and configuration instructions
 - **[API Documentation](./api/README.md)**: API endpoints, request/response formats, and authentication
 - **[User Guides](./user_guides/README.md)**: End-user instructions for borrowers and lenders
-- **[Developer Guides](./developer_guides/README.md)**: Guidelines for developers contributing to the project
 - **[Infrastructure](./infrastructure/README.md)**: Deployment, scaling, and infrastructure management
 - **[Blockchain](./blockchain/README.md)**: Smart contract details and blockchain integration
 
@@ -57,10 +55,6 @@ LendSmart is built using the following technologies:
 ## Getting Started
 
 For quick setup and installation instructions, please refer to the [Setup Guide](./setup/installation.md).
-
-## Contributing
-
-We welcome contributions to improve the LendSmart platform. Please refer to the [Developer Guide](./developer_guides/contributing.md) for guidelines on how to contribute.
 
 ## License
 

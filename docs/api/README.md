@@ -986,9 +986,3 @@ LendSmart provides official SDKs for easy integration:
       purpose='Home renovation'
     )
     ```
-
-3. **SDK Documentation**:
-    - Comprehensive documentation available at [docs.lendsmart.io/sdk](https://docs.lendsmart.io/sdk)
-    - Code examples for common use cases
-    - TypeScript definitions for JavaScript SDK
-    - API reference for all SDK methods
