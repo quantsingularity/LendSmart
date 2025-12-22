@@ -1,9 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import './LoanManager.sol';
+import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
 
-contract BorrowerContract {
+/**
+ * @title BorrowerContract
+ * @dev A contract representing a single loan instance for a borrower.
+ * This can be used for more complex loan logic or as a proxy.
+ */
+contract BorrowerContract is ReentrancyGuard {
     address public borrower;
     address public loanManager;
     uint256 public loanAmount;
@@ -26,8 +31,14 @@ contract BorrowerContract {
         _;
     }
 
-    constructor(address _loanManager, uint256 _amount, uint256 _interest, uint256 _durationDays) {
-        borrower = msg.sender;
+    constructor(
+        address _borrower,
+        address _loanManager,
+        uint256 _amount,
+        uint256 _interest,
+        uint256 _durationDays
+    ) {
+        borrower = _borrower;
         loanManager = _loanManager;
         loanAmount = _amount;
         interestRate = _interest;
@@ -36,46 +47,59 @@ contract BorrowerContract {
         isActive = true;
     }
 
+    /**
+     * @dev Calculates total amount to be repaid (principal + interest).
+     */
     function getTotalOwed() public view returns (uint256) {
         return loanAmount + (loanAmount * interestRate) / 100;
     }
 
+    /**
+     * @dev Calculates remaining balance to be repaid.
+     */
     function getRemainingBalance() public view returns (uint256) {
-        return getTotalOwed() - repaidAmount;
+        uint256 totalOwed = getTotalOwed();
+        if (repaidAmount >= totalOwed) return 0;
+        return totalOwed - repaidAmount;
     }
 
-    function repayLoan() external payable onlyBorrower onlyActive {
-        require(block.timestamp <= repaymentDeadline, 'Loan has expired');
+    /**
+     * @dev Repays the loan.
+     */
+    function repayLoan() external payable onlyBorrower onlyActive nonReentrant {
+        require(block.timestamp <= repaymentDeadline, 'Loan has expired, check default status');
         require(msg.value > 0, 'Payment must be greater than 0');
 
         uint256 remainingBalance = getRemainingBalance();
+        uint256 paymentAmount = msg.value;
+        uint256 refundAmount = 0;
 
-        if (msg.value >= remainingBalance) {
-            // Full repayment
+        if (paymentAmount >= remainingBalance) {
+            refundAmount = paymentAmount - remainingBalance;
+            paymentAmount = remainingBalance;
             repaidAmount = getTotalOwed();
             isActive = false;
-
-            // Transfer payment to loan manager
-            payable(loanManager).transfer(remainingBalance);
-
-            // Return excess funds if any
-            if (msg.value > remainingBalance) {
-                payable(borrower).transfer(msg.value - remainingBalance);
-            }
-
-            emit RepaymentMade(remainingBalance, 0);
             emit LoanFullyRepaid();
         } else {
-            // Partial repayment
-            repaidAmount += msg.value;
-
-            // Transfer payment to loan manager
-            payable(loanManager).transfer(msg.value);
-
-            emit RepaymentMade(msg.value, getRemainingBalance());
+            repaidAmount += paymentAmount;
         }
+
+        // Transfer payment to loan manager (or lender directly if configured)
+        (bool success, ) = payable(loanManager).call{value: paymentAmount}('');
+        require(success, 'Transfer to loan manager failed');
+
+        // Refund excess funds
+        if (refundAmount > 0) {
+            (bool refundSuccess, ) = payable(borrower).call{value: refundAmount}('');
+            require(refundSuccess, 'Refund to borrower failed');
+        }
+
+        emit RepaymentMade(paymentAmount, getRemainingBalance());
     }
 
+    /**
+     * @dev Checks if the loan has defaulted.
+     */
     function checkDefault() external returns (bool) {
         if (block.timestamp > repaymentDeadline && isActive) {
             isActive = false;
@@ -85,6 +109,9 @@ contract BorrowerContract {
         return false;
     }
 
+    /**
+     * @dev Returns the current status of the loan.
+     */
     function getRepaymentStatus()
         external
         view
@@ -97,5 +124,12 @@ contract BorrowerContract {
         )
     {
         return (getTotalOwed(), repaidAmount, getRemainingBalance(), repaymentDeadline, isActive);
+    }
+
+    /**
+     * @dev Fallback to receive funds.
+     */
+    receive() external payable {
+        revert('Use repayLoan() to make payments');
     }
 }
