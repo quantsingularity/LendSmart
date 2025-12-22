@@ -752,18 +752,22 @@ class AuditLogger {
      * @param {Object} data - Event data
      */
     async logSystemEvent(event, data = {}) {
-        const auditEntry = await this.createAuditEntry('SYSTEM', {
-            action: event,
-            userId: 'system',
-            ip: 'system',
-            userAgent: 'system',
-            timestamp: new Date().toISOString(),
-            ...data,
-        }, {
-            category: 'system',
-            severity: 'info',
-            retention: '7_years',
-        });
+        const auditEntry = await this.createAuditEntry(
+            'SYSTEM',
+            {
+                action: event,
+                userId: 'system',
+                ip: 'system',
+                userAgent: 'system',
+                timestamp: new Date().toISOString(),
+                ...data,
+            },
+            {
+                category: 'system',
+                severity: 'info',
+                retention: '7_years',
+            },
+        );
 
         this.auditLogger.info('System Event', auditEntry);
         await this.storeAuditHash(auditEntry);
@@ -890,5 +894,6 @@ module.exports = {
     getAuditLogger,
     auditMiddleware,
     auditLogger: singletonAuditLogger, // Direct export for simple imports
-    logSystemEvent: (event, data) => singletonAuditLogger.logAdminAction({ action: event, ...data }),
+    logSystemEvent: (event, data) =>
+        singletonAuditLogger.logAdminAction({ action: event, ...data }),
 };

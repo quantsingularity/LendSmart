@@ -12,26 +12,19 @@ const auditLogger = getAuditLogger();
  * @access  Private/Admin
  */
 exports.getAllUsers = asyncHandler(async (req, res) => {
-    const {
-        page = 1,
-        limit = 20,
-        sort = '-createdAt',
-        status,
-        role,
-        search,
-    } = req.query;
+    const { page = 1, limit = 20, sort = '-createdAt', status, role, search } = req.query;
 
     // Build query
     const query = {};
-    
+
     if (status) {
         query.status = status;
     }
-    
+
     if (role) {
         query.role = role;
     }
-    
+
     if (search) {
         query.$or = [
             { email: { $regex: search, $options: 'i' } },
@@ -121,11 +114,11 @@ exports.updateUserStatus = asyncHandler(async (req, res) => {
 
     const oldStatus = user.status;
     user.status = status;
-    
+
     if (reason) {
         user.statusReason = reason;
     }
-    
+
     await user.save();
 
     // Log admin action
@@ -187,26 +180,19 @@ exports.deleteUser = asyncHandler(async (req, res) => {
  * @access  Private/Admin
  */
 exports.getAllLoans = asyncHandler(async (req, res) => {
-    const {
-        page = 1,
-        limit = 20,
-        sort = '-createdAt',
-        status,
-        minAmount,
-        maxAmount,
-    } = req.query;
+    const { page = 1, limit = 20, sort = '-createdAt', status, minAmount, maxAmount } = req.query;
 
     // Build query
     const query = {};
-    
+
     if (status) {
         query.status = status;
     }
-    
+
     if (minAmount) {
         query.amount = { ...query.amount, $gte: parseFloat(minAmount) };
     }
-    
+
     if (maxAmount) {
         query.amount = { ...query.amount, $lte: parseFloat(maxAmount) };
     }
@@ -293,7 +279,7 @@ exports.updateLoanStatus = asyncHandler(async (req, res) => {
 
     const oldStatus = loan.status;
     loan.status = status;
-    
+
     if (reason) {
         loan.adminNotes = loan.adminNotes || [];
         loan.adminNotes.push({
@@ -302,7 +288,7 @@ exports.updateLoanStatus = asyncHandler(async (req, res) => {
             addedAt: new Date(),
         });
     }
-    
+
     await loan.save();
 
     // Log admin action
@@ -353,14 +339,16 @@ exports.getSystemAnalytics = asyncHandler(async (req, res) => {
     const totalLoans = await Loan.countDocuments();
     const activeLoans = await Loan.countDocuments({ status: 'active' });
     const completedLoans = await Loan.countDocuments({ status: 'completed' });
-    
+
     // Calculate total loan amount
     const loanAggregation = await Loan.aggregate([
-        { $group: {
-            _id: null,
-            totalAmount: { $sum: '$amount' },
-            averageAmount: { $avg: '$amount' },
-        }},
+        {
+            $group: {
+                _id: null,
+                totalAmount: { $sum: '$amount' },
+                averageAmount: { $avg: '$amount' },
+            },
+        },
     ]);
 
     const analytics = {

@@ -51,8 +51,7 @@ class DatabaseManager {
                 },
 
                 // Performance Settings
-                bufferMaxEntries: 0, // Disable mongoose buffering
-                bufferCommands: false, // Disable mongoose buffering
+                // Note: bufferMaxEntries and bufferCommands are removed in newer MongoDB drivers
                 maxStalenessSeconds: parseInt(process.env.MONGO_MAX_STALENESS) || 90,
 
                 // Security Settings

@@ -15,9 +15,14 @@ class EncryptionService {
         this.iterations = 100000; // PBKDF2 iterations
 
         // Master key from environment (should be 64 hex characters)
-        this.masterKey = process.env.ENCRYPTION_MASTER_KEY || process.env.ENCRYPTION_KEY || crypto.randomBytes(32).toString('hex');
+        this.masterKey =
+            process.env.ENCRYPTION_MASTER_KEY ||
+            process.env.ENCRYPTION_KEY ||
+            crypto.randomBytes(32).toString('hex');
         if (this.masterKey.length < 32) {
-            console.warn('ENCRYPTION_MASTER_KEY not properly set, using default (NOT SECURE FOR PRODUCTION)');
+            console.warn(
+                'ENCRYPTION_MASTER_KEY not properly set, using default (NOT SECURE FOR PRODUCTION)',
+            );
             this.masterKey = crypto.randomBytes(32).toString('hex');
         }
     }

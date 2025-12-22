@@ -302,25 +302,25 @@ class CreditScoringService {
                         const lateCount = loan.repayments.filter((payment) => {
                             // Would implement actual late payment detection logic
                             // Check for common fraud patterns
-        const fraudIndicators = [];
-        
-        // Check for unusual patterns
-        if (loanAmount > creditScore * 500) {
-            fraudIndicators.push('loan_amount_exceeds_creditworthiness');
-        }
-        
-        // Check employment duration
-        if (employmentDuration < 6) {
-            fraudIndicators.push('short_employment_duration');
-        }
-        
-        // Check debt-to-income ratio
-        const debtToIncomeRatio = (existingDebt + loanAmount) / monthlyIncome;
-        if (debtToIncomeRatio > 0.5) {
-            fraudIndicators.push('high_debt_to_income_ratio');
-        }
-        
-        return fraudIndicators.length > 2; // Flag as fraud if 3+ indicators
+                            const fraudIndicators = [];
+
+                            // Check for unusual patterns
+                            if (loanAmount > creditScore * 500) {
+                                fraudIndicators.push('loan_amount_exceeds_creditworthiness');
+                            }
+
+                            // Check employment duration
+                            if (employmentDuration < 6) {
+                                fraudIndicators.push('short_employment_duration');
+                            }
+
+                            // Check debt-to-income ratio
+                            const debtToIncomeRatio = (existingDebt + loanAmount) / monthlyIncome;
+                            if (debtToIncomeRatio > 0.5) {
+                                fraudIndicators.push('high_debt_to_income_ratio');
+                            }
+
+                            return fraudIndicators.length > 2; // Flag as fraud if 3+ indicators
                         }).length;
                         latePayments += lateCount;
                     }
