@@ -6,6 +6,7 @@ to augment traditional credit scoring with non-traditional data points.
 """
 
 from .utils import setup_logging
+import logging
 import os
 from typing import Any, Dict, Optional, Tuple
 import joblib
@@ -28,7 +29,7 @@ class AlternativeDataScorer:
     Provides common functionality for all alternative data scoring algorithms
     """
 
-    def __init__(self, config: Dict[str, Any] = None) -> Any:
+    def __init__(self, config: Dict[str, Any] = None) -> None:
         """
         Initialize the scorer with configuration
 
@@ -90,7 +91,7 @@ class DigitalFootprintScorer(AlternativeDataScorer):
     Analyzes digital presence and behavior to assess creditworthiness
     """
 
-    def __init__(self, config: Dict[str, Any] = None) -> Any:
+    def __init__(self, config: Dict[str, Any] = None) -> None:
         super().__init__(config)
         self.weights = self.config.get(
             "weights",
@@ -193,7 +194,7 @@ class TransactionDataScorer(AlternativeDataScorer):
     Analyzes financial behavior and stability based on transaction history
     """
 
-    def __init__(self, config: Dict[str, Any] = None) -> Any:
+    def __init__(self, config: Dict[str, Any] = None) -> None:
         super().__init__(config)
         self.model = None
         self.scaler = StandardScaler()
@@ -359,7 +360,7 @@ class UtilityPaymentScorer(AlternativeDataScorer):
     Analyzes utility payment history to assess payment reliability
     """
 
-    def __init__(self, config: Dict[str, Any] = None) -> Any:
+    def __init__(self, config: Dict[str, Any] = None) -> None:
         super().__init__(config)
         self.weights = self.config.get(
             "weights",
@@ -480,7 +481,7 @@ class EducationEmploymentScorer(AlternativeDataScorer):
     Analyzes educational background and employment history to assess stability and potential
     """
 
-    def __init__(self, config: Dict[str, Any] = None) -> Any:
+    def __init__(self, config: Dict[str, Any] = None) -> None:
         super().__init__(config)
         self.weights = self.config.get(
             "weights",
@@ -642,7 +643,7 @@ class AlternativeDataScoreAggregator:
     Combines individual scores into a comprehensive alternative data score
     """
 
-    def __init__(self, config: Dict[str, Any] = None) -> Any:
+    def __init__(self, config: Dict[str, Any] = None) -> None:
         """
         Initialize the score aggregator
 

@@ -28,7 +28,7 @@ class DataSourceError(Exception):
 class AlternativeDataSource(ABC):
     """Abstract base class for all alternative data sources"""
 
-    def __init__(self, config: Dict[str, Any] = None) -> Any:
+    def __init__(self, config: Dict[str, Any] = None) -> None:
         """
         Initialize the data source with configuration
 
@@ -133,7 +133,7 @@ class DigitalFootprintDataSource(AlternativeDataSource):
     - Online behavior
     """
 
-    def __init__(self, config: Dict[str, Any] = None) -> Any:
+    def __init__(self, config: Dict[str, Any] = None) -> None:
         super().__init__(config)
         self.api_key = self.config.get(
             "api_key", os.environ.get("DIGITAL_FOOTPRINT_API_KEY", "")
@@ -254,7 +254,7 @@ class TransactionDataSource(AlternativeDataSource):
     - Financial behavior
     """
 
-    def __init__(self, config: Dict[str, Any] = None) -> Any:
+    def __init__(self, config: Dict[str, Any] = None) -> None:
         super().__init__(config)
         self.api_key = self.config.get(
             "api_key", os.environ.get("TRANSACTION_API_KEY", "")
@@ -381,7 +381,7 @@ class UtilityPaymentDataSource(AlternativeDataSource):
     - Rent payments
     """
 
-    def __init__(self, config: Dict[str, Any] = None) -> Any:
+    def __init__(self, config: Dict[str, Any] = None) -> None:
         super().__init__(config)
         self.api_key = self.config.get("api_key", os.environ.get("UTILITY_API_KEY", ""))
         self.api_url = self.config.get(
@@ -489,7 +489,7 @@ class EducationEmploymentDataSource(AlternativeDataSource):
     - Industry and job stability
     """
 
-    def __init__(self, config: Dict[str, Any] = None) -> Any:
+    def __init__(self, config: Dict[str, Any] = None) -> None:
         super().__init__(config)
         self.api_key = self.config.get(
             "api_key", os.environ.get("EDUCATION_EMPLOYMENT_API_KEY", "")
@@ -609,7 +609,7 @@ class AlternativeDataManager:
     multiple alternative data sources.
     """
 
-    def __init__(self, config_path: str = None) -> Any:
+    def __init__(self, config_path: str = None) -> None:
         """
         Initialize the alternative data manager
 

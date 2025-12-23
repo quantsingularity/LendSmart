@@ -26,7 +26,7 @@ class ComplianceError(Exception):
 class ComplianceCheck:
     """Base class for all compliance checks"""
 
-    def __init__(self, config: Dict[str, Any] = None) -> Any:
+    def __init__(self, config: Dict[str, Any] = None) -> None:
         """
         Initialize the compliance check
 
@@ -73,7 +73,7 @@ class EqualOpportunityCheck(ComplianceCheck):
     Ensures that lending decisions do not discriminate based on protected characteristics
     """
 
-    def __init__(self, config: Dict[str, Any] = None) -> Any:
+    def __init__(self, config: Dict[str, Any] = None) -> None:
         super().__init__(config)
         self.description = (
             "Checks for equal opportunity compliance in lending decisions"
@@ -209,7 +209,7 @@ class FairCreditReportingCheck(ComplianceCheck):
     Ensures proper handling of credit information and adverse action notices
     """
 
-    def __init__(self, config: Dict[str, Any] = None) -> Any:
+    def __init__(self, config: Dict[str, Any] = None) -> None:
         super().__init__(config)
         self.description = (
             "Checks for FCRA compliance in credit reporting and adverse actions"
@@ -272,7 +272,7 @@ class TruthInLendingCheck(ComplianceCheck):
     Ensures proper disclosure of loan terms and costs
     """
 
-    def __init__(self, config: Dict[str, Any] = None) -> Any:
+    def __init__(self, config: Dict[str, Any] = None) -> None:
         super().__init__(config)
         self.description = "Checks for TILA compliance in loan disclosures"
         self.regulation_references = ["TILA", "Regulation Z"]
@@ -335,7 +335,7 @@ class AntiMoneyLaunderingCheck(ComplianceCheck):
     Ensures proper customer identification and suspicious activity monitoring
     """
 
-    def __init__(self, config: Dict[str, Any] = None) -> Any:
+    def __init__(self, config: Dict[str, Any] = None) -> None:
         super().__init__(config)
         self.description = "Checks for AML compliance in customer identification and transaction monitoring"
         self.regulation_references = ["BSA", "FinCEN", "PATRIOT Act"]
@@ -415,7 +415,7 @@ class ModelRiskGovernanceCheck(ComplianceCheck):
     Ensures proper development, validation, and monitoring of credit models
     """
 
-    def __init__(self, config: Dict[str, Any] = None) -> Any:
+    def __init__(self, config: Dict[str, Any] = None) -> None:
         super().__init__(config)
         self.description = (
             "Checks for compliance with model risk governance requirements"
@@ -487,7 +487,7 @@ class DataPrivacyCheck(ComplianceCheck):
     Ensures proper handling of personal information in accordance with privacy laws
     """
 
-    def __init__(self, config: Dict[str, Any] = None) -> Any:
+    def __init__(self, config: Dict[str, Any] = None) -> None:
         super().__init__(config)
         self.description = "Checks for compliance with data privacy requirements"
         self.regulation_references = ["GLBA", "CCPA", "GDPR", "Regulation P"]
@@ -565,7 +565,7 @@ class UDAPCheck(ComplianceCheck):
     Ensures lending practices are fair, transparent, and non-abusive
     """
 
-    def __init__(self, config: Dict[str, Any] = None) -> Any:
+    def __init__(self, config: Dict[str, Any] = None) -> None:
         super().__init__(config)
         self.description = "Checks for compliance with UDAAP requirements"
         self.regulation_references = ["UDAAP", "Dodd-Frank Act", "FTC Act"]
@@ -620,7 +620,7 @@ class ComplianceAuditTrail:
     Records all compliance-related activities for reporting and examination
     """
 
-    def __init__(self, config: Dict[str, Any] = None) -> Any:
+    def __init__(self, config: Dict[str, Any] = None) -> None:
         """
         Initialize the compliance audit trail
 
@@ -791,7 +791,7 @@ class ComplianceFramework:
     Coordinates compliance checks, audit logging, and reporting
     """
 
-    def __init__(self, config: Dict[str, Any] = None) -> Any:
+    def __init__(self, config: Dict[str, Any] = None) -> None:
         """
         Initialize the compliance framework
 
@@ -972,7 +972,7 @@ class ComplianceDocumentGenerator:
     Creates policy documents, disclosures, and reports
     """
 
-    def __init__(self, config: Dict[str, Any] = None) -> Any:
+    def __init__(self, config: Dict[str, Any] = None) -> None:
         """
         Initialize the document generator
 

@@ -11,23 +11,25 @@ import os
 import sys
 import uuid
 from datetime import datetime
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Tuple, Optional
 import pandas as pd
 
+# Add parent directory to path to import modules
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+# Import from credit_risk_models
 sys.path.append(
     os.path.join(
         os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-        "alternative_data_scoring",
+        "credit_risk_models",
         "src",
     )
 )
-sys.path.append(
-    os.path.join(
-        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-        "ml_enhanced_models",
-        "src",
-    )
-)
+from credit_scoring_model import ModelIntegrator, generate_synthetic_data
+from data_sources import AlternativeDataManager
+from scoring import AlternativeDataScoreAggregator
+
+# Import from compliance_framework
 sys.path.append(
     os.path.join(
         os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
@@ -36,31 +38,26 @@ sys.path.append(
     )
 )
 from compliance import ComplianceDocumentGenerator, ComplianceFramework
-from data_sources import AlternativeDataManager
-from enhanced_models import ModelIntegrator
-from scoring import AlternativeDataScoreAggregator
-from core.logging import get_logger
 
-logger = get_logger(__name__)
+# Import from credit risk models
 sys.path.append(
     os.path.join(
-        os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "ml-model", "src"
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+        "credit_risk_models",
+        "src",
     )
 )
 try:
-    from risk_model import LoanRiskModel
+    from risk_assessment import LoanRiskModel
 except ImportError:
-    logging.warning(
-        "Could not import original LoanRiskModel, using mock implementation"
-    )
+    logging.warning("Could not import LoanRiskModel, using mock implementation")
 
     class LoanRiskModel:
-
-        def __init__(self) -> Any:
+        def __init__(self) -> None:
             self.model = None
             self.features = []
 
-        def predict_risk_score(self, loan_data: Any) -> Any:
+        def predict_risk_score(self, loan_data: Any) -> int:
             return 50
 
 
@@ -76,7 +73,7 @@ class EnhancedLendingSystem:
     alternative data, advanced ML models, and compliance framework
     """
 
-    def __init__(self, config: Dict[str, Any] = None) -> Any:
+    def __init__(self, config: Optional[Dict[str, Any]] = None) -> None:
         """
         Initialize the enhanced lending system
 
@@ -84,9 +81,7 @@ class EnhancedLendingSystem:
             config: Configuration dictionary for the system
         """
         self.config = config or {}
-        self.alt_data_manager = AlternativeDataManager(
-            self.config.get("alt_data_manager", {})
-        )
+        self.alt_data_manager = AlternativeDataManager()
         self.alt_data_scorer = AlternativeDataScoreAggregator(
             self.config.get("alt_data_scorer", {})
         )
@@ -175,9 +170,7 @@ class EnhancedLendingSystem:
         """
         logger.info(f"Collecting alternative data for borrower {borrower_id}")
         email = application_data.get("email", f"{borrower_id}@example.com")
-        alt_data = self.alt_data_manager.collect_all_data(
-            borrower_id, email=email, application_data=application_data
-        )
+        alt_data = self.alt_data_manager.collect_all_data(borrower_id, email=email)
         return alt_data
 
     def _prepare_traditional_data(
@@ -196,14 +189,14 @@ class EnhancedLendingSystem:
             "loan_amount": application_data.get("loan_amount", 0),
             "interest_rate": application_data.get("interest_rate", 0),
             "term_days": application_data.get("term_days", 0),
-            "borrower_credit_score": application_data.get("credit_score", 0),
-            "borrower_income": application_data.get("income", 0),
-            "borrower_debt_to_income": application_data.get("debt_to_income", 0),
-            "borrower_employment_years": application_data.get("employment_years", 0),
+            "credit_score": application_data.get("credit_score", 0),
+            "income": application_data.get("income", 0),
+            "debt_to_income": application_data.get("debt_to_income", 0),
+            "employment_years": application_data.get("employment_years", 0),
             "is_collateralized": int(application_data.get("is_collateralized", False)),
             "collateral_value": application_data.get("collateral_value", 0),
-            "borrower_previous_loans": application_data.get("previous_loans", 0),
-            "borrower_previous_defaults": application_data.get("previous_defaults", 0),
+            "previous_loans": application_data.get("previous_loans", 0),
+            "previous_defaults": application_data.get("previous_defaults", 0),
         }
         return pd.DataFrame([trad_data])
 
@@ -221,7 +214,7 @@ class EnhancedLendingSystem:
         try:
             traditional_score = self.traditional_model.predict_risk_score(loan_data)
             logger.info(f"Traditional credit score: {traditional_score}")
-            return traditional_score
+            return float(traditional_score)
         except Exception as e:
             logger.error(f"Error calculating traditional score: {e}")
             return 50.0
@@ -244,7 +237,7 @@ class EnhancedLendingSystem:
                 traditional_data, alt_data
             )
             logger.info(f"Enhanced credit score: {enhanced_score}")
-            return (enhanced_score, assessment)
+            return (float(enhanced_score), assessment)
         except Exception as e:
             logger.error(f"Error calculating enhanced score: {e}")
             traditional_score = self._calculate_traditional_score(traditional_data)
@@ -260,10 +253,10 @@ class EnhancedLendingSystem:
         features = []
         if hasattr(self.traditional_model, "features"):
             features.extend(self.traditional_model.features)
-        if hasattr(self.model_integrator.enhanced_model, "traditional_features"):
-            features.extend(self.model_integrator.enhanced_model.traditional_features)
-        if hasattr(self.model_integrator.enhanced_model, "alternative_features"):
-            features.extend(self.model_integrator.enhanced_model.alternative_features)
+        if hasattr(self.model_integrator.credit_model, "traditional_features"):
+            features.extend(self.model_integrator.credit_model.traditional_features)
+        if hasattr(self.model_integrator.credit_model, "alternative_features"):
+            features.extend(self.model_integrator.credit_model.alternative_features)
         return list(set(features))
 
     def _determine_decision(self, credit_score: float) -> str:
@@ -336,13 +329,13 @@ class EnhancedLendingSystem:
             "description": "Enhanced credit risk model that combines traditional credit data with alternative data sources",
             "methodology": "Ensemble machine learning approach with feature engineering",
             "traditional_features": (
-                self.model_integrator.enhanced_model.traditional_features
-                if hasattr(self.model_integrator.enhanced_model, "traditional_features")
+                self.model_integrator.credit_model.traditional_features
+                if hasattr(self.model_integrator.credit_model, "traditional_features")
                 else []
             ),
             "alternative_features": (
-                self.model_integrator.enhanced_model.alternative_features
-                if hasattr(self.model_integrator.enhanced_model, "alternative_features")
+                self.model_integrator.credit_model.alternative_features
+                if hasattr(self.model_integrator.credit_model, "alternative_features")
                 else []
             ),
             "assumptions": "Model assumes data quality and completeness across both traditional and alternative sources",
@@ -476,8 +469,6 @@ class EnhancedLendingSystem:
         Returns:
             Dictionary with synthetic data
         """
-        from enhanced_models import generate_synthetic_data
-
         X, y = generate_synthetic_data(n_samples=n_samples, include_alternative=True)
         trad_cols = [
             col
@@ -519,7 +510,7 @@ class EnhancedLendingSystem:
         }
 
 
-def example_usage() -> Any:
+def example_usage() -> None:
     """Example usage of the enhanced lending system"""
     system = EnhancedLendingSystem()
     training_data = system.generate_synthetic_training_data(n_samples=1000)

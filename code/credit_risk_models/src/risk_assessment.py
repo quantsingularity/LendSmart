@@ -1,6 +1,7 @@
 import joblib
 import numpy as np
 import pandas as pd
+from typing import Union
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report, confusion_matrix, roc_auc_score
 from sklearn.model_selection import GridSearchCV, train_test_split
@@ -17,7 +18,7 @@ class LoanRiskModel:
     Uses machine learning to predict the likelihood of loan default based on various features.
     """
 
-    def __init__(self) -> Any:
+    def __init__(self) -> None:
         """Initialize the risk model with default parameters"""
         self.model = None
         self.features = [
@@ -35,7 +36,7 @@ class LoanRiskModel:
             "borrower_previous_defaults",
         ]
 
-    def preprocess_data(self, X: Any) -> Any:
+    def preprocess_data(self, X: pd.DataFrame) -> pd.DataFrame:
         """
         Preprocess input data for model training or prediction
 
@@ -84,7 +85,7 @@ class LoanRiskModel:
         ].fillna(0)
         return X_processed
 
-    def train(self, X: Any, y: Any) -> Any:
+    def train(self, X: pd.DataFrame, y: pd.Series) -> "LoanRiskModel":
         """
         Train the risk model on historical loan data
 
@@ -129,7 +130,7 @@ class LoanRiskModel:
         logger.info(f"Best Parameters: {grid_search.best_params_}")
         return self
 
-    def predict_risk_score(self, loan_data: Any) -> Any:
+    def predict_risk_score(self, loan_data: Union[dict, pd.DataFrame]) -> int:
         """
         Predict risk score for a loan application
 
@@ -137,7 +138,7 @@ class LoanRiskModel:
             loan_data (dict or pd.DataFrame): Loan application data
 
         Returns:
-            float: Risk score between 0 and 100 (higher is better/less risky)
+            int: Risk score between 0 and 100 (higher is better/less risky)
         """
         if self.model is None:
             raise ValueError("Model not trained. Call train() first.")
@@ -172,7 +173,7 @@ class LoanRiskModel:
         risk_score = int(not_default_prob * 100)
         return risk_score
 
-    def save_model(self, filepath: Any) -> Any:
+    def save_model(self, filepath: str) -> None:
         """
         Save the trained model to a file
 
@@ -184,7 +185,7 @@ class LoanRiskModel:
         joblib.dump(self.model, filepath)
         logger.info(f"Model saved to {filepath}")
 
-    def load_model(self, filepath: Any) -> Any:
+    def load_model(self, filepath: str) -> "LoanRiskModel":
         """
         Load a trained model from a file
 
@@ -198,7 +199,7 @@ class LoanRiskModel:
         logger.info(f"Model loaded from {filepath}")
         return self
 
-    def generate_synthetic_training_data(self, n_samples: Any = 1000) -> Any:
+    def generate_synthetic_training_data(self, n_samples: int = 1000) -> tuple:
         """
         Generate synthetic data for training when real data is not available
 

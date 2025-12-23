@@ -11,10 +11,9 @@ import os
 import sys
 import uuid
 from datetime import datetime
+from typing import Any
 import pandas as pd
-from core.logging import get_logger
 
-logger = get_logger(__name__)
 sys.path.append(
     os.path.join(
         os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "integration"
