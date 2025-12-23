@@ -2,11 +2,12 @@
 Alternative Data Sources Module for LendSmart
 
 This module provides interfaces and implementations for collecting alternative data
-from various sources to enhance credit scoring beyond traditional credit data.
+from various sources to augment credit scoring beyond traditional credit data.
 """
 
 import json
 import logging
+from .utils import setup_logging
 import os
 from abc import ABC, abstractmethod
 from datetime import datetime
@@ -17,7 +18,7 @@ import pandas as pd
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
-logger = logging.getLogger("alternative_data_sources")
+logger = setup_logging("alternative_data_sources", "data_sources.log")
 
 
 class DataSourceError(Exception):

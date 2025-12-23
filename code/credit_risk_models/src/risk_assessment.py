@@ -6,9 +6,9 @@ from sklearn.metrics import classification_report, confusion_matrix, roc_auc_sco
 from sklearn.model_selection import GridSearchCV, train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
-from core.logging import get_logger
+from .utils import setup_logging
 
-logger = get_logger(__name__)
+logger = setup_logging("loan_risk_model", "risk_assessment.log")
 
 
 class LoanRiskModel:

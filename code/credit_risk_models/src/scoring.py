@@ -2,10 +2,10 @@
 Alternative Data Scoring Module for LendSmart
 
 This module provides scoring algorithms and models for alternative data sources
-to enhance traditional credit scoring with non-traditional data points.
+to augment traditional credit scoring with non-traditional data points.
 """
 
-import logging
+from .utils import setup_logging
 import os
 from typing import Any, Dict, Optional, Tuple
 import joblib
@@ -18,7 +18,7 @@ from sklearn.preprocessing import MinMaxScaler, StandardScaler
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
-logger = logging.getLogger("alternative_data_scoring")
+logger = setup_logging("alternative_data_scoring", "scoring.log")
 
 
 class AlternativeDataScorer:

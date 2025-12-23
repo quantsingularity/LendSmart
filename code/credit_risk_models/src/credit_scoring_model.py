@@ -8,6 +8,7 @@ persistence utilities.
 """
 
 import logging
+from .utils import setup_logging, load_data, feature_engineering
 import os
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
@@ -54,7 +55,7 @@ from sklearn.preprocessing import OneHotEncoder, PowerTransformer
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
-logger = logging.getLogger("ml_models")
+logger = setup_logging("ml_models", "model_training.log")
 
 
 class CreditScoringModel:

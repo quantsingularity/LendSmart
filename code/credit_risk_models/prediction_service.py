@@ -3,9 +3,9 @@ import json
 import os
 import joblib
 import pandas as pd
-from core.logging import get_logger
+from src.utils import setup_logging
 
-logger = get_logger(__name__)
+logger = setup_logging("prediction_service", "prediction_service.log")
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 SAVED_MODELS_DIR = os.path.join(BASE_DIR, "saved_models")
 PREPROCESSOR_PATH = os.path.join(SAVED_MODELS_DIR, "preprocessor.joblib")
