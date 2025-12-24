@@ -4,7 +4,7 @@ const crypto = require('crypto');
 const { getEncryptionService } = require('../config/security/encryption');
 
 /**
- * Enhanced User Model
+ * User Model
  * Implements enterprise-grade user management with security and compliance features
  */
 const userSchema = new mongoose.Schema(

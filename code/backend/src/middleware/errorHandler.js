@@ -2,7 +2,7 @@ const { getAuditLogger } = require('../compliance/auditLogger');
 const { logger } = require('../utils/logger');
 
 /**
- * Enhanced Error Handler Middleware
+ * Error Handler Middleware
  * Provides comprehensive error handling with security, compliance, and audit features
  */
 class ErrorHandler {

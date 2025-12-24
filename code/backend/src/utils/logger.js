@@ -3,7 +3,7 @@ const path = require('path');
 const fs = require('fs');
 
 /**
- * Enhanced Logging System
+ * Logging System
  * Implements structured logging with multiple transports and security features
  */
 
@@ -344,8 +344,8 @@ const sanitizeForLogging = (data) => {
     return sanitized;
 };
 
-// Enhanced logging methods
-const enhancedLogger = {
+// Logging methods
+const Logger = {
     // Standard logging methods
     debug: (message, meta = {}) => logger.debug(message, sanitizeForLogging(meta)),
     info: (message, meta = {}) => logger.info(message, sanitizeForLogging(meta)),
@@ -545,7 +545,7 @@ const enhancedLogger = {
             const duration = Date.now() - startTime;
 
             // Log response
-            enhancedLogger.performance.apiRequest(
+            Logger.performance.apiRequest(
                 req.method,
                 req.originalUrl || req.url,
                 duration,
@@ -571,7 +571,7 @@ const enhancedLogger = {
 
 // Export loggers and utilities
 module.exports = {
-    logger: enhancedLogger,
+    logger: Logger,
     rawLogger: logger,
     securityLogger,
     performanceLogger,

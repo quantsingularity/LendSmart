@@ -3,7 +3,7 @@ const { logger } = require('../../utils/logger');
 const { AppError } = require('../monitoring/errorHandler');
 
 /**
- * Enhanced Input Validation Middleware for LendSmart
+ * Input Validation Middleware for LendSmart
  * Provides comprehensive input validation using Joi schemas
  * with financial industry specific validations and security measures
  */

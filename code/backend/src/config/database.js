@@ -4,7 +4,7 @@ const { getAuditLogger } = require('../compliance/auditLogger');
 const auditLogger = getAuditLogger();
 
 /**
- * Enhanced Database Configuration
+ * Database Configuration
  * Implements production-ready MongoDB and Redis connections with monitoring and optimization
  */
 class DatabaseManager {

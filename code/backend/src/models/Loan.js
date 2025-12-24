@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const { getEncryptionService } = require('../config/security/encryption');
 
 /**
- * Enhanced Loan Model
+ * Loan Model
  * Implements enterprise-grade loan management with security, compliance, and blockchain integration
  */
 const loanSchema = new mongoose.Schema(

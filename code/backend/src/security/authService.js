@@ -42,7 +42,7 @@ try {
 }
 
 /**
- * Enhanced Authentication Service with enterprise security features
+ * Authentication Service with enterprise security features
  * Implements JWT with refresh tokens, MFA, session management, and security monitoring
  */
 class AuthService {

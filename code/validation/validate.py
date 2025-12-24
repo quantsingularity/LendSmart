@@ -29,7 +29,7 @@ sys.path.append(
 sys.path.append(
     os.path.join(
         os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-        "ml_enhanced_models",
+        "ml_models",
         "src",
     )
 )
@@ -43,8 +43,8 @@ sys.path.append(
 try:
     from compliance import ComplianceDocumentGenerator, ComplianceFramework
     from data_sources import AlternativeDataManager
-    from enhanced_models import EnhancedCreditScoringModel
-    from integration import EnhancedLendingSystem
+    from models import CreditScoringModel
+    from integration import LendingSystem
     from scoring import AlternativeDataScoreAggregator
 
     logging.basicConfig(
@@ -103,12 +103,12 @@ try:
             logger.error(f"Alternative data scoring validation failed: {e}")
             return False
 
-    def validate_enhanced_ml_models() -> Any:
+    def validate_ml_models() -> Any:
         """Validate enhanced machine learning models functionality"""
         logger.info("Validating enhanced ML models...")
         try:
-            model = EnhancedCreditScoringModel()
-            from enhanced_models import generate_synthetic_data
+            model = CreditScoringModel()
+            from models import generate_synthetic_data
 
             X, y = generate_synthetic_data(n_samples=200)
             model.train(X, y)
@@ -125,7 +125,7 @@ try:
             test_path = os.path.join(validation_dir, "test_model.joblib")
             model.save_model(test_path)
             assert os.path.exists(test_path), "Model file was not saved"
-            new_model = EnhancedCreditScoringModel()
+            new_model = CreditScoringModel()
             new_model.load_model(test_path)
             assert new_model.model is not None, "Model was not loaded properly"
             logger.info("✓ Enhanced ML models validation passed")
@@ -189,7 +189,7 @@ try:
         """Validate integration functionality"""
         logger.info("Validating integration...")
         try:
-            system = EnhancedLendingSystem()
+            system = LendingSystem()
             training_data = system.generate_synthetic_training_data(n_samples=200)
             assert (
                 "X_traditional" in training_data
@@ -225,7 +225,7 @@ try:
             assert (
                 "alternative_data_score" in results
             ), "Missing alternative data score in results"
-            assert "enhanced_score" in results, "Missing enhanced score in results"
+            assert "score" in results, "Missing score in results"
             assert "decision" in results, "Missing decision in results"
             assert "is_compliant" in results, "Missing compliance status in results"
             assert "documents" in results, "Missing documents in results"
@@ -235,9 +235,7 @@ try:
             assert (
                 0 <= results["alternative_data_score"] <= 100
             ), "Alternative score outside valid range"
-            assert (
-                300 <= results["enhanced_score"] <= 850
-            ), "Enhanced score outside valid range"
+            assert 300 <= results["score"] <= 850, "Score outside valid range"
             assert results["decision"] in [
                 "Approved",
                 "Conditionally Approved",
@@ -256,7 +254,7 @@ try:
         validation_results = {
             "alternative_data_sources": validate_alternative_data_sources(),
             "alternative_data_scoring": validate_alternative_data_scoring(),
-            "enhanced_ml_models": validate_enhanced_ml_models(),
+            "ml_models": validate_ml_models(),
             "compliance_framework": validate_compliance_framework(),
             "integration": validate_integration(),
         }

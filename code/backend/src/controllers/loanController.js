@@ -9,7 +9,7 @@ const blockchainService = require('../services/blockchainService');
 const notificationService = require('../services/notificationService');
 
 /**
- * Enhanced Loan Controller
+ * Loan Controller
  * Implements enterprise-grade loan management with compliance and security
  */
 class LoanController {

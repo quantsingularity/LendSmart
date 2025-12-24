@@ -303,7 +303,7 @@ class AuditLogger {
     }
 
     /**
-     * Enhanced log authentication events with database storage
+     * Log authentication events with database storage
      * @param {Object} event - Authentication event data
      */
     async logAuthEvent(event) {
@@ -339,7 +339,7 @@ class AuditLogger {
     }
 
     /**
-     * Enhanced log data access events
+     * Log data access events
      * @param {Object} event - Data access event
      */
     async logDataEvent(event) {
@@ -379,7 +379,7 @@ class AuditLogger {
     }
 
     /**
-     * Enhanced log security events
+     * Log security events
      * @param {Object} event - Security event
      */
     async logSecurityEvent(event) {

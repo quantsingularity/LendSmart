@@ -7,7 +7,7 @@ const { validateSchema, validateRules, validationRules } = require('../validator
 const { logger } = require('../utils/logger');
 
 /**
- * Enhanced Authentication Controller
+ * Authentication Controller
  * Implements enterprise-grade authentication with security, compliance, and audit features
  */
 class AuthController {

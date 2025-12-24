@@ -29,14 +29,14 @@ def generate_validation_summary() -> Any:
             "validation_results": {
                 "alternative_data_sources": True,
                 "alternative_data_scoring": True,
-                "enhanced_ml_models": True,
+                "ml_models": True,
                 "compliance_framework": True,
                 "integration": True,
             },
             "all_passed": True,
             "summary": "Validation PASSED: All components validated successfully",
         }
-    markdown = f"# LendSmart Enhanced Credit Scoring System - Validation Report\n\n## Summary\n**Status: {('PASSED' if report_data.get('all_passed', False) else 'FAILED')}**\n\n{report_data.get('summary', 'No summary available')}\n\n## Validation Timestamp\n{report_data.get('timestamp', datetime.now().isoformat())}\n\n## Component Validation Results\n\n| Component | Status |\n|-----------|--------|\n"
+    markdown = f"# LendSmart Credit Scoring System - Validation Report\n\n## Summary\n**Status: {('PASSED' if report_data.get('all_passed', False) else 'FAILED')}**\n\n{report_data.get('summary', 'No summary available')}\n\n## Validation Timestamp\n{report_data.get('timestamp', datetime.now().isoformat())}\n\n## Component Validation Results\n\n| Component | Status |\n|-----------|--------|\n"
     for component, result in report_data.get("validation_results", {}).items():
         status = "✅ PASSED" if result else "❌ FAILED"
         markdown += f"| {component.replace('_', ' ').title()} | {status} |\n"

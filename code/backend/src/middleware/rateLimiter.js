@@ -4,7 +4,7 @@ const { getAuditLogger } = require('../compliance/auditLogger');
 const { logger } = require('../utils/logger');
 
 /**
- * Enhanced Rate Limiting Middleware
+ * Rate Limiting Middleware
  * Implements sophisticated rate limiting with different strategies for different endpoints
  */
 class RateLimiter {

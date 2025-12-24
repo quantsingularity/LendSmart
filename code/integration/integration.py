@@ -67,15 +67,15 @@ logging.basicConfig(
 logger = logging.getLogger("lendsmart_integration")
 
 
-class EnhancedLendingSystem:
+class LendingSystem:
     """
-    Enhanced lending system that integrates traditional credit scoring,
+    Lending system that integrates traditional credit scoring,
     alternative data, advanced ML models, and compliance framework
     """
 
     def __init__(self, config: Optional[Dict[str, Any]] = None) -> None:
         """
-        Initialize the enhanced lending system
+        Initialize the lending system
 
         Args:
             config: Configuration dictionary for the system
@@ -119,24 +119,22 @@ class EnhancedLendingSystem:
         )
         traditional_data = self._prepare_traditional_data(application_data)
         traditional_score = self._calculate_traditional_score(traditional_data)
-        enhanced_score, assessment = self._calculate_enhanced_score(
-            traditional_data, alt_data
-        )
+        score, assessment = self._calculate_score(traditional_data, alt_data)
         compliance_data = {
             "application_data": application_data,
             "traditional_data": traditional_data,
             "alternative_data": alt_data,
             "traditional_score": traditional_score,
             "alternative_score": alt_data_score,
-            "enhanced_score": enhanced_score,
+            "score": score,
             "model_features": self._get_model_features(),
-            "decision": self._determine_decision(enhanced_score),
+            "decision": self._determine_decision(score),
         }
         is_compliant, compliance_results = self.compliance_framework.is_compliant(
             compliance_data
         )
         documents = self._generate_documents(
-            application_data, enhanced_score, compliance_results, is_compliant
+            application_data, score, compliance_results, is_compliant
         )
         results = {
             "application_id": application_id,
@@ -145,8 +143,8 @@ class EnhancedLendingSystem:
             "traditional_score": traditional_score,
             "alternative_data_score": alt_data_score,
             "alternative_data_individual_scores": individual_scores,
-            "enhanced_score": enhanced_score,
-            "decision": self._determine_decision(enhanced_score),
+            "score": score,
+            "decision": self._determine_decision(score),
             "assessment": assessment,
             "is_compliant": is_compliant,
             "compliance_results": compliance_results,
@@ -219,7 +217,7 @@ class EnhancedLendingSystem:
             logger.error(f"Error calculating traditional score: {e}")
             return 50.0
 
-    def _calculate_enhanced_score(
+    def _calculate_score(
         self, traditional_data: pd.DataFrame, alt_data: pd.DataFrame
     ) -> Tuple[float, Dict[str, Any]]:
         """
@@ -230,14 +228,14 @@ class EnhancedLendingSystem:
             alt_data: DataFrame with alternative data
 
         Returns:
-            Tuple of (enhanced_score, assessment_details)
+            Tuple of (score, assessment_details)
         """
         try:
-            enhanced_score, assessment = self.model_integrator.predict(
+            score, assessment = self.model_integrator.predict(
                 traditional_data, alt_data
             )
-            logger.info(f"Enhanced credit score: {enhanced_score}")
-            return (float(enhanced_score), assessment)
+            logger.info(f"Enhanced credit score: {score}")
+            return (float(score), assessment)
         except Exception as e:
             logger.error(f"Error calculating enhanced score: {e}")
             traditional_score = self._calculate_traditional_score(traditional_data)
@@ -424,7 +422,7 @@ class EnhancedLendingSystem:
             "application_id": application_id,
             "traditional_score": results["traditional_score"],
             "alternative_score": results["alternative_data_score"],
-            "enhanced_score": results["enhanced_score"],
+            "score": results["score"],
             "decision": results["decision"],
             "is_compliant": results["is_compliant"],
         }
@@ -512,7 +510,7 @@ class EnhancedLendingSystem:
 
 def example_usage() -> None:
     """Example usage of the enhanced lending system"""
-    system = EnhancedLendingSystem()
+    system = LendingSystem()
     training_data = system.generate_synthetic_training_data(n_samples=1000)
     system.train_models(training_data)
     application_data = {
@@ -537,7 +535,7 @@ def example_usage() -> None:
     logger.info(f"Application ID: {results['application_id']}")
     logger.info(f"Traditional Score: {results['traditional_score']}")
     logger.info(f"Alternative Data Score: {results['alternative_data_score']}")
-    logger.info(f"Enhanced Score: {results['enhanced_score']}")
+    logger.info(f"Score: {results['score']}")
     logger.info(f"Decision: {results['decision']}")
     logger.info(f"Is Compliant: {results['is_compliant']}")
     logger.info(f"Documents Generated:")

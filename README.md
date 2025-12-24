@@ -346,15 +346,6 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-## Future Enhancements
-
-- Cross-chain lending capabilities
-- Advanced risk assessment models
-- Integration with traditional credit bureaus
-- Governance token for community-driven decision making
-- Mobile app with biometric authentication
-- Fiat on/off ramps for easier access
-
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

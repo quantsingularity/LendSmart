@@ -5,7 +5,7 @@ const { getAuditLogger } = require('../compliance/auditLogger');
 const { logger } = require('../utils/logger');
 
 /**
- * Enhanced Input Validation Service
+ * Input Validation Service
  * Implements comprehensive input validation, sanitization, and security checks
  */
 class InputValidator {
