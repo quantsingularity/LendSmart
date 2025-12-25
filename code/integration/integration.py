@@ -52,10 +52,10 @@ try:
 except ImportError:
     logging.warning("Could not import LoanRiskModel, using mock implementation")
 
-    class LoanRiskModel:
+    class LoanRiskModel:  # type: ignore[no-redef]
         def __init__(self) -> None:
             self.model = None
-            self.features = []
+            self.features: List[str] = []
 
         def predict_risk_score(self, loan_data: Any) -> int:
             return 50

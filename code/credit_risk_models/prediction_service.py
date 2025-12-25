@@ -61,6 +61,9 @@ def predict_credit_score(applicant_data: Any) -> Any:
             return {
                 "error": "Model or preprocessor not loaded. Cannot make predictions."
             }
+    # At this point, _model and _preprocessor should be loaded
+    assert _model is not None, "Model should be loaded"
+    assert _preprocessor is not None, "Preprocessor should be loaded"
     try:
         if isinstance(applicant_data, dict):
             applicant_df = pd.DataFrame([applicant_data])

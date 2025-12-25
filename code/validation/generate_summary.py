@@ -6,11 +6,12 @@ including alternative data integration, machine learning models, and compliance 
 """
 
 import json
+import logging
 import os
 from datetime import datetime
-from core.logging import get_logger
+from typing import Any
 
-logger = get_logger(__name__)
+logger = logging.getLogger(__name__)
 VALIDATION_DIR = os.path.join(
     os.path.dirname(os.path.abspath(__file__)), "validation_results"
 )

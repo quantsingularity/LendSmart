@@ -22,14 +22,7 @@ sys.path.append(
 sys.path.append(
     os.path.join(
         os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-        "alternative_data_scoring",
-        "src",
-    )
-)
-sys.path.append(
-    os.path.join(
-        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-        "ml_models",
+        "credit_risk_models",
         "src",
     )
 )
@@ -43,7 +36,7 @@ sys.path.append(
 try:
     from compliance import ComplianceDocumentGenerator, ComplianceFramework
     from data_sources import AlternativeDataManager
-    from models import CreditScoringModel
+    from credit_scoring_model import CreditScoringModel
     from integration import LendingSystem
     from scoring import AlternativeDataScoreAggregator
 

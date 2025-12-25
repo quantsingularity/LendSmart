@@ -5,7 +5,10 @@ This module provides scoring algorithms and models for alternative data sources
 to augment traditional credit scoring with non-traditional data points.
 """
 
-from .utils import setup_logging
+try:
+    from .utils import setup_logging
+except ImportError:
+    from utils import setup_logging
 import logging
 import os
 from typing import Any, Dict, Optional, Tuple
@@ -29,7 +32,7 @@ class AlternativeDataScorer:
     Provides common functionality for all alternative data scoring algorithms
     """
 
-    def __init__(self, config: Dict[str, Any] = None) -> None:
+    def __init__(self, config: Optional[Dict[str, Any]] = None) -> None:
         """
         Initialize the scorer with configuration
 
@@ -91,7 +94,7 @@ class DigitalFootprintScorer(AlternativeDataScorer):
     Analyzes digital presence and behavior to assess creditworthiness
     """
 
-    def __init__(self, config: Dict[str, Any] = None) -> None:
+    def __init__(self, config: Optional[Dict[str, Any]] = None) -> None:
         super().__init__(config)
         self.weights = self.config.get(
             "weights",
@@ -194,11 +197,11 @@ class TransactionDataScorer(AlternativeDataScorer):
     Analyzes financial behavior and stability based on transaction history
     """
 
-    def __init__(self, config: Dict[str, Any] = None) -> None:
+    def __init__(self, config: Optional[Dict[str, Any]] = None) -> None:
         super().__init__(config)
-        self.model = None
+        self.model: Optional[RandomForestRegressor] = None
         self.scaler = StandardScaler()
-        self.feature_importance = {}
+        self.feature_importance: Dict[str, float] = {}
         self.weights = self.config.get(
             "weights",
             {
@@ -311,7 +314,7 @@ class TransactionDataScorer(AlternativeDataScorer):
         logger.info(f"Transaction data score: {final_score:.2f}")
         return final_score
 
-    def save_model(self, filepath: str = None) -> None:
+    def save_model(self, filepath: Optional[str] = None) -> None:
         """
         Save the scoring model to a file
 
@@ -360,7 +363,7 @@ class UtilityPaymentScorer(AlternativeDataScorer):
     Analyzes utility payment history to assess payment reliability
     """
 
-    def __init__(self, config: Dict[str, Any] = None) -> None:
+    def __init__(self, config: Optional[Dict[str, Any]] = None) -> None:
         super().__init__(config)
         self.weights = self.config.get(
             "weights",
@@ -481,7 +484,7 @@ class EducationEmploymentScorer(AlternativeDataScorer):
     Analyzes educational background and employment history to assess stability and potential
     """
 
-    def __init__(self, config: Dict[str, Any] = None) -> None:
+    def __init__(self, config: Optional[Dict[str, Any]] = None) -> None:
         super().__init__(config)
         self.weights = self.config.get(
             "weights",
@@ -496,7 +499,7 @@ class EducationEmploymentScorer(AlternativeDataScorer):
                 "skill_demand_score": 0.05,
             },
         )
-        self.model = None
+        self.model: Optional[RandomForestRegressor] = None
 
     def preprocess_features(self, data: pd.DataFrame) -> pd.DataFrame:
         """
@@ -598,7 +601,7 @@ class EducationEmploymentScorer(AlternativeDataScorer):
         logger.info(f"Education/employment score: {final_score:.2f}")
         return final_score
 
-    def save_model(self, filepath: str = None) -> None:
+    def save_model(self, filepath: Optional[str] = None) -> None:
         """
         Save the scoring model to a file
 
@@ -643,7 +646,7 @@ class AlternativeDataScoreAggregator:
     Combines individual scores into a comprehensive alternative data score
     """
 
-    def __init__(self, config: Dict[str, Any] = None) -> None:
+    def __init__(self, config: Optional[Dict[str, Any]] = None) -> None:
         """
         Initialize the score aggregator
 

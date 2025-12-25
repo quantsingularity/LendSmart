@@ -26,7 +26,7 @@ class ComplianceError(Exception):
 class ComplianceCheck:
     """Base class for all compliance checks"""
 
-    def __init__(self, config: Dict[str, Any] = None) -> None:
+    def __init__(self, config: Optional[Dict[str, Any]] = None) -> None:
         """
         Initialize the compliance check
 
@@ -36,7 +36,7 @@ class ComplianceCheck:
         self.config = config or {}
         self.name = self.__class__.__name__
         self.description = "Base compliance check"
-        self.regulation_references = []
+        self.regulation_references: List[str] = []
         self.severity = "medium"
 
     def check(self, data: Dict[str, Any]) -> Tuple[bool, str]:
@@ -73,7 +73,7 @@ class EqualOpportunityCheck(ComplianceCheck):
     Ensures that lending decisions do not discriminate based on protected characteristics
     """
 
-    def __init__(self, config: Dict[str, Any] = None) -> None:
+    def __init__(self, config: Optional[Dict[str, Any]] = None) -> None:
         super().__init__(config)
         self.description = (
             "Checks for equal opportunity compliance in lending decisions"
@@ -209,7 +209,7 @@ class FairCreditReportingCheck(ComplianceCheck):
     Ensures proper handling of credit information and adverse action notices
     """
 
-    def __init__(self, config: Dict[str, Any] = None) -> None:
+    def __init__(self, config: Optional[Dict[str, Any]] = None) -> None:
         super().__init__(config)
         self.description = (
             "Checks for FCRA compliance in credit reporting and adverse actions"
@@ -272,7 +272,7 @@ class TruthInLendingCheck(ComplianceCheck):
     Ensures proper disclosure of loan terms and costs
     """
 
-    def __init__(self, config: Dict[str, Any] = None) -> None:
+    def __init__(self, config: Optional[Dict[str, Any]] = None) -> None:
         super().__init__(config)
         self.description = "Checks for TILA compliance in loan disclosures"
         self.regulation_references = ["TILA", "Regulation Z"]
@@ -335,7 +335,7 @@ class AntiMoneyLaunderingCheck(ComplianceCheck):
     Ensures proper customer identification and suspicious activity monitoring
     """
 
-    def __init__(self, config: Dict[str, Any] = None) -> None:
+    def __init__(self, config: Optional[Dict[str, Any]] = None) -> None:
         super().__init__(config)
         self.description = "Checks for AML compliance in customer identification and transaction monitoring"
         self.regulation_references = ["BSA", "FinCEN", "PATRIOT Act"]
@@ -415,7 +415,7 @@ class ModelRiskGovernanceCheck(ComplianceCheck):
     Ensures proper development, validation, and monitoring of credit models
     """
 
-    def __init__(self, config: Dict[str, Any] = None) -> None:
+    def __init__(self, config: Optional[Dict[str, Any]] = None) -> None:
         super().__init__(config)
         self.description = (
             "Checks for compliance with model risk governance requirements"
@@ -487,7 +487,7 @@ class DataPrivacyCheck(ComplianceCheck):
     Ensures proper handling of personal information in accordance with privacy laws
     """
 
-    def __init__(self, config: Dict[str, Any] = None) -> None:
+    def __init__(self, config: Optional[Dict[str, Any]] = None) -> None:
         super().__init__(config)
         self.description = "Checks for compliance with data privacy requirements"
         self.regulation_references = ["GLBA", "CCPA", "GDPR", "Regulation P"]
@@ -565,7 +565,7 @@ class UDAPCheck(ComplianceCheck):
     Ensures lending practices are fair, transparent, and non-abusive
     """
 
-    def __init__(self, config: Dict[str, Any] = None) -> None:
+    def __init__(self, config: Optional[Dict[str, Any]] = None) -> None:
         super().__init__(config)
         self.description = "Checks for compliance with UDAAP requirements"
         self.regulation_references = ["UDAAP", "Dodd-Frank Act", "FTC Act"]
@@ -620,7 +620,7 @@ class ComplianceAuditTrail:
     Records all compliance-related activities for reporting and examination
     """
 
-    def __init__(self, config: Dict[str, Any] = None) -> None:
+    def __init__(self, config: Optional[Dict[str, Any]] = None) -> None:
         """
         Initialize the compliance audit trail
 
@@ -628,7 +628,7 @@ class ComplianceAuditTrail:
             config: Configuration dictionary for the audit trail
         """
         self.config = config or {}
-        self.audit_records = []
+        self.audit_records: List[Dict[str, Any]] = []
         self.audit_dir = self.config.get(
             "audit_dir",
             os.path.join(
@@ -662,7 +662,11 @@ class ComplianceAuditTrail:
         self._write_to_log(record)
 
     def log_action(
-        self, action_type: str, data_id: str, description: str, user_id: str = None
+        self,
+        action_type: str,
+        data_id: str,
+        description: str,
+        user_id: Optional[str] = None,
     ) -> None:
         """
         Log a compliance-related action
@@ -701,10 +705,10 @@ class ComplianceAuditTrail:
 
     def get_records(
         self,
-        start_time: datetime = None,
-        end_time: datetime = None,
-        check_name: str = None,
-        is_compliant: bool = None,
+        start_time: Optional[datetime] = None,
+        end_time: Optional[datetime] = None,
+        check_name: Optional[str] = None,
+        is_compliant: Optional[bool] = None,
     ) -> List[Dict[str, Any]]:
         """
         Get filtered audit records
@@ -742,7 +746,7 @@ class ComplianceAuditTrail:
         return filtered_records
 
     def generate_report(
-        self, start_time: datetime = None, end_time: datetime = None
+        self, start_time: Optional[datetime] = None, end_time: Optional[datetime] = None
     ) -> Dict[str, Any]:
         """
         Generate a compliance audit report
@@ -791,7 +795,7 @@ class ComplianceFramework:
     Coordinates compliance checks, audit logging, and reporting
     """
 
-    def __init__(self, config: Dict[str, Any] = None) -> None:
+    def __init__(self, config: Optional[Dict[str, Any]] = None) -> None:
         """
         Initialize the compliance framework
 
@@ -854,7 +858,7 @@ class ComplianceFramework:
         return self.checks.get(name)
 
     def run_check(
-        self, check_name: str, data: Dict[str, Any], data_id: str = None
+        self, check_name: str, data: Dict[str, Any], data_id: Optional[str] = None
     ) -> Tuple[bool, str]:
         """
         Run a specific compliance check
@@ -884,7 +888,7 @@ class ComplianceFramework:
             return (False, error_message)
 
     def run_all_checks(
-        self, data: Dict[str, Any], data_id: str = None
+        self, data: Dict[str, Any], data_id: Optional[str] = None
     ) -> Dict[str, Tuple[bool, str]]:
         """
         Run all registered compliance checks
@@ -904,7 +908,7 @@ class ComplianceFramework:
         return results
 
     def is_compliant(
-        self, data: Dict[str, Any], data_id: str = None
+        self, data: Dict[str, Any], data_id: Optional[str] = None
     ) -> Tuple[bool, Dict[str, Any]]:
         """
         Check if data is compliant with all checks
@@ -927,7 +931,11 @@ class ComplianceFramework:
         return (overall_compliance, detailed_results)
 
     def log_action(
-        self, action_type: str, data_id: str, description: str, user_id: str = None
+        self,
+        action_type: str,
+        data_id: str,
+        description: str,
+        user_id: Optional[str] = None,
     ) -> None:
         """
         Log a compliance-related action
@@ -941,7 +949,7 @@ class ComplianceFramework:
         self.audit_trail.log_action(action_type, data_id, description, user_id)
 
     def generate_report(
-        self, start_time: datetime = None, end_time: datetime = None
+        self, start_time: Optional[datetime] = None, end_time: Optional[datetime] = None
     ) -> Dict[str, Any]:
         """
         Generate a compliance audit report
@@ -972,7 +980,7 @@ class ComplianceDocumentGenerator:
     Creates policy documents, disclosures, and reports
     """
 
-    def __init__(self, config: Dict[str, Any] = None) -> None:
+    def __init__(self, config: Optional[Dict[str, Any]] = None) -> None:
         """
         Initialize the document generator
 

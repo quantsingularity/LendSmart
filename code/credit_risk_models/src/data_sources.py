@@ -7,7 +7,11 @@ from various sources to augment credit scoring beyond traditional credit data.
 
 import json
 import logging
-from .utils import setup_logging
+
+try:
+    from .utils import setup_logging
+except ImportError:
+    from utils import setup_logging
 import os
 from abc import ABC, abstractmethod
 from datetime import datetime
@@ -28,7 +32,7 @@ class DataSourceError(Exception):
 class AlternativeDataSource(ABC):
     """Abstract base class for all alternative data sources"""
 
-    def __init__(self, config: Dict[str, Any] = None) -> None:
+    def __init__(self, config: Optional[Dict[str, Any]] = None) -> None:
         """
         Initialize the data source with configuration
 
@@ -37,7 +41,7 @@ class AlternativeDataSource(ABC):
         """
         self.config = config or {}
         self.name = self.__class__.__name__
-        self.last_fetch_time = None
+        self.last_fetch_time: Optional[datetime] = None
         self.cache_dir = os.path.join(
             os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
             "data",
@@ -133,7 +137,7 @@ class DigitalFootprintDataSource(AlternativeDataSource):
     - Online behavior
     """
 
-    def __init__(self, config: Dict[str, Any] = None) -> None:
+    def __init__(self, config: Optional[Dict[str, Any]] = None) -> None:
         super().__init__(config)
         self.api_key = self.config.get(
             "api_key", os.environ.get("DIGITAL_FOOTPRINT_API_KEY", "")
@@ -254,7 +258,7 @@ class TransactionDataSource(AlternativeDataSource):
     - Financial behavior
     """
 
-    def __init__(self, config: Dict[str, Any] = None) -> None:
+    def __init__(self, config: Optional[Dict[str, Any]] = None) -> None:
         super().__init__(config)
         self.api_key = self.config.get(
             "api_key", os.environ.get("TRANSACTION_API_KEY", "")
@@ -381,7 +385,7 @@ class UtilityPaymentDataSource(AlternativeDataSource):
     - Rent payments
     """
 
-    def __init__(self, config: Dict[str, Any] = None) -> None:
+    def __init__(self, config: Optional[Dict[str, Any]] = None) -> None:
         super().__init__(config)
         self.api_key = self.config.get("api_key", os.environ.get("UTILITY_API_KEY", ""))
         self.api_url = self.config.get(
@@ -489,7 +493,7 @@ class EducationEmploymentDataSource(AlternativeDataSource):
     - Industry and job stability
     """
 
-    def __init__(self, config: Dict[str, Any] = None) -> None:
+    def __init__(self, config: Optional[Dict[str, Any]] = None) -> None:
         super().__init__(config)
         self.api_key = self.config.get(
             "api_key", os.environ.get("EDUCATION_EMPLOYMENT_API_KEY", "")

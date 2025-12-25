@@ -1,13 +1,17 @@
 import joblib
 import numpy as np
 import pandas as pd
-from typing import Union
+from typing import Optional, Union
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report, confusion_matrix, roc_auc_score
 from sklearn.model_selection import GridSearchCV, train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
-from .utils import setup_logging
+
+try:
+    from .utils import setup_logging
+except ImportError:
+    from utils import setup_logging
 
 logger = setup_logging("loan_risk_model", "risk_assessment.log")
 
@@ -20,7 +24,7 @@ class LoanRiskModel:
 
     def __init__(self) -> None:
         """Initialize the risk model with default parameters"""
-        self.model = None
+        self.model: Optional[Pipeline] = None
         self.features = [
             "loan_amount",
             "interest_rate",

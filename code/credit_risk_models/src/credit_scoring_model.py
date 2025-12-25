@@ -8,7 +8,11 @@ persistence utilities.
 """
 
 import logging
-from .utils import setup_logging
+
+try:
+    from .utils import setup_logging
+except ImportError:
+    from utils import setup_logging
 import os
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
@@ -496,7 +500,7 @@ class CreditScoringModel:
             cv = StratifiedKFold(
                 n_splits=self.cv_folds, shuffle=True, random_state=self.random_state
             )
-            grid_search = GridSearchCV(
+            grid_search_cv = GridSearchCV(
                 pipeline,
                 param_grid,
                 cv=cv,
@@ -504,9 +508,9 @@ class CreditScoringModel:
                 n_jobs=self.n_jobs,
                 verbose=1,
             )
-            grid_search.fit(X_train, y_train)
-            logger.info(f"Best parameters: {grid_search.best_params_}")
-            self.model = grid_search.best_estimator_
+            grid_search_cv.fit(X_train, y_train)
+            logger.info(f"Best parameters: {grid_search_cv.best_params_}")
+            self.model = grid_search_cv.best_estimator_
         else:
             logger.info("Training model without grid search")
             pipeline.fit(X_train, y_train)
