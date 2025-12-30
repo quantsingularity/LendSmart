@@ -1,61 +1,121 @@
 # LendSmart Documentation
 
-Welcome to the comprehensive documentation for the LendSmart platform - a Smart Contract-Based Micro-Lending Platform. This documentation provides detailed information about the platform's architecture, setup procedures, API references, user guides, developer guides, infrastructure details, and blockchain implementation.
+## Quick Summary
 
-## Documentation Structure
+LendSmart is an AI-powered decentralized lending platform that combines blockchain technology with machine learning to create a transparent, efficient, and accessible lending ecosystem. The platform enables peer-to-peer lending with automated credit scoring, smart contract-based loan management, and comprehensive compliance features.
 
-The documentation is organized into the following sections:
+---
 
-- **[Setup](./setup/README.md)**: Installation and configuration instructions
-- **[API Documentation](./api/README.md)**: API endpoints, request/response formats, and authentication
-- **[User Guides](./user_guides/README.md)**: End-user instructions for borrowers and lenders
-- **[Infrastructure](./infrastructure/README.md)**: Deployment, scaling, and infrastructure management
-- **[Blockchain](./blockchain/README.md)**: Smart contract details and blockchain integration
+## 📚 Documentation Index
 
-## Project Overview
+### Getting Started
 
-LendSmart is a decentralized application (DApp) designed to revolutionize peer-to-peer lending. It leverages blockchain technology for transparency, AI for borrower risk assessment, and smart contracts to automate loan agreements.
+- **[Installation Guide](INSTALLATION.md)** - System prerequisites, installation steps for all platforms
+- **[Quick Start](USAGE.md#quick-start)** - Get up and running in 3 steps
+- **[Configuration Guide](CONFIGURATION.md)** - Environment variables and configuration options
 
-### Key Features
+### Core Documentation
 
-- **Decentralized Peer-to-Peer Lending**: Direct interaction between borrowers and lenders through smart contracts
-- **AI-Powered Risk Assessment**: Machine learning models for evaluating borrower creditworthiness
-- **Smart Contracts for Automation**: Secure loan agreements with automatic disbursement and repayment handling
-- **Immutable Records**: Blockchain-based tamper-proof and transparent loan transactions
-- **Multi-Currency Support**: Global accessibility through support for multiple currencies
-- **User-Friendly Interface**: Intuitive dashboards for both borrowers and lenders
+- **[Usage Guide](USAGE.md)** - Typical workflows for borrowers, lenders, and administrators
+- **[API Reference](API.md)** - Complete REST API documentation with examples
+- **[CLI Reference](CLI.md)** - Command-line interface for scripts and utilities
+- **[Feature Matrix](FEATURE_MATRIX.md)** - Complete feature overview and capabilities
 
-## Core Technologies
+### Architecture & Development
 
-LendSmart is built using the following technologies:
+- **[Architecture Overview](ARCHITECTURE.md)** - System design, components, and data flow
+- **[Contributing Guide](CONTRIBUTING.md)** - How to contribute, code standards, and testing
+- **[Troubleshooting](TROUBLESHOOTING.md)** - Common issues and solutions
 
-1. **Blockchain**:
-    - Ethereum/Polygon for smart contract deployment and transaction management
+### Examples
 
-2. **AI/ML**:
-    - Python with TensorFlow and Scikit-learn for credit risk models
+- **[Examples Directory](examples/)** - Working code examples
+    - [Loan Application Example](examples/LOAN_APPLICATION_EXAMPLE.md)
+    - [Smart Contract Interaction](examples/SMART_CONTRACT_EXAMPLE.md)
+    - [AI Credit Scoring Example](examples/AI_CREDIT_SCORING_EXAMPLE.md)
 
-3. **Smart Contracts**:
-    - Solidity for implementing loan agreements and data management
+---
 
-4. **Database**:
-    - MongoDB for off-chain storage of borrower and loan data
+## 🚀 3-Step Quickstart
 
-5. **Frontend**:
-    - React.js for creating a responsive and intuitive user interface
+### 1. Clone and Setup
 
-6. **Backend**:
-    - Node.js with Express for API endpoints and business logic
+```bash
+git clone https://github.com/abrar2030/LendSmart.git
+cd LendSmart
+./scripts/setup_lendsmart_env.sh
+```
 
-7. **Infrastructure**:
-    - Kubernetes for container orchestration
-    - Terraform for infrastructure as code
-    - Ansible for configuration management
+### 2. Configure Environment
 
-## Getting Started
+```bash
+cd code/backend
+cp .env.example .env
+# Edit .env with your configuration
+```
 
-For quick setup and installation instructions, please refer to the [Setup Guide](./setup/installation.md).
+### 3. Start the Platform
 
-## License
+```bash
+./scripts/run_lendsmart.sh
+# Backend: http://localhost:3001
+# Frontend: http://localhost:5173
+# API Docs: http://localhost:3001/api-docs
+```
 
-This project is licensed under the MIT License. See the `LICENSE` file in the project root for details.
+---
+
+## 🎯 Key Features at a Glance
+
+| Feature                 | Description                                        | Status    |
+| ----------------------- | -------------------------------------------------- | --------- |
+| **AI Credit Scoring**   | Machine learning-based creditworthiness assessment | ✅ Active |
+| **Smart Contracts**     | Automated loan management on blockchain            | ✅ Active |
+| **Multi-Chain Support** | Ethereum, Polygon, Arbitrum compatibility          | ✅ Active |
+| **KYC/AML Compliance**  | Regulatory compliance framework                    | ✅ Active |
+| **Real-time Analytics** | Dashboard with loan performance metrics            | ✅ Active |
+| **Mobile Apps**         | iOS and Android native applications                | ✅ Active |
+| **MFA Security**        | Multi-factor authentication support                | ✅ Active |
+| **GDPR Compliance**     | Data protection and privacy controls               | ✅ Active |
+
+---
+
+## 📦 Project Components
+
+```
+LendSmart/
+├── code/
+│   ├── backend/              # Node.js/Express API server
+│   ├── smart-contracts/      # Solidity smart contracts (Hardhat)
+│   ├── credit_risk_models/   # Python ML models for credit scoring
+│   ├── web-frontend/         # React web application
+│   ├── mobile-frontend/      # React Native mobile app
+│   ├── compliance_framework/ # Compliance and audit tools
+│   └── integration/          # External service integrations
+├── infrastructure/           # Kubernetes, Terraform configs
+├── scripts/                  # Automation scripts
+└── docs/                     # This documentation
+```
+
+---
+
+## 🔗 Quick Links
+
+- **Project Repository:** https://github.com/abrar2030/LendSmart
+- **Issue Tracker:** https://github.com/abrar2030/LendSmart/issues
+- **License:** MIT (see [LICENSE](../LICENSE))
+
+---
+
+## 🔄 Documentation Updates
+
+This documentation is actively maintained. To update docs:
+
+1. Fork the repository
+2. Make changes in the `docs/` directory
+3. Submit a pull request with clear description
+4. Follow the [Contributing Guide](CONTRIBUTING.md)
+
+---
+
+**Next Steps:** Read the [Installation Guide](INSTALLATION.md) to set up your development environment.
