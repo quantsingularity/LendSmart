@@ -1,7 +1,7 @@
 # LendSmart
 
-![CI/CD Status](https://img.shields.io/github/actions/workflow/status/abrar2030/LendSmart/cicd.yml?branch=main&label=CI/CD&logo=github)
-[![Test Coverage](https://img.shields.io/badge/coverage-83%25-brightgreen)](https://github.com/abrar2030/LendSmart/actions)
+![CI/CD Status](https://img.shields.io/github/actions/workflow/status/quantsingularity/LendSmart/cicd.yml?branch=main&label=CI/CD&logo=github)
+[![Test Coverage](https://img.shields.io/badge/coverage-83%25-brightgreen)](https://github.com/quantsingularity/LendSmart/actions)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 ## 💰 AI-Powered Decentralized Lending Platform
@@ -188,7 +188,7 @@ LendSmart/
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/abrar2030/LendSmart.git
+git clone https://github.com/quantsingularity/LendSmart.git
 cd LendSmart
 
 # Run the setup script to configure the environment

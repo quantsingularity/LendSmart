@@ -78,7 +78,7 @@ The fastest way to get started on Linux/macOS:
 
 ```bash
 # Clone repository
-git clone https://github.com/abrar2030/LendSmart.git
+git clone https://github.com/quantsingularity/LendSmart.git
 cd LendSmart
 
 # Run automated setup
@@ -98,7 +98,7 @@ Best for production-like environments:
 
 ```bash
 # Clone repository
-git clone https://github.com/abrar2030/LendSmart.git
+git clone https://github.com/quantsingularity/LendSmart.git
 cd LendSmart
 
 # Build and start all services

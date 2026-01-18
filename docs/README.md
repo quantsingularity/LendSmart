@@ -41,7 +41,7 @@ LendSmart is an AI-powered decentralized lending platform that combines blockcha
 ### 1. Clone and Setup
 
 ```bash
-git clone https://github.com/abrar2030/LendSmart.git
+git clone https://github.com/quantsingularity/LendSmart.git
 cd LendSmart
 ./scripts/setup_lendsmart_env.sh
 ```
@@ -101,8 +101,8 @@ LendSmart/
 
 ## 🔗 Quick Links
 
-- **Project Repository:** https://github.com/abrar2030/LendSmart
-- **Issue Tracker:** https://github.com/abrar2030/LendSmart/issues
+- **Project Repository:** https://github.com/quantsingularity/LendSmart
+- **Issue Tracker:** https://github.com/quantsingularity/LendSmart/issues
 - **License:** MIT (see [LICENSE](../LICENSE))
 
 ---

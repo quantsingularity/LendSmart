@@ -505,7 +505,7 @@ export FRONTEND_PORT=3000
 
 ```bash
 # 1. Clone repository
-git clone https://github.com/abrar2030/LendSmart.git
+git clone https://github.com/quantsingularity/LendSmart.git
 cd LendSmart
 
 # 2. Run setup script

@@ -576,7 +576,7 @@ nslookup api.lendsmart.com
 If issues persist:
 
 1. **Check Documentation:** Review relevant docs sections
-2. **Search Issues:** https://github.com/abrar2030/LendSmart/issues
+2. **Search Issues:** https://github.com/quantsingularity/LendSmart/issues
 3. **Ask Community:** GitHub Discussions
 4. **Create Issue:** Include logs, environment details, and steps to reproduce
 

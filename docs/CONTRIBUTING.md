@@ -34,11 +34,11 @@ Thank you for your interest in contributing to LendSmart! This document provides
 ```bash
 # Fork the repository on GitHub
 # Clone your fork
-git clone https://github.com/abrar2030/LendSmart.git
+git clone https://github.com/quantsingularity/LendSmart.git
 cd LendSmart
 
 # Add upstream remote
-git remote add upstream https://github.com/abrar2030/LendSmart.git
+git remote add upstream https://github.com/quantsingularity/LendSmart.git
 ```
 
 ### 2. Set Up Development Environment
