@@ -33,6 +33,24 @@ LendSmart is an innovative decentralized lending platform that combines blockcha
 
 LendSmart revolutionizes traditional lending by leveraging blockchain technology and artificial intelligence to create a transparent, efficient, and accessible lending platform. The system uses AI to assess borrower creditworthiness beyond traditional metrics, while smart contracts ensure secure and automated loan management on the blockchain.
 
+## Project Structure
+
+The project is organized into several main components:
+
+```
+LendSmart/
+├── code/                   # Core backend logic, services, and shared utilities
+├── docs/                   # Project documentation
+├── infrastructure/         # DevOps, deployment, and infra-related code
+├── mobile-frontend/        # Mobile application
+├── web-frontend/           # Web dashboard
+├── scripts/                # Automation, setup, and utility scripts
+├── LICENSE                 # License information
+├── README.md               # Project overview and instructions
+├── eslint.config.js        # ESLint configuration
+└── package.json            # Node.js project metadata and dependencies
+```
+
 ## Key Features
 
 ### Smart Contract-Based Lending
