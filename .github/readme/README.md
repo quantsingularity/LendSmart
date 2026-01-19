@@ -1,55 +1,19 @@
-# GitHub Workflows
-
-This directory contains GitHub Actions workflow configurations that automate the CI/CD pipeline for the LendSmart project.
-
-## Directory Structure
-
-- `workflows/` - Contains GitHub Actions workflow definition files
-    - `ci-cd.yml` - Main CI/CD pipeline configuration
-
 ## CI/CD Pipeline
 
-The LendSmart CI/CD pipeline (`ci-cd.yml`) automates the following processes:
+LendSmart uses GitHub Actions for continuous integration and deployment:
 
-### Linting
-
-Runs code quality checks on:
-
-- Smart contracts using Solhint
-- Backend code using ESLint
-- Frontend code using ESLint
-
-### Testing
-
-Executes comprehensive test suites for:
-
-- Smart contracts using Hardhat
-- Backend services
-- Frontend components
-- AI risk assessment models
-
-### Deployment
-
-For branches `main` and `develop`, the pipeline:
-
-1. Deploys smart contracts to the Sepolia testnet
-2. Verifies contracts on Etherscan
-3. Updates deployment information
-4. Creates a deployment summary as a comment on the related PR
-
-## Environment Secrets
-
-The workflow requires the following secrets to be configured in the repository settings:
-
-- `DEPLOY_PRIVATE_KEY` - Private key for deploying contracts
-- `ETHERSCAN_API_KEY` - API key for Etherscan verification
-- `INFURA_API_KEY` - API key for Infura node access
-
-## Usage
-
-The workflow triggers automatically on:
-
-- Push events to `main` and `develop` branches
-- Pull requests targeting `main` and `develop` branches
-
-No manual intervention is required for the CI/CD process to run.
+| Stage                | Control Area                    | Institutional-Grade Detail                                                              |
+| :------------------- | :------------------------------ | :-------------------------------------------------------------------------------------- |
+| **Formatting Check** | Change Triggers                 | Enforced on all `push` and `pull_request` events to `main` and `develop`                |
+|                      | Manual Oversight                | On-demand execution via controlled `workflow_dispatch`                                  |
+|                      | Source Integrity                | Full repository checkout with complete Git history for auditability                     |
+|                      | Python Runtime Standardization  | Python 3.10 with deterministic dependency caching                                       |
+|                      | Backend Code Hygiene            | `autoflake` to detect unused imports/variables using non-mutating diff-based validation |
+|                      | Backend Style Compliance        | `black --check` to enforce institutional formatting standards                           |
+|                      | Non-Intrusive Validation        | Temporary workspace comparison to prevent unauthorized source modification              |
+|                      | Node.js Runtime Control         | Node.js 18 with locked dependency installation via `npm ci`                             |
+|                      | Web Frontend Formatting Control | Prettier checks for web-facing assets                                                   |
+|                      | Mobile Frontend Formatting      | Prettier enforcement for mobile application codebases                                   |
+|                      | Documentation Governance        | Repository-wide Markdown formatting enforcement                                         |
+|                      | Infrastructure Configuration    | Prettier validation for YAML/YML infrastructure definitions                             |
+|                      | Compliance Gate                 | Any formatting deviation fails the pipeline and blocks merge                            |
