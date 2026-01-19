@@ -17,12 +17,12 @@ LendSmart is an innovative decentralized lending platform that combines blockcha
 ## Table of Contents
 
 - [Overview](#overview)
+- [Project Structure](#project-structure)
 - [Key Features](#key-features)
 - [Technology Stack](#technology-stack)
 - [Architecture](#architecture)
 - [Development Workflow](#development-workflow)
 - [Installation and Setup](#installation-and-setup)
-- [Example Use Cases](#example-use-cases)
 - [Testing](#testing)
 - [CI/CD Pipeline](#cicd-pipeline)
 - [Documentation](#documentation)
@@ -258,29 +258,6 @@ npm start
 cd web-frontend
 npm start
 ```
-
-## Example Use Cases
-
-### 1. Individual Borrowers
-
-- Submit a loan application with personal and financial details
-- Receive credit score and loan terms based on AI risk assessment
-- Monitor loan status and make repayments through the dashboard
-- Build credit history on the blockchain for better future loan terms
-
-### 2. Individual Lenders
-
-- Browse loan applications and choose borrowers to fund
-- Track repayments and earnings in real-time through the dashboard
-- Diversify lending portfolio across different risk categories
-- Earn interest and platform tokens as rewards for participation
-
-### 3. Institutional Investors
-
-- Access a pool of pre-vetted borrowers with AI-verified risk profiles
-- Implement automated lending strategies based on risk preferences
-- Generate detailed reports for regulatory compliance
-- Integrate with existing financial systems through APIs
 
 ## Testing
 
