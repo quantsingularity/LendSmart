@@ -1,5 +1,5 @@
-#!/usr/bin/env python3
 """Test basic imports and type checking of all fixed modules"""
+
 import sys
 import os
 

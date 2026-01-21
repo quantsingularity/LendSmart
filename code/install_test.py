@@ -1,8 +1,8 @@
-#!/usr/bin/env python3
 """
 Quick Installation & Verification Script for LendSmart Backend
 Run this after extracting code_fixed.zip to verify everything works
 """
+
 import sys
 import os
 
