@@ -1,50 +1,50 @@
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-    name: default-deny-all
-    namespace: default
+  name: default-deny-all
+  namespace: default
 spec:
-    podSelector: {}
-    policyTypes:
-        - Ingress
-        - Egress
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-    name: allow-frontend-to-backend
-    namespace: default
+  name: allow-frontend-to-backend
+  namespace: default
 spec:
-    podSelector:
-        matchLabels:
-            app: backend
-    policyTypes:
-        - Ingress
-    ingress:
-        - from:
-              - podSelector:
-                    matchLabels:
-                        app: frontend
-          ports:
-              - protocol: TCP
-                port: 8080 # Assuming backend listens on 8080
+  podSelector:
+    matchLabels:
+      app: backend
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: frontend
+      ports:
+        - protocol: TCP
+          port: 8080 # Assuming backend listens on 8080
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-    name: allow-backend-to-database
-    namespace: default
+  name: allow-backend-to-database
+  namespace: default
 spec:
-    podSelector:
-        matchLabels:
-            app: database
-    policyTypes:
-        - Ingress
-    ingress:
-        - from:
-              - podSelector:
-                    matchLabels:
-                        app: backend
-          ports:
-              - protocol: TCP
-                port: 3306 # Assuming database listens on 3306
+  podSelector:
+    matchLabels:
+      app: database
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: backend
+      ports:
+        - protocol: TCP
+          port: 3306 # Assuming database listens on 3306

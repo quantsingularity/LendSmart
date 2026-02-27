@@ -1,25 +1,25 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const { protect, authorize } = require('../middleware/auth');
+const { protect, authorize } = require("../middleware/auth");
 const {
-    getUsers,
-    getUser,
-    createUser,
-    updateUser,
-    deleteUser,
-    getUsersByRole,
-    getUserByWalletAddress,
-} = require('../controllers/userController');
+  getUsers,
+  getUser,
+  createUser,
+  updateUser,
+  deleteUser,
+  getUsersByRole,
+  getUserByWalletAddress,
+} = require("../controllers/userController");
 
 // Admin only routes
 router.use(protect);
-router.use(authorize('admin'));
+router.use(authorize("admin"));
 
-router.route('/').get(getUsers).post(createUser);
+router.route("/").get(getUsers).post(createUser);
 
-router.route('/:id').get(getUser).put(updateUser).delete(deleteUser);
+router.route("/:id").get(getUser).put(updateUser).delete(deleteUser);
 
-router.get('/role/:role', getUsersByRole);
-router.get('/wallet/:address', getUserByWalletAddress);
+router.get("/role/:role", getUsersByRole);
+router.get("/wallet/:address", getUserByWalletAddress);
 
 module.exports = router;

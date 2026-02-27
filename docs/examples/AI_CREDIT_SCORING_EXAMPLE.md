@@ -49,42 +49,42 @@ curl -X POST http://localhost:8000/api/v1/score \
 
 ```json
 {
-    "credit_score": 72.5,
-    "risk_level": "medium",
-    "default_probability": 4.2,
-    "recommended_interest_rate": 8.5,
-    "loan_approval_recommendation": "approve",
-    "confidence_score": 0.89,
-    "risk_factors": [
-        {
-            "factor": "credit_score",
-            "value": 720,
-            "impact": "positive",
-            "importance": 0.35
-        },
-        {
-            "factor": "debt_to_income_ratio",
-            "value": 0.2,
-            "impact": "neutral",
-            "importance": 0.2
-        },
-        {
-            "factor": "collateral_coverage",
-            "value": 4.0,
-            "impact": "positive",
-            "importance": 0.25
-        }
-    ],
-    "explanation": {
-        "positive_factors": [
-            "Good credit history (720)",
-            "Low debt-to-income ratio (20%)",
-            "Strong collateral coverage (400%)",
-            "Stable employment (3 years)"
-        ],
-        "negative_factors": [],
-        "neutral_factors": ["Moderate loan amount relative to income"]
+  "credit_score": 72.5,
+  "risk_level": "medium",
+  "default_probability": 4.2,
+  "recommended_interest_rate": 8.5,
+  "loan_approval_recommendation": "approve",
+  "confidence_score": 0.89,
+  "risk_factors": [
+    {
+      "factor": "credit_score",
+      "value": 720,
+      "impact": "positive",
+      "importance": 0.35
+    },
+    {
+      "factor": "debt_to_income_ratio",
+      "value": 0.2,
+      "impact": "neutral",
+      "importance": 0.2
+    },
+    {
+      "factor": "collateral_coverage",
+      "value": 4.0,
+      "impact": "positive",
+      "importance": 0.25
     }
+  ],
+  "explanation": {
+    "positive_factors": [
+      "Good credit history (720)",
+      "Low debt-to-income ratio (20%)",
+      "Strong collateral coverage (400%)",
+      "Stable employment (3 years)"
+    ],
+    "negative_factors": [],
+    "neutral_factors": ["Moderate loan amount relative to income"]
+  }
 }
 ```
 
@@ -207,85 +207,105 @@ if __name__ == "__main__":
 ## JavaScript/Node.js Client
 
 ```javascript
-const axios = require('axios');
+const axios = require("axios");
 
 class CreditScoringClient {
-    constructor(baseUrl = 'http://localhost:8000', apiKey = null) {
-        this.baseUrl = baseUrl;
-        this.headers = {
-            'Content-Type': 'application/json',
-        };
-        if (apiKey) {
-            this.headers['X-API-Key'] = apiKey;
-        }
+  constructor(baseUrl = "http://localhost:8000", apiKey = null) {
+    this.baseUrl = baseUrl;
+    this.headers = {
+      "Content-Type": "application/json",
+    };
+    if (apiKey) {
+      this.headers["X-API-Key"] = apiKey;
     }
+  }
 
-    async calculateCreditScore(borrowerData) {
-        try {
-            const response = await axios.post(`${this.baseUrl}/api/v1/score`, borrowerData, {
-                headers: this.headers,
-            });
-            return response.data;
-        } catch (error) {
-            console.error('Credit scoring error:', error.response?.data || error.message);
-            throw error;
-        }
+  async calculateCreditScore(borrowerData) {
+    try {
+      const response = await axios.post(
+        `${this.baseUrl}/api/v1/score`,
+        borrowerData,
+        {
+          headers: this.headers,
+        },
+      );
+      return response.data;
+    } catch (error) {
+      console.error(
+        "Credit scoring error:",
+        error.response?.data || error.message,
+      );
+      throw error;
     }
+  }
 
-    async assessLoanRisk(loanData) {
-        try {
-            const response = await axios.post(`${this.baseUrl}/api/v1/risk-assessment`, loanData, {
-                headers: this.headers,
-            });
-            return response.data;
-        } catch (error) {
-            console.error('Risk assessment error:', error.response?.data || error.message);
-            throw error;
-        }
+  async assessLoanRisk(loanData) {
+    try {
+      const response = await axios.post(
+        `${this.baseUrl}/api/v1/risk-assessment`,
+        loanData,
+        {
+          headers: this.headers,
+        },
+      );
+      return response.data;
+    } catch (error) {
+      console.error(
+        "Risk assessment error:",
+        error.response?.data || error.message,
+      );
+      throw error;
     }
+  }
 
-    async batchScore(borrowers) {
-        try {
-            const response = await axios.post(
-                `${this.baseUrl}/api/v1/batch-score`,
-                { borrowers },
-                { headers: this.headers },
-            );
-            return response.data;
-        } catch (error) {
-            console.error('Batch scoring error:', error.response?.data || error.message);
-            throw error;
-        }
+  async batchScore(borrowers) {
+    try {
+      const response = await axios.post(
+        `${this.baseUrl}/api/v1/batch-score`,
+        { borrowers },
+        { headers: this.headers },
+      );
+      return response.data;
+    } catch (error) {
+      console.error(
+        "Batch scoring error:",
+        error.response?.data || error.message,
+      );
+      throw error;
     }
+  }
 }
 
 // Usage
 async function main() {
-    const client = new CreditScoringClient('http://localhost:8000', 'your_api_key');
+  const client = new CreditScoringClient(
+    "http://localhost:8000",
+    "your_api_key",
+  );
 
-    const borrower = {
-        credit_score: 720,
-        annual_income: 75000,
-        employment_status: 'employed',
-        employment_duration: 36,
-        existing_debt: 15000,
-        debt_to_income_ratio: 0.2,
-        loan_amount: 25000,
-        loan_purpose: 'business_expansion',
-        collateral_value: 100000,
-    };
+  const borrower = {
+    credit_score: 720,
+    annual_income: 75000,
+    employment_status: "employed",
+    employment_duration: 36,
+    existing_debt: 15000,
+    debt_to_income_ratio: 0.2,
+    loan_amount: 25000,
+    loan_purpose: "business_expansion",
+    collateral_value: 100000,
+  };
 
-    const result = await client.calculateCreditScore(borrower);
+  const result = await client.calculateCreditScore(borrower);
 
-    console.log('Credit Score:', result.credit_score);
-    console.log('Risk Level:', result.risk_level);
-    console.log('Recommended Rate:', result.recommended_interest_rate + '%');
-    console.log('Decision:', result.loan_approval_recommendation);
+  console.log("Credit Score:", result.credit_score);
+  console.log("Risk Level:", result.risk_level);
+  console.log("Recommended Rate:", result.recommended_interest_rate + "%");
+  console.log("Decision:", result.loan_approval_recommendation);
 
-    console.log('\nPositive Factors:');
-    result.explanation.positive_factors.forEach((factor) => {
-        console.log('  -', factor);
-    });
+  console.log("\nPositive Factors:");
+  result.explanation.positive_factors.forEach((factor) => {
+    console.log("  -", factor);
+  });
 }
 
 main().catch(console.error);
@@ -343,62 +363,66 @@ model.plot_shap_summary(shap_values, X.head(100))
 ```javascript
 // In backend: code/backend/src/services/ai/aiService.js
 
-const axios = require('axios');
+const axios = require("axios");
 
 class AIService {
-    constructor() {
-        this.mlServiceUrl = process.env.ML_SERVICE_URL || 'http://localhost:8000';
-        this.apiKey = process.env.ML_API_KEY;
+  constructor() {
+    this.mlServiceUrl = process.env.ML_SERVICE_URL || "http://localhost:8000";
+    this.apiKey = process.env.ML_API_KEY;
+  }
+
+  async calculateCreditScore(borrowerData) {
+    try {
+      const response = await axios.post(
+        `${this.mlServiceUrl}/api/v1/score`,
+        borrowerData,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            "X-API-Key": this.apiKey,
+          },
+        },
+      );
+
+      return {
+        aiScore: response.data.credit_score,
+        riskLevel: response.data.risk_level,
+        defaultProbability: response.data.default_probability,
+        recommendedInterestRate: response.data.recommended_interest_rate,
+        factors: response.data.risk_factors,
+        explanation: response.data.explanation,
+      };
+    } catch (error) {
+      console.error("AI Service Error:", error);
+      // Fallback to traditional credit scoring
+      return this.fallbackCreditScore(borrowerData);
     }
+  }
 
-    async calculateCreditScore(borrowerData) {
-        try {
-            const response = await axios.post(`${this.mlServiceUrl}/api/v1/score`, borrowerData, {
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-API-Key': this.apiKey,
-                },
-            });
+  fallbackCreditScore(borrowerData) {
+    // Simple rule-based scoring as fallback
+    const baseRate = 10.0;
+    let adjustment = 0;
 
-            return {
-                aiScore: response.data.credit_score,
-                riskLevel: response.data.risk_level,
-                defaultProbability: response.data.default_probability,
-                recommendedInterestRate: response.data.recommended_interest_rate,
-                factors: response.data.risk_factors,
-                explanation: response.data.explanation,
-            };
-        } catch (error) {
-            console.error('AI Service Error:', error);
-            // Fallback to traditional credit scoring
-            return this.fallbackCreditScore(borrowerData);
-        }
-    }
+    if (borrowerData.credit_score > 750) adjustment -= 2.0;
+    else if (borrowerData.credit_score < 650) adjustment += 3.0;
 
-    fallbackCreditScore(borrowerData) {
-        // Simple rule-based scoring as fallback
-        const baseRate = 10.0;
-        let adjustment = 0;
+    if (borrowerData.debt_to_income_ratio < 0.2) adjustment -= 1.0;
+    else if (borrowerData.debt_to_income_ratio > 0.4) adjustment += 2.0;
 
-        if (borrowerData.credit_score > 750) adjustment -= 2.0;
-        else if (borrowerData.credit_score < 650) adjustment += 3.0;
-
-        if (borrowerData.debt_to_income_ratio < 0.2) adjustment -= 1.0;
-        else if (borrowerData.debt_to_income_ratio > 0.4) adjustment += 2.0;
-
-        return {
-            aiScore: 65,
-            riskLevel: 'medium',
-            defaultProbability: 5.0,
-            recommendedInterestRate: baseRate + adjustment,
-            factors: [],
-            explanation: {
-                positive_factors: [],
-                negative_factors: [],
-                neutral_factors: ['Using fallback scoring method'],
-            },
-        };
-    }
+    return {
+      aiScore: 65,
+      riskLevel: "medium",
+      defaultProbability: 5.0,
+      recommendedInterestRate: baseRate + adjustment,
+      factors: [],
+      explanation: {
+        positive_factors: [],
+        negative_factors: [],
+        neutral_factors: ["Using fallback scoring method"],
+      },
+    };
+  }
 }
 
 module.exports = new AIService();

@@ -166,18 +166,18 @@ let retryCount = 0;
 
 // Use arrow functions
 const calculateInterest = (principal, rate, term) => {
-    return (principal * rate * term) / 100;
+  return (principal * rate * term) / 100;
 };
 
 // Use async/await over promises
 async function getLoan(loanId) {
-    try {
-        const loan = await Loan.findById(loanId);
-        return loan;
-    } catch (error) {
-        logger.error('Failed to get loan', { loanId, error });
-        throw error;
-    }
+  try {
+    const loan = await Loan.findById(loanId);
+    return loan;
+  } catch (error) {
+    logger.error("Failed to get loan", { loanId, error });
+    throw error;
+  }
 }
 
 // Destructuring
@@ -364,69 +364,74 @@ Minimum coverage requirements:
 #### Backend Tests (Jest)
 
 ```javascript
-describe('Loan Controller', () => {
-    describe('applyForLoan', () => {
-        it('should create a new loan application', async () => {
-            const loanData = {
-                amount: 25000,
-                purpose: 'business',
-                termMonths: 24,
-            };
+describe("Loan Controller", () => {
+  describe("applyForLoan", () => {
+    it("should create a new loan application", async () => {
+      const loanData = {
+        amount: 25000,
+        purpose: "business",
+        termMonths: 24,
+      };
 
-            const response = await request(app)
-                .post('/api/loans/apply')
-                .set('Authorization', `Bearer ${authToken}`)
-                .send(loanData)
-                .expect(201);
+      const response = await request(app)
+        .post("/api/loans/apply")
+        .set("Authorization", `Bearer ${authToken}`)
+        .send(loanData)
+        .expect(201);
 
-            expect(response.body.success).toBe(true);
-            expect(response.body.data.loanId).toBeDefined();
-        });
-
-        it('should reject loan with invalid amount', async () => {
-            const response = await request(app)
-                .post('/api/loans/apply')
-                .set('Authorization', `Bearer ${authToken}`)
-                .send({ amount: -1000 })
-                .expect(400);
-
-            expect(response.body.success).toBe(false);
-        });
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.loanId).toBeDefined();
     });
+
+    it("should reject loan with invalid amount", async () => {
+      const response = await request(app)
+        .post("/api/loans/apply")
+        .set("Authorization", `Bearer ${authToken}`)
+        .send({ amount: -1000 })
+        .expect(400);
+
+      expect(response.body.success).toBe(false);
+    });
+  });
 });
 ```
 
 #### Smart Contract Tests (Hardhat)
 
 ```javascript
-describe('LendSmartLoan', () => {
-    let loanContract;
-    let owner, borrower, lender;
+describe("LendSmartLoan", () => {
+  let loanContract;
+  let owner, borrower, lender;
 
-    beforeEach(async () => {
-        [owner, borrower, lender] = await ethers.getSigners();
-        const LoanContract = await ethers.getContractFactory('LendSmartLoan');
-        loanContract = await LoanContract.deploy(owner.address, 100, owner.address, owner.address);
+  beforeEach(async () => {
+    [owner, borrower, lender] = await ethers.getSigners();
+    const LoanContract = await ethers.getContractFactory("LendSmartLoan");
+    loanContract = await LoanContract.deploy(
+      owner.address,
+      100,
+      owner.address,
+      owner.address,
+    );
+  });
+
+  describe("requestLoan", () => {
+    it("should create a new loan request", async () => {
+      const tx = await loanContract.connect(borrower).requestLoan(
+        tokenAddress,
+        ethers.utils.parseEther("10"),
+        500, // 5% interest
+        365 * 24 * 60 * 60, // 1 year
+        "Business expansion",
+        false,
+      );
+
+      const receipt = await tx.wait();
+      const event = receipt.events.find((e) => e.event === "LoanRequested");
+
+      expect(event).to.not.be.undefined;
+      expect(event.args.borrower).to.equal(borrower.address);
     });
-
-    describe('requestLoan', () => {
-        it('should create a new loan request', async () => {
-            const tx = await loanContract.connect(borrower).requestLoan(
-                tokenAddress,
-                ethers.utils.parseEther('10'),
-                500, // 5% interest
-                365 * 24 * 60 * 60, // 1 year
-                'Business expansion',
-                false,
-            );
-
-            const receipt = await tx.wait();
-            const event = receipt.events.find((e) => e.event === 'LoanRequested');
-
-            expect(event).to.not.be.undefined;
-            expect(event.args.borrower).to.equal(borrower.address);
-        });
-    });
+  });
 });
 ```
 

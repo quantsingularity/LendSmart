@@ -61,61 +61,61 @@ The LendSmart backend is designed with enterprise-grade architecture principles:
 
 1. **Clone the repository**
 
-    ```bash
-    git clone <repository-url>
-    cd lendsmart_production_backend
-    ```
+   ```bash
+   git clone <repository-url>
+   cd lendsmart_production_backend
+   ```
 
 2. **Install dependencies**
 
-    ```bash
-    npm install
-    ```
+   ```bash
+   npm install
+   ```
 
 3. **Environment Configuration**
 
-    ```bash
-    cp .env.example .env
-    ```
+   ```bash
+   cp .env.example .env
+   ```
 
-    Configure the following environment variables:
+   Configure the following environment variables:
 
-    ```env
-    # Server Configuration
-    NODE_ENV=development
-    PORT=3000
-    HOST=0.0.0.0
-    APP_VERSION=1.0.0
+   ```env
+   # Server Configuration
+   NODE_ENV=development
+   PORT=3000
+   HOST=0.0.0.0
+   APP_VERSION=1.0.0
 
-    # Database Configuration
-    MONGODB_URI=mongodb://localhost:27017/lendsmart
-    REDIS_URL=redis://localhost:6379
+   # Database Configuration
+   MONGODB_URI=mongodb://localhost:27017/lendsmart
+   REDIS_URL=redis://localhost:6379
 
-    # Security Configuration
-    JWT_SECRET=your-super-secret-jwt-key
-    JWT_EXPIRE=1h
-    REFRESH_TOKEN_SECRET=your-refresh-token-secret
-    REFRESH_TOKEN_EXPIRE=7d
-    ENCRYPTION_KEY=your-32-character-encryption-key
+   # Security Configuration
+   JWT_SECRET=your-super-secret-jwt-key
+   JWT_EXPIRE=1h
+   REFRESH_TOKEN_SECRET=your-refresh-token-secret
+   REFRESH_TOKEN_EXPIRE=7d
+   ENCRYPTION_KEY=your-32-character-encryption-key
 
-    # External Services
-    PAYMENT_PROCESSOR_API_KEY=your-payment-api-key
-    CREDIT_BUREAU_API_KEY=your-credit-bureau-key
-    NOTIFICATION_SERVICE_API_KEY=your-notification-key
+   # External Services
+   PAYMENT_PROCESSOR_API_KEY=your-payment-api-key
+   CREDIT_BUREAU_API_KEY=your-credit-bureau-key
+   NOTIFICATION_SERVICE_API_KEY=your-notification-key
 
-    # CORS Configuration
-    ALLOWED_ORIGINS=https://yourdomain.com,https://app.yourdomain.com
-    ```
+   # CORS Configuration
+   ALLOWED_ORIGINS=https://yourdomain.com,https://app.yourdomain.com
+   ```
 
 4. **Start the server**
 
-    ```bash
-    # Development
-    npm run dev
+   ```bash
+   # Development
+   npm run dev
 
-    # Production
-    npm start
-    ```
+   # Production
+   npm start
+   ```
 
 ## 🏃‍♂️ Quick Start
 
@@ -320,37 +320,37 @@ docker run -p 3000:3000 --env-file .env lendsmart-backend
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-    name: lendsmart-backend
+  name: lendsmart-backend
 spec:
-    replicas: 3
-    selector:
-        matchLabels:
-            app: lendsmart-backend
-    template:
-        metadata:
-            labels:
-                app: lendsmart-backend
-        spec:
-            containers:
-                - name: lendsmart-backend
-                  image: lendsmart-backend:latest
-                  ports:
-                      - containerPort: 3000
-                  env:
-                      - name: NODE_ENV
-                        value: 'production'
-                  livenessProbe:
-                      httpGet:
-                          path: /health/live
-                          port: 3000
-                      initialDelaySeconds: 30
-                      periodSeconds: 10
-                  readinessProbe:
-                      httpGet:
-                          path: /health/ready
-                          port: 3000
-                      initialDelaySeconds: 5
-                      periodSeconds: 5
+  replicas: 3
+  selector:
+    matchLabels:
+      app: lendsmart-backend
+  template:
+    metadata:
+      labels:
+        app: lendsmart-backend
+    spec:
+      containers:
+        - name: lendsmart-backend
+          image: lendsmart-backend:latest
+          ports:
+            - containerPort: 3000
+          env:
+            - name: NODE_ENV
+              value: "production"
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: 3000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 5
 ```
 
 ### Environment-Specific Configuration

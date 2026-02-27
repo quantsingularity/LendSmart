@@ -1,87 +1,87 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-    name: database
-    namespace: default
-    labels:
+  name: database
+  namespace: default
+  labels:
+    app: database
+    component: database
+spec:
+  serviceName: database
+  replicas: 1
+  selector:
+    matchLabels:
+      app: database
+  template:
+    metadata:
+      labels:
         app: database
         component: database
-spec:
-    serviceName: database
-    replicas: 1
-    selector:
-        matchLabels:
-            app: database
-    template:
-        metadata:
-            labels:
-                app: database
-                component: database
-        spec:
-            containers:
-                - name: mysql
-                  image: mysql:8.0
-                  ports:
-                      - name: mysql
-                        containerPort: 3306
-                        protocol: TCP
-                  resources:
-                      limits:
-                          cpu: 1000m
-                          memory: 1Gi
-                      requests:
-                          cpu: 500m
-                          memory: 512Mi
-                  env:
-                      - name: MYSQL_ROOT_PASSWORD
-                        valueFrom:
-                            secretKeyRef:
-                                name: app-secrets
-                                key: MYSQL_ROOT_PASSWORD
-                      - name: MYSQL_DATABASE
-                        valueFrom:
-                            secretKeyRef:
-                                name: app-secrets
-                                key: MYSQL_DATABASE
-                      - name: MYSQL_USER
-                        valueFrom:
-                            secretKeyRef:
-                                name: app-secrets
-                                key: MYSQL_USER
-                      - name: MYSQL_PASSWORD
-                        valueFrom:
-                            secretKeyRef:
-                                name: app-secrets
-                                key: MYSQL_PASSWORD
-                  volumeMounts:
-                      - name: mysql-data
-                        mountPath: /var/lib/mysql
-                  livenessProbe:
-                      exec:
-                          command:
-                              - mysqladmin
-                              - ping
-                              - -h
-                              - localhost
-                      initialDelaySeconds: 30
-                      periodSeconds: 10
-                      timeoutSeconds: 5
-                  readinessProbe:
-                      exec:
-                          command:
-                              - mysql
-                              - -h
-                              - localhost
-                              - -e
-                              - SELECT 1
-                      initialDelaySeconds: 10
-                      periodSeconds: 5
-                      timeoutSeconds: 3
-    volumeClaimTemplates:
-        - metadata:
-              name: mysql-data
-          spec:
-              accessModes: ['ReadWriteOnce']
-              resources:
-                  requests:
-                      storage: 10Gi
+    spec:
+      containers:
+        - name: mysql
+          image: mysql:8.0
+          ports:
+            - name: mysql
+              containerPort: 3306
+              protocol: TCP
+          resources:
+            limits:
+              cpu: 1000m
+              memory: 1Gi
+            requests:
+              cpu: 500m
+              memory: 512Mi
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: MYSQL_ROOT_PASSWORD
+            - name: MYSQL_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: MYSQL_DATABASE
+            - name: MYSQL_USER
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: MYSQL_USER
+            - name: MYSQL_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: MYSQL_PASSWORD
+          volumeMounts:
+            - name: mysql-data
+              mountPath: /var/lib/mysql
+          livenessProbe:
+            exec:
+              command:
+                - mysqladmin
+                - ping
+                - -h
+                - localhost
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+          readinessProbe:
+            exec:
+              command:
+                - mysql
+                - -h
+                - localhost
+                - -e
+                - SELECT 1
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+  volumeClaimTemplates:
+    - metadata:
+        name: mysql-data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 10Gi

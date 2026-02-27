@@ -281,10 +281,10 @@ See `validation_logs/` directory for sample validation outputs.
 
 - Use `.example` files as templates
 - Store actual secrets in:
-    - AWS Secrets Manager
-    - HashiCorp Vault
-    - Kubernetes External Secrets
-    - Ansible Vault for sensitive variables
+  - AWS Secrets Manager
+  - HashiCorp Vault
+  - Kubernetes External Secrets
+  - Ansible Vault for sensitive variables
 
 ### Required Secret Files (Git-ignored)
 
@@ -395,8 +395,8 @@ For issues or questions:
 ## Change Log
 
 - **2024-12**: Infrastructure code audit and fixes
-    - Fixed Terraform module dependencies
-    - Added Kubernetes RBAC and PDB
-    - Created example configuration files
-    - Added comprehensive validation
-    - Updated CI/CD with infrastructure checks
+  - Fixed Terraform module dependencies
+  - Added Kubernetes RBAC and PDB
+  - Created example configuration files
+  - Added comprehensive validation
+  - Updated CI/CD with infrastructure checks

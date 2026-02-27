@@ -62,11 +62,11 @@ Authorization: Bearer YOUR_ACCESS_TOKEN
 
 ```json
 {
-    "success": true,
-    "data": {
-        // Response data
-    },
-    "message": "Operation successful"
+  "success": true,
+  "data": {
+    // Response data
+  },
+  "message": "Operation successful"
 }
 ```
 
@@ -97,17 +97,17 @@ Authorization: Bearer YOUR_ACCESS_TOKEN
 
 ```json
 {
-    "success": false,
-    "error": {
-        "code": "VALIDATION_ERROR",
-        "message": "Invalid input data",
-        "details": [
-            {
-                "field": "email",
-                "message": "Invalid email format"
-            }
-        ]
-    }
+  "success": false,
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Invalid input data",
+    "details": [
+      {
+        "field": "email",
+        "message": "Invalid email format"
+      }
+    ]
+  }
 }
 ```
 
@@ -200,18 +200,18 @@ curl -X POST http://localhost:3001/api/auth/register \
 
 ```json
 {
-    "success": true,
-    "data": {
-        "user": {
-            "id": "user_abc123",
-            "email": "john@example.com",
-            "username": "johndoe",
-            "role": "borrower"
-        },
-        "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-        "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  "success": true,
+  "data": {
+    "user": {
+      "id": "user_abc123",
+      "email": "john@example.com",
+      "username": "johndoe",
+      "role": "borrower"
     },
-    "message": "Registration successful"
+    "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  },
+  "message": "Registration successful"
 }
 ```
 
@@ -248,17 +248,17 @@ curl -X POST http://localhost:3001/api/auth/login \
 
 ```json
 {
-    "success": true,
-    "data": {
-        "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-        "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-        "user": {
-            "id": "user_abc123",
-            "email": "john@example.com",
-            "username": "johndoe",
-            "role": "borrower"
-        }
+  "success": true,
+  "data": {
+    "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "user": {
+      "id": "user_abc123",
+      "email": "john@example.com",
+      "username": "johndoe",
+      "role": "borrower"
     }
+  }
 }
 ```
 
@@ -283,20 +283,20 @@ curl -X GET http://localhost:3001/api/auth/me \
 
 ```json
 {
-    "success": true,
-    "data": {
-        "user": {
-            "id": "user_abc123",
-            "email": "john@example.com",
-            "username": "johndoe",
-            "firstName": "John",
-            "lastName": "Doe",
-            "role": "borrower",
-            "kycStatus": "verified",
-            "creditScore": 720,
-            "createdAt": "2024-01-01T00:00:00Z"
-        }
+  "success": true,
+  "data": {
+    "user": {
+      "id": "user_abc123",
+      "email": "john@example.com",
+      "username": "johndoe",
+      "firstName": "John",
+      "lastName": "Doe",
+      "role": "borrower",
+      "kycStatus": "verified",
+      "creditScore": 720,
+      "createdAt": "2024-01-01T00:00:00Z"
     }
+  }
 }
 ```
 
@@ -368,18 +368,18 @@ curl -X POST http://localhost:3001/api/loans/apply \
 
 ```json
 {
-    "success": true,
-    "data": {
-        "loanId": "loan_abc123",
-        "status": "pending_review",
-        "aiRiskScore": 72.5,
-        "riskLevel": "medium",
-        "recommendedInterestRate": 8.5,
-        "monthlyPayment": 1127.42,
-        "totalRepayment": 27058.08,
-        "estimatedApprovalTime": "2-4 hours"
-    },
-    "message": "Loan application submitted successfully"
+  "success": true,
+  "data": {
+    "loanId": "loan_abc123",
+    "status": "pending_review",
+    "aiRiskScore": 72.5,
+    "riskLevel": "medium",
+    "recommendedInterestRate": 8.5,
+    "monthlyPayment": 1127.42,
+    "totalRepayment": 27058.08,
+    "estimatedApprovalTime": "2-4 hours"
+  },
+  "message": "Loan application submitted successfully"
 }
 ```
 
@@ -417,37 +417,37 @@ curl -X GET "http://localhost:3001/api/loans?status=pending_funding&minAmount=10
 
 ```json
 {
-    "success": true,
-    "data": {
-        "loans": [
-            {
-                "loanId": "loan_xyz789",
-                "borrower": {
-                    "username": "borrower123",
-                    "creditScore": 720,
-                    "aiRiskScore": 68.2,
-                    "successfulLoans": 3
-                },
-                "amount": 25000,
-                "interestRate": 9.5,
-                "termMonths": 24,
-                "purpose": "business_expansion",
-                "monthlyPayment": 1152.5,
-                "totalReturn": 27660,
-                "roi": 10.64,
-                "status": "pending_funding",
-                "fundingDeadline": "2024-02-01T00:00:00Z"
-            }
-        ],
-        "pagination": {
-            "page": 1,
-            "limit": 20,
-            "totalItems": 48,
-            "totalPages": 3,
-            "hasNext": true,
-            "hasPrev": false
-        }
+  "success": true,
+  "data": {
+    "loans": [
+      {
+        "loanId": "loan_xyz789",
+        "borrower": {
+          "username": "borrower123",
+          "creditScore": 720,
+          "aiRiskScore": 68.2,
+          "successfulLoans": 3
+        },
+        "amount": 25000,
+        "interestRate": 9.5,
+        "termMonths": 24,
+        "purpose": "business_expansion",
+        "monthlyPayment": 1152.5,
+        "totalReturn": 27660,
+        "roi": 10.64,
+        "status": "pending_funding",
+        "fundingDeadline": "2024-02-01T00:00:00Z"
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "limit": 20,
+      "totalItems": 48,
+      "totalPages": 3,
+      "hasNext": true,
+      "hasPrev": false
     }
+  }
 }
 ```
 
@@ -477,47 +477,51 @@ curl -X GET http://localhost:3001/api/loans/loan_abc123
 
 ```json
 {
-    "success": true,
-    "data": {
-        "loan": {
-            "loanId": "loan_abc123",
-            "borrower": {
-                "userId": "user_borrower123",
-                "username": "johndoe",
-                "creditScore": 720,
-                "aiRiskScore": 72.5,
-                "reputation": 4.8,
-                "successfulLoans": 5,
-                "defaultedLoans": 0
-            },
-            "amount": 25000,
-            "interestRate": 8.5,
-            "termMonths": 24,
-            "purpose": "business_expansion",
-            "status": "active",
-            "disbursedDate": "2024-01-15T00:00:00Z",
-            "maturityDate": "2026-01-15T00:00:00Z",
-            "monthlyPayment": 1127.42,
-            "totalRepayment": 27058.08,
-            "amountRepaid": 5637.1,
-            "remainingBalance": 21420.98,
-            "paymentsCompleted": 5,
-            "paymentsRemaining": 19,
-            "nextPaymentDate": "2024-06-15T00:00:00Z",
-            "nextPaymentAmount": 1127.42,
-            "collateral": {
-                "type": "property",
-                "value": 100000,
-                "description": "Commercial property"
-            },
-            "aiAssessment": {
-                "riskScore": 72.5,
-                "riskLevel": "medium",
-                "defaultProbability": 4.2,
-                "factors": ["Good credit history", "Stable employment", "Adequate collateral"]
-            }
-        }
+  "success": true,
+  "data": {
+    "loan": {
+      "loanId": "loan_abc123",
+      "borrower": {
+        "userId": "user_borrower123",
+        "username": "johndoe",
+        "creditScore": 720,
+        "aiRiskScore": 72.5,
+        "reputation": 4.8,
+        "successfulLoans": 5,
+        "defaultedLoans": 0
+      },
+      "amount": 25000,
+      "interestRate": 8.5,
+      "termMonths": 24,
+      "purpose": "business_expansion",
+      "status": "active",
+      "disbursedDate": "2024-01-15T00:00:00Z",
+      "maturityDate": "2026-01-15T00:00:00Z",
+      "monthlyPayment": 1127.42,
+      "totalRepayment": 27058.08,
+      "amountRepaid": 5637.1,
+      "remainingBalance": 21420.98,
+      "paymentsCompleted": 5,
+      "paymentsRemaining": 19,
+      "nextPaymentDate": "2024-06-15T00:00:00Z",
+      "nextPaymentAmount": 1127.42,
+      "collateral": {
+        "type": "property",
+        "value": 100000,
+        "description": "Commercial property"
+      },
+      "aiAssessment": {
+        "riskScore": 72.5,
+        "riskLevel": "medium",
+        "defaultProbability": 4.2,
+        "factors": [
+          "Good credit history",
+          "Stable employment",
+          "Adequate collateral"
+        ]
+      }
     }
+  }
 }
 ```
 
@@ -661,27 +665,27 @@ Get platform-wide statistics.
 
 ```json
 {
-    "success": true,
-    "data": {
-        "users": {
-            "total": 15420,
-            "borrowers": 8950,
-            "lenders": 6470,
-            "verified": 12340
-        },
-        "loans": {
-            "total": 5280,
-            "active": 1850,
-            "funded": 4120,
-            "defaulted": 95
-        },
-        "financials": {
-            "totalLent": 125400000,
-            "totalRepaid": 98200000,
-            "platformRevenue": 3250000,
-            "defaultRate": 1.8
-        }
+  "success": true,
+  "data": {
+    "users": {
+      "total": 15420,
+      "borrowers": 8950,
+      "lenders": 6470,
+      "verified": 12340
+    },
+    "loans": {
+      "total": 5280,
+      "active": 1850,
+      "funded": 4120,
+      "defaulted": 95
+    },
+    "financials": {
+      "totalLent": 125400000,
+      "totalRepaid": 98200000,
+      "platformRevenue": 3250000,
+      "defaultRate": 1.8
     }
+  }
 }
 ```
 
@@ -706,13 +710,13 @@ LendSmart supports webhooks for real-time event notifications.
 
 ```json
 {
-    "event": "loan.funded",
-    "timestamp": "2024-01-15T12:00:00Z",
-    "data": {
-        "loanId": "loan_abc123",
-        "amount": 25000,
-        "lender": "user_lender456"
-    }
+  "event": "loan.funded",
+  "timestamp": "2024-01-15T12:00:00Z",
+  "data": {
+    "loanId": "loan_abc123",
+    "amount": 25000,
+    "lender": "user_lender456"
+  }
 }
 ```
 

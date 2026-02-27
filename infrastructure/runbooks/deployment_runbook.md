@@ -21,47 +21,47 @@ Before initiating a deployment, ensure the following:
 
 - **Trigger:** Automatically triggered on every push to the `develop` branch.
 - **Process:**
-    1.  CI/CD pipeline builds new Docker images for frontend and backend.
-    2.  Images are pushed to the container registry.
-    3.  Helm chart is updated with the new image tags.
-    4.  `helm upgrade --install lend-smart-dev ./helm/lend-smart --namespace dev -f ./helm/lend-smart/values-dev.yaml` is executed.
-    5.  Verify deployment success by checking pod status and application logs.
-    6.  Perform basic smoke tests on the deployed application.
+  1.  CI/CD pipeline builds new Docker images for frontend and backend.
+  2.  Images are pushed to the container registry.
+  3.  Helm chart is updated with the new image tags.
+  4.  `helm upgrade --install lend-smart-dev ./helm/lend-smart --namespace dev -f ./helm/lend-smart/values-dev.yaml` is executed.
+  5.  Verify deployment success by checking pod status and application logs.
+  6.  Perform basic smoke tests on the deployed application.
 
 ### 3.2. Staging Environment Deployment
 
 - **Trigger:** Manual trigger from the CI/CD pipeline after successful `main` branch merge.
 - **Process:**
-    1.  Ensure all features for the release are merged into `main`.
-    2.  CI/CD pipeline builds new Docker images for frontend and backend.
-    3.  Images are pushed to the container registry.
-    4.  Helm chart is updated with the new image tags.
-    5.  `helm upgrade --install lend-smart-staging ./helm/lend-smart --namespace staging -f ./helm/lend-smart/values-staging.yaml` is executed.
-    6.  **Pre-Deployment Checks:**
-        - Verify database backups are up-to-date.
-        - Confirm monitoring and alerting systems are operational.
-    7.  **Deployment Strategy:** Blue/Green or Canary deployment (if configured).
-    8.  Verify deployment success by checking pod status, application logs, and monitoring dashboards.
-    9.  Conduct comprehensive QA and user acceptance testing (UAT).
-    10. Monitor application performance and error rates closely.
+  1.  Ensure all features for the release are merged into `main`.
+  2.  CI/CD pipeline builds new Docker images for frontend and backend.
+  3.  Images are pushed to the container registry.
+  4.  Helm chart is updated with the new image tags.
+  5.  `helm upgrade --install lend-smart-staging ./helm/lend-smart --namespace staging -f ./helm/lend-smart/values-staging.yaml` is executed.
+  6.  **Pre-Deployment Checks:**
+      - Verify database backups are up-to-date.
+      - Confirm monitoring and alerting systems are operational.
+  7.  **Deployment Strategy:** Blue/Green or Canary deployment (if configured).
+  8.  Verify deployment success by checking pod status, application logs, and monitoring dashboards.
+  9.  Conduct comprehensive QA and user acceptance testing (UAT).
+  10. Monitor application performance and error rates closely.
 
 ### 3.3. Production Environment Deployment
 
 - **Trigger:** Manual trigger from the CI/CD pipeline, typically after a successful tag (e.g., `v1.0.0`) is pushed to `main`.
 - **Process:**
-    1.  Ensure Staging environment testing is complete and signed off.
-    2.  **Pre-Deployment Checks:**
-        - Verify database backups are up-to-date and a rollback plan is in place.
-        - Confirm monitoring and alerting systems are operational and configured for production.
-        - Notify all relevant stakeholders of the production deployment window.
-    3.  **Deployment Strategy:** Blue/Green or Canary deployment (recommended for production).
-        - **Blue/Green:** Deploy new version (Green) alongside current (Blue). Once Green is verified, switch traffic. Keep Blue for quick rollback.
-        - **Canary:** Deploy new version to a small subset of users. Monitor performance and errors. Gradually increase traffic to new version.
-    4.  Execute `helm upgrade --install lend-smart-prod ./helm/lend-smart --namespace prod -f ./helm/lend-smart/values-prod.yaml`.
-    5.  Verify deployment success by checking pod status, application logs, and monitoring dashboards.
-    6.  Conduct post-deployment smoke tests.
-    7.  Monitor application performance, error rates, and key business metrics closely for the first few hours/days.
-    8.  **Rollback Plan:** If critical issues are detected, immediately initiate rollback to the previous stable version.
+  1.  Ensure Staging environment testing is complete and signed off.
+  2.  **Pre-Deployment Checks:**
+      - Verify database backups are up-to-date and a rollback plan is in place.
+      - Confirm monitoring and alerting systems are operational and configured for production.
+      - Notify all relevant stakeholders of the production deployment window.
+  3.  **Deployment Strategy:** Blue/Green or Canary deployment (recommended for production).
+      - **Blue/Green:** Deploy new version (Green) alongside current (Blue). Once Green is verified, switch traffic. Keep Blue for quick rollback.
+      - **Canary:** Deploy new version to a small subset of users. Monitor performance and errors. Gradually increase traffic to new version.
+  4.  Execute `helm upgrade --install lend-smart-prod ./helm/lend-smart --namespace prod -f ./helm/lend-smart/values-prod.yaml`.
+  5.  Verify deployment success by checking pod status, application logs, and monitoring dashboards.
+  6.  Conduct post-deployment smoke tests.
+  7.  Monitor application performance, error rates, and key business metrics closely for the first few hours/days.
+  8.  **Rollback Plan:** If critical issues are detected, immediately initiate rollback to the previous stable version.
 
 ## 4. Rollback Procedure
 

@@ -15,11 +15,11 @@ Future contracts might include:
 ## Contracts
 
 - **`contracts/LoanContract.sol`**: The main contract for managing loan agreements between borrowers and lenders.
-    - Allows borrowers to request loans.
-    - Allows lenders to fund open loan requests.
-    - Manages fund disbursement upon successful funding.
-    - Tracks repayment schedules and processes repayments.
-    - Handles loan defaults and collateral (if applicable and on-chain).
+  - Allows borrowers to request loans.
+  - Allows lenders to fund open loan requests.
+  - Manages fund disbursement upon successful funding.
+  - Tracks repayment schedules and processes repayments.
+  - Handles loan defaults and collateral (if applicable and on-chain).
 - **`contracts/Migrations.sol`**: Standard Truffle/Hardhat migrations contract (if using these frameworks).
 
 ## Project Structure
@@ -99,17 +99,17 @@ smart-contracts/
 
 3.  **Deploy Contracts:**
     - **To a local Hardhat network:**
-        ```bash
-        npx hardhat node # Starts a local node
-        # In another terminal:
-        npx hardhat run scripts/deploy.js --network localhost
-        ```
+      ```bash
+      npx hardhat node # Starts a local node
+      # In another terminal:
+      npx hardhat run scripts/deploy.js --network localhost
+      ```
     - **To a testnet (e.g., Sepolia):**
       Ensure your `hardhat.config.js` is configured for the testnet and your `.env` file has the RPC URL and private key.
-        ```bash
-        npx hardhat run scripts/deploy.js --network sepolia
-        ```
-        The `deploy.js` script should output the address of the deployed contract.
+      ```bash
+      npx hardhat run scripts/deploy.js --network sepolia
+      ```
+      The `deploy.js` script should output the address of the deployed contract.
 
 4.  **Verify Contracts on Etherscan (or similar block explorer):**
     After deploying to a public testnet or mainnet, you can verify the contract source code.

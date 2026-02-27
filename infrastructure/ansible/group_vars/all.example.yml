@@ -21,7 +21,7 @@ webserver_ssl_port: 443
 
 # System Configuration
 ntp_servers:
-    - 0.pool.ntp.org
-    - 1.pool.ntp.org
+  - 0.pool.ntp.org
+  - 1.pool.ntp.org
 
 swap_file_size_mb: 2048

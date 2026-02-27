@@ -30,9 +30,9 @@ LendSmart is an AI-powered decentralized lending platform that combines blockcha
 ### Examples
 
 - **[Examples Directory](examples/)** - Working code examples
-    - [Loan Application Example](examples/LOAN_APPLICATION_EXAMPLE.md)
-    - [Smart Contract Interaction](examples/SMART_CONTRACT_EXAMPLE.md)
-    - [AI Credit Scoring Example](examples/AI_CREDIT_SCORING_EXAMPLE.md)
+  - [Loan Application Example](examples/LOAN_APPLICATION_EXAMPLE.md)
+  - [Smart Contract Interaction](examples/SMART_CONTRACT_EXAMPLE.md)
+  - [AI Credit Scoring Example](examples/AI_CREDIT_SCORING_EXAMPLE.md)
 
 ---
 

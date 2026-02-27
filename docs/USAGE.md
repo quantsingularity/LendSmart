@@ -118,15 +118,15 @@ curl -X POST http://localhost:3001/api/loans/apply \
 
 ```json
 {
-    "success": true,
-    "data": {
-        "loanId": "loan_abc123",
-        "status": "pending_review",
-        "aiRiskScore": 72.5,
-        "recommendedInterestRate": 8.5,
-        "estimatedApprovalTime": "2-4 hours",
-        "monthlyPayment": 1127.42
-    }
+  "success": true,
+  "data": {
+    "loanId": "loan_abc123",
+    "status": "pending_review",
+    "aiRiskScore": 72.5,
+    "recommendedInterestRate": 8.5,
+    "estimatedApprovalTime": "2-4 hours",
+    "monthlyPayment": 1127.42
+  }
 }
 ```
 
@@ -184,29 +184,29 @@ curl -X GET "http://localhost:3001/api/loans?status=pending_funding&minAmount=10
 
 ```json
 {
-    "success": true,
-    "data": {
-        "loans": [
-            {
-                "loanId": "loan_xyz789",
-                "borrower": {
-                    "creditScore": 720,
-                    "aiRiskScore": 68.2
-                },
-                "amount": 25000,
-                "interestRate": 9.5,
-                "termMonths": 24,
-                "purpose": "business_expansion",
-                "monthlyPayment": 1152.5,
-                "totalReturn": 27660
-            }
-        ],
-        "pagination": {
-            "page": 1,
-            "totalPages": 5,
-            "totalLoans": 48
-        }
+  "success": true,
+  "data": {
+    "loans": [
+      {
+        "loanId": "loan_xyz789",
+        "borrower": {
+          "creditScore": 720,
+          "aiRiskScore": 68.2
+        },
+        "amount": 25000,
+        "interestRate": 9.5,
+        "termMonths": 24,
+        "purpose": "business_expansion",
+        "monthlyPayment": 1152.5,
+        "totalReturn": 27660
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "totalPages": 5,
+      "totalLoans": 48
     }
+  }
 }
 ```
 
@@ -389,104 +389,110 @@ All scripts are located in `scripts/` directory.
 // Install client
 // npm install axios
 
-const axios = require('axios');
+const axios = require("axios");
 
 class LendSmartClient {
-    constructor(baseURL, apiKey) {
-        this.client = axios.create({
-            baseURL: baseURL,
-            headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${apiKey}`,
-            },
-        });
-    }
+  constructor(baseURL, apiKey) {
+    this.client = axios.create({
+      baseURL: baseURL,
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+    });
+  }
 
-    // Apply for loan
-    async applyForLoan(loanData) {
-        const response = await this.client.post('/loans/apply', loanData);
-        return response.data;
-    }
+  // Apply for loan
+  async applyForLoan(loanData) {
+    const response = await this.client.post("/loans/apply", loanData);
+    return response.data;
+  }
 
-    // Get loan details
-    async getLoan(loanId) {
-        const response = await this.client.get(`/loans/${loanId}`);
-        return response.data;
-    }
+  // Get loan details
+  async getLoan(loanId) {
+    const response = await this.client.get(`/loans/${loanId}`);
+    return response.data;
+  }
 
-    // Fund a loan
-    async fundLoan(loanId, amount) {
-        const response = await this.client.post(`/loans/${loanId}/fund`, { amount });
-        return response.data;
-    }
+  // Fund a loan
+  async fundLoan(loanId, amount) {
+    const response = await this.client.post(`/loans/${loanId}/fund`, {
+      amount,
+    });
+    return response.data;
+  }
 }
 
 // Usage
-const client = new LendSmartClient('http://localhost:3001/api', 'your_api_key');
+const client = new LendSmartClient("http://localhost:3001/api", "your_api_key");
 
 // Apply for loan
 const loan = await client.applyForLoan({
-    amount: 25000,
-    purpose: 'business_expansion',
-    termMonths: 24,
-    monthlyIncome: 8000,
+  amount: 25000,
+  purpose: "business_expansion",
+  termMonths: 24,
+  monthlyIncome: 8000,
 });
 
-console.log('Loan application submitted:', loan.data.loanId);
+console.log("Loan application submitted:", loan.data.loanId);
 ```
 
 ### Smart Contract Interaction (ethers.js)
 
 ```javascript
-const { ethers } = require('ethers');
+const { ethers } = require("ethers");
 
 // Contract ABI (simplified)
 const LOAN_CONTRACT_ABI = [
-    'function requestLoan(address token, uint256 principal, uint256 interestRate, uint256 duration, string purpose, bool isCollateralized) external returns (uint256)',
-    'function getLoan(uint256 loanId) external view returns (tuple(uint256 id, address borrower, address lender, uint256 principal, uint256 interestRate, uint8 status))',
-    'function fundLoan(uint256 loanId) external',
-    'function makeRepayment(uint256 loanId, uint256 amount) external',
+  "function requestLoan(address token, uint256 principal, uint256 interestRate, uint256 duration, string purpose, bool isCollateralized) external returns (uint256)",
+  "function getLoan(uint256 loanId) external view returns (tuple(uint256 id, address borrower, address lender, uint256 principal, uint256 interestRate, uint8 status))",
+  "function fundLoan(uint256 loanId) external",
+  "function makeRepayment(uint256 loanId, uint256 amount) external",
 ];
 
 // Initialize provider and contract
 const provider = new ethers.providers.JsonRpcProvider(
-    'https://mainnet.infura.io/v3/YOUR_PROJECT_ID',
+  "https://mainnet.infura.io/v3/YOUR_PROJECT_ID",
 );
-const wallet = new ethers.Wallet('YOUR_PRIVATE_KEY', provider);
-const loanContract = new ethers.Contract('CONTRACT_ADDRESS', LOAN_CONTRACT_ABI, wallet);
+const wallet = new ethers.Wallet("YOUR_PRIVATE_KEY", provider);
+const loanContract = new ethers.Contract(
+  "CONTRACT_ADDRESS",
+  LOAN_CONTRACT_ABI,
+  wallet,
+);
 
 // Request a loan
 async function requestLoan() {
-    const tx = await loanContract.requestLoan(
-        '0xTokenAddress', // Token address
-        ethers.utils.parseEther('10'), // 10 ETH
-        500, // 5% interest rate
-        365 * 24 * 60 * 60, // 1 year duration
-        'Business expansion', // Purpose
-        true, // Collateralized
-    );
+  const tx = await loanContract.requestLoan(
+    "0xTokenAddress", // Token address
+    ethers.utils.parseEther("10"), // 10 ETH
+    500, // 5% interest rate
+    365 * 24 * 60 * 60, // 1 year duration
+    "Business expansion", // Purpose
+    true, // Collateralized
+  );
 
-    const receipt = await tx.wait();
-    console.log('Loan requested. Transaction:', receipt.transactionHash);
+  const receipt = await tx.wait();
+  console.log("Loan requested. Transaction:", receipt.transactionHash);
 
-    // Extract loan ID from event
-    const event = receipt.events.find((e) => e.event === 'LoanRequested');
-    const loanId = event.args.loanId;
+  // Extract loan ID from event
+  const event = receipt.events.find((e) => e.event === "LoanRequested");
+  const loanId = event.args.loanId;
 
-    return loanId;
+  return loanId;
 }
 
 // Get loan details
 async function getLoanDetails(loanId) {
-    const loan = await loanContract.getLoan(loanId);
-    console.log('Loan Details:', {
-        id: loan.id.toString(),
-        borrower: loan.borrower,
-        principal: ethers.utils.formatEther(loan.principal),
-        interestRate: loan.interestRate.toString(),
-        status: loan.status,
-    });
-    return loan;
+  const loan = await loanContract.getLoan(loanId);
+  console.log("Loan Details:", {
+    id: loan.id.toString(),
+    borrower: loan.borrower,
+    principal: ethers.utils.formatEther(loan.principal),
+    interestRate: loan.interestRate.toString(),
+    status: loan.status,
+  });
+  return loan;
 }
 
 // Usage
@@ -581,28 +587,28 @@ curl -X POST "http://localhost:3001/api/loans/$LOAN_ID/repay" \
 ```javascript
 // Lender strategy: Diversify across multiple loans
 async function diversifyPortfolio(client, budget, riskTolerance) {
-    // Get available loans within risk tolerance
-    const loans = await client.getMarketplaceLoans({
-        maxRiskScore: riskTolerance,
-        sortBy: 'interestRate',
-        sortOrder: 'desc',
-    });
+  // Get available loans within risk tolerance
+  const loans = await client.getMarketplaceLoans({
+    maxRiskScore: riskTolerance,
+    sortBy: "interestRate",
+    sortOrder: "desc",
+  });
 
-    // Calculate investment per loan
-    const investmentPerLoan = budget / 10; // Diversify across 10 loans
+  // Calculate investment per loan
+  const investmentPerLoan = budget / 10; // Diversify across 10 loans
 
-    // Fund loans
-    const funded = [];
-    for (const loan of loans.data.loans.slice(0, 10)) {
-        try {
-            const result = await client.fundLoan(loan.loanId, investmentPerLoan);
-            funded.push(result);
-        } catch (error) {
-            console.error(`Failed to fund loan ${loan.loanId}:`, error);
-        }
+  // Fund loans
+  const funded = [];
+  for (const loan of loans.data.loans.slice(0, 10)) {
+    try {
+      const result = await client.fundLoan(loan.loanId, investmentPerLoan);
+      funded.push(result);
+    } catch (error) {
+      console.error(`Failed to fund loan ${loan.loanId}:`, error);
     }
+  }
 
-    return funded;
+  return funded;
 }
 ```
 
@@ -611,20 +617,20 @@ async function diversifyPortfolio(client, budget, riskTolerance) {
 ```javascript
 // Setup automatic monthly repayments
 async function setupAutoRepayment(client, loanId, paymentMethod) {
-    const loan = await client.getLoan(loanId);
+  const loan = await client.getLoan(loanId);
 
-    // Schedule monthly payment
-    const repaymentSchedule = {
-        loanId: loanId,
-        amount: loan.data.monthlyPayment,
-        frequency: 'monthly',
-        paymentMethod: paymentMethod,
-        startDate: new Date(),
-        endDate: loan.data.maturityDate,
-    };
+  // Schedule monthly payment
+  const repaymentSchedule = {
+    loanId: loanId,
+    amount: loan.data.monthlyPayment,
+    frequency: "monthly",
+    paymentMethod: paymentMethod,
+    startDate: new Date(),
+    endDate: loan.data.maturityDate,
+  };
 
-    const result = await client.setupAutoPay(repaymentSchedule);
-    console.log('Auto-repayment configured:', result);
+  const result = await client.setupAutoPay(repaymentSchedule);
+  console.log("Auto-repayment configured:", result);
 }
 ```
 

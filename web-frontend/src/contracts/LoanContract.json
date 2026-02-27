@@ -1,132 +1,161 @@
 {
-    "abi": [
+  "abi": [
+    {
+      "inputs": [
+        { "internalType": "address", "name": "borrower", "type": "address" },
+        { "internalType": "address", "name": "lender", "type": "address" },
+        { "internalType": "uint256", "name": "amount", "type": "uint256" },
         {
-            "inputs": [
-                { "internalType": "address", "name": "borrower", "type": "address" },
-                { "internalType": "address", "name": "lender", "type": "address" },
-                { "internalType": "uint256", "name": "amount", "type": "uint256" },
-                { "internalType": "uint256", "name": "interestRateBps", "type": "uint256" },
-                { "internalType": "uint256", "name": "termSeconds", "type": "uint256" },
-                { "internalType": "string", "name": "loanId", "type": "string" }
-            ],
-            "stateMutability": "nonpayable",
-            "type": "constructor"
+          "internalType": "uint256",
+          "name": "interestRateBps",
+          "type": "uint256"
+        },
+        { "internalType": "uint256", "name": "termSeconds", "type": "uint256" },
+        { "internalType": "string", "name": "loanId", "type": "string" }
+      ],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "lender",
+          "type": "address"
         },
         {
-            "anonymous": false,
-            "inputs": [
-                { "indexed": true, "internalType": "address", "name": "lender", "type": "address" },
-                {
-                    "indexed": false,
-                    "internalType": "uint256",
-                    "name": "amount",
-                    "type": "uint256"
-                },
-                {
-                    "indexed": false,
-                    "internalType": "uint256",
-                    "name": "timestamp",
-                    "type": "uint256"
-                }
-            ],
-            "name": "LoanFunded",
-            "type": "event"
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
         },
         {
-            "anonymous": false,
-            "inputs": [
-                {
-                    "indexed": true,
-                    "internalType": "address",
-                    "name": "borrower",
-                    "type": "address"
-                },
-                {
-                    "indexed": false,
-                    "internalType": "uint256",
-                    "name": "amount",
-                    "type": "uint256"
-                },
-                {
-                    "indexed": false,
-                    "internalType": "uint256",
-                    "name": "installmentNumber",
-                    "type": "uint256"
-                },
-                {
-                    "indexed": false,
-                    "internalType": "uint256",
-                    "name": "timestamp",
-                    "type": "uint256"
-                }
-            ],
-            "name": "LoanRepayment",
-            "type": "event"
-        },
-        {
-            "anonymous": false,
-            "inputs": [
-                {
-                    "indexed": false,
-                    "internalType": "uint256",
-                    "name": "timestamp",
-                    "type": "uint256"
-                }
-            ],
-            "name": "LoanCompleted",
-            "type": "event"
-        },
-        {
-            "anonymous": false,
-            "inputs": [
-                {
-                    "indexed": false,
-                    "internalType": "uint256",
-                    "name": "timestamp",
-                    "type": "uint256"
-                }
-            ],
-            "name": "LoanDefaulted",
-            "type": "event"
-        },
-        {
-            "inputs": [],
-            "name": "fundLoan",
-            "outputs": [],
-            "stateMutability": "payable",
-            "type": "function"
-        },
-        {
-            "inputs": [
-                { "internalType": "uint256", "name": "installmentNumber", "type": "uint256" }
-            ],
-            "name": "repayLoan",
-            "outputs": [],
-            "stateMutability": "payable",
-            "type": "function"
-        },
-        {
-            "inputs": [],
-            "name": "getLoanDetails",
-            "outputs": [
-                { "internalType": "address", "name": "borrower", "type": "address" },
-                { "internalType": "address", "name": "lender", "type": "address" },
-                { "internalType": "uint256", "name": "amount", "type": "uint256" },
-                { "internalType": "uint256", "name": "interestRateBps", "type": "uint256" },
-                { "internalType": "uint256", "name": "termSeconds", "type": "uint256" },
-                { "internalType": "uint256", "name": "startDate", "type": "uint256" },
-                { "internalType": "uint8", "name": "status", "type": "uint8" },
-                { "internalType": "uint256", "name": "amountRepaid", "type": "uint256" },
-                { "internalType": "uint256", "name": "remainingBalance", "type": "uint256" },
-                { "internalType": "uint256", "name": "nextPaymentDue", "type": "uint256" },
-                { "internalType": "string", "name": "loanId", "type": "string" }
-            ],
-            "stateMutability": "view",
-            "type": "function"
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "timestamp",
+          "type": "uint256"
         }
-    ],
-    "bytecode": "0x608060405234801561001057600080fd5b506040516108c73803806108c78339818101604052810190610032919061024c565b8060",
-    "deployedBytecode": "0x608060405234801561001057600080fd5b50600436106100365760003560e01c8063",
-    "linkReferences": {},
-    "deployedLinkReferences": {}
+      ],
+      "name": "LoanFunded",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "borrower",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "installmentNumber",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "timestamp",
+          "type": "uint256"
+        }
+      ],
+      "name": "LoanRepayment",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "timestamp",
+          "type": "uint256"
+        }
+      ],
+      "name": "LoanCompleted",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "timestamp",
+          "type": "uint256"
+        }
+      ],
+      "name": "LoanDefaulted",
+      "type": "event"
+    },
+    {
+      "inputs": [],
+      "name": "fundLoan",
+      "outputs": [],
+      "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "installmentNumber",
+          "type": "uint256"
+        }
+      ],
+      "name": "repayLoan",
+      "outputs": [],
+      "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getLoanDetails",
+      "outputs": [
+        { "internalType": "address", "name": "borrower", "type": "address" },
+        { "internalType": "address", "name": "lender", "type": "address" },
+        { "internalType": "uint256", "name": "amount", "type": "uint256" },
+        {
+          "internalType": "uint256",
+          "name": "interestRateBps",
+          "type": "uint256"
+        },
+        { "internalType": "uint256", "name": "termSeconds", "type": "uint256" },
+        { "internalType": "uint256", "name": "startDate", "type": "uint256" },
+        { "internalType": "uint8", "name": "status", "type": "uint8" },
+        {
+          "internalType": "uint256",
+          "name": "amountRepaid",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "remainingBalance",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "nextPaymentDue",
+          "type": "uint256"
+        },
+        { "internalType": "string", "name": "loanId", "type": "string" }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x608060405234801561001057600080fd5b506040516108c73803806108c78339818101604052810190610032919061024c565b8060",
+  "deployedBytecode": "0x608060405234801561001057600080fd5b50600436106100365760003560e01c8063",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
 }

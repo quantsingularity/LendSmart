@@ -240,26 +240,28 @@ Located in `code/mobile-frontend/src/config/index.js`
 
 ```javascript
 export default {
-    // API Configuration
-    API_URL: __DEV__ ? 'http://localhost:3001/api' : 'https://api.lendsmart.com/api',
-    API_VERSION: 'v1',
-    API_TIMEOUT: 30000,
+  // API Configuration
+  API_URL: __DEV__
+    ? "http://localhost:3001/api"
+    : "https://api.lendsmart.com/api",
+  API_VERSION: "v1",
+  API_TIMEOUT: 30000,
 
-    // Blockchain Configuration
-    BLOCKCHAIN_NETWORK: 'mainnet',
-    CHAIN_ID: 1,
-    CONTRACT_ADDRESS: '0x1234567890123456789012345678901234567890',
-    RPC_URL: 'https://mainnet.infura.io/v3/YOUR_PROJECT_ID',
+  // Blockchain Configuration
+  BLOCKCHAIN_NETWORK: "mainnet",
+  CHAIN_ID: 1,
+  CONTRACT_ADDRESS: "0x1234567890123456789012345678901234567890",
+  RPC_URL: "https://mainnet.infura.io/v3/YOUR_PROJECT_ID",
 
-    // Features
-    ENABLE_BIOMETRIC_AUTH: true,
-    ENABLE_PUSH_NOTIFICATIONS: true,
-    ENABLE_ANALYTICS: true,
+  // Features
+  ENABLE_BIOMETRIC_AUTH: true,
+  ENABLE_PUSH_NOTIFICATIONS: true,
+  ENABLE_ANALYTICS: true,
 
-    // App Configuration
-    APP_VERSION: '1.0.0',
-    MIN_PASSWORD_LENGTH: 8,
-    SESSION_TIMEOUT: 900000, // 15 minutes
+  // App Configuration
+  APP_VERSION: "1.0.0",
+  MIN_PASSWORD_LENGTH: 8,
+  SESSION_TIMEOUT: 900000, // 15 minutes
 };
 ```
 
@@ -272,62 +274,62 @@ export default {
 Located in `code/smart-contracts/hardhat.config.js`
 
 ```javascript
-require('@nomicfoundation/hardhat-toolbox');
-require('dotenv').config();
+require("@nomicfoundation/hardhat-toolbox");
+require("dotenv").config();
 
 module.exports = {
-    solidity: {
-        version: '0.8.20',
-        settings: {
-            optimizer: {
-                enabled: true,
-                runs: 200,
-            },
-        },
+  solidity: {
+    version: "0.8.20",
+    settings: {
+      optimizer: {
+        enabled: true,
+        runs: 200,
+      },
     },
-    networks: {
-        // Local development
-        localhost: {
-            url: 'http://127.0.0.1:8545',
-        },
-
-        // Ethereum Testnet
-        goerli: {
-            url: process.env.ETHEREUM_RPC_URL,
-            accounts: [process.env.ETHEREUM_PRIVATE_KEY],
-            chainId: 5,
-        },
-
-        // Ethereum Mainnet
-        mainnet: {
-            url: process.env.ETHEREUM_RPC_URL,
-            accounts: [process.env.ETHEREUM_PRIVATE_KEY],
-            chainId: 1,
-            gasPrice: 'auto',
-        },
-
-        // Polygon
-        polygon: {
-            url: process.env.POLYGON_RPC_URL,
-            accounts: [process.env.ETHEREUM_PRIVATE_KEY],
-            chainId: 137,
-        },
-
-        // Arbitrum
-        arbitrum: {
-            url: process.env.ARBITRUM_RPC_URL,
-            accounts: [process.env.ETHEREUM_PRIVATE_KEY],
-            chainId: 42161,
-        },
+  },
+  networks: {
+    // Local development
+    localhost: {
+      url: "http://127.0.0.1:8545",
     },
-    etherscan: {
-        apiKey: process.env.ETHERSCAN_API_KEY,
+
+    // Ethereum Testnet
+    goerli: {
+      url: process.env.ETHEREUM_RPC_URL,
+      accounts: [process.env.ETHEREUM_PRIVATE_KEY],
+      chainId: 5,
     },
-    gasReporter: {
-        enabled: process.env.REPORT_GAS === 'true',
-        currency: 'USD',
-        coinmarketcap: process.env.COINMARKETCAP_API_KEY,
+
+    // Ethereum Mainnet
+    mainnet: {
+      url: process.env.ETHEREUM_RPC_URL,
+      accounts: [process.env.ETHEREUM_PRIVATE_KEY],
+      chainId: 1,
+      gasPrice: "auto",
     },
+
+    // Polygon
+    polygon: {
+      url: process.env.POLYGON_RPC_URL,
+      accounts: [process.env.ETHEREUM_PRIVATE_KEY],
+      chainId: 137,
+    },
+
+    // Arbitrum
+    arbitrum: {
+      url: process.env.ARBITRUM_RPC_URL,
+      accounts: [process.env.ETHEREUM_PRIVATE_KEY],
+      chainId: 42161,
+    },
+  },
+  etherscan: {
+    apiKey: process.env.ETHERSCAN_API_KEY,
+  },
+  gasReporter: {
+    enabled: process.env.REPORT_GAS === "true",
+    currency: "USD",
+    coinmarketcap: process.env.COINMARKETCAP_API_KEY,
+  },
 };
 ```
 
@@ -368,47 +370,47 @@ Located in `code/credit_risk_models/config.yaml`
 ```yaml
 # Model Configuration
 model:
-    type: ensemble # rf, gb, xgb, lgb, nn, stacking, voting, ensemble
-    random_state: 42
-    cv_folds: 5
-    n_jobs: -1
+  type: ensemble # rf, gb, xgb, lgb, nn, stacking, voting, ensemble
+  random_state: 42
+  cv_folds: 5
+  n_jobs: -1
 
 # Feature Engineering
 features:
-    numeric_features:
-        - credit_score
-        - annual_income
-        - debt_to_income_ratio
-        - employment_duration
-        - loan_amount
-    categorical_features:
-        - employment_status
-        - loan_purpose
-        - home_ownership
+  numeric_features:
+    - credit_score
+    - annual_income
+    - debt_to_income_ratio
+    - employment_duration
+    - loan_amount
+  categorical_features:
+    - employment_status
+    - loan_purpose
+    - home_ownership
 
 # Training Parameters
 training:
-    test_size: 0.2
-    validation_size: 0.1
-    stratify: true
+  test_size: 0.2
+  validation_size: 0.1
+  stratify: true
 
 # Hyperparameter Tuning
 hyperparameters:
-    random_forest:
-        n_estimators: [100, 200, 300]
-        max_depth: [10, 20, 30]
-        min_samples_split: [2, 5, 10]
+  random_forest:
+    n_estimators: [100, 200, 300]
+    max_depth: [10, 20, 30]
+    min_samples_split: [2, 5, 10]
 
-    gradient_boosting:
-        n_estimators: [100, 200]
-        learning_rate: [0.01, 0.1]
-        max_depth: [3, 5, 7]
+  gradient_boosting:
+    n_estimators: [100, 200]
+    learning_rate: [0.01, 0.1]
+    max_depth: [3, 5, 7]
 
 # Model Persistence
 output:
-    model_dir: ./models
-    model_name: credit_scoring_model
-    save_format: joblib # joblib, pickle, onnx
+  model_dir: ./models
+  model_name: credit_scoring_model
+  save_format: joblib # joblib, pickle, onnx
 ```
 
 ### Prediction Service Configuration

@@ -397,28 +397,28 @@ fetch('http://localhost:3001/health')
 
 ```javascript
 // Check if MetaMask is installed
-if (typeof window.ethereum === 'undefined') {
-    alert('Please install MetaMask');
+if (typeof window.ethereum === "undefined") {
+  alert("Please install MetaMask");
 }
 
 // Check network
 const chainId = await window.ethereum.request({
-    method: 'eth_chainId',
+  method: "eth_chainId",
 });
-console.log('Current chain:', chainId);
+console.log("Current chain:", chainId);
 
 // Switch to correct network
-if (chainId !== '0x1') {
-    // Mainnet
-    await window.ethereum.request({
-        method: 'wallet_switchEthereumChain',
-        params: [{ chainId: '0x1' }],
-    });
+if (chainId !== "0x1") {
+  // Mainnet
+  await window.ethereum.request({
+    method: "wallet_switchEthereumChain",
+    params: [{ chainId: "0x1" }],
+  });
 }
 
 // Request account access
 const accounts = await window.ethereum.request({
-    method: 'eth_requestAccounts',
+  method: "eth_requestAccounts",
 });
 ```
 
@@ -503,7 +503,7 @@ node --expose-gc --trace-gc src/server.js
 ```javascript
 // Increase gas price for faster confirmation
 const tx = await contract.fundLoan(loanId, {
-    gasPrice: ethers.utils.parseUnits('50', 'gwei'),
+  gasPrice: ethers.utils.parseUnits("50", "gwei"),
 });
 
 // Use Flashbots for priority

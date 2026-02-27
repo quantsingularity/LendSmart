@@ -4,14 +4,14 @@
   hosts: webservers
   become: true
   roles:
-      - common
-      - webserver
+    - common
+    - webserver
 
 - name: Configure database servers
   hosts: databases
   become: true
   roles:
-      - common
-      - database
+    - common
+    - database
 
 - import_playbook: security_hardening.yml

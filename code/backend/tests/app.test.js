@@ -1,6 +1,6 @@
-const request = require('supertest');
-const app = require('../src/server'); // Adjust path to your app entry file
-const mongoose = require('mongoose');
+const request = require("supertest");
+const app = require("../src/server"); // Adjust path to your app entry file
+const mongoose = require("mongoose");
 // const connectDB = require("../src/config/db"); // If you need to connect/disconnect DB for tests
 
 /*
@@ -10,13 +10,13 @@ BEFORE ALL TESTS:
 */
 
 // Example: Basic test for a public endpoint
-describe('GET / (API Root)', () => {
-    it('should return welcome message and 200 OK', async () => {
-        const res = await request(app).get('/');
-        expect(res.statusCode).toEqual(200);
-        expect(res.body).toHaveProperty('message');
-        expect(res.body.message).toBe('Welcome to LendSmart Backend API');
-    });
+describe("GET / (API Root)", () => {
+  it("should return welcome message and 200 OK", async () => {
+    const res = await request(app).get("/");
+    expect(res.statusCode).toEqual(200);
+    expect(res.body).toHaveProperty("message");
+    expect(res.body.message).toBe("Welcome to LendSmart Backend API");
+  });
 });
 
 // Example: Test for a protected route (requires more setup for auth)

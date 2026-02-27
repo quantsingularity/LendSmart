@@ -57,18 +57,18 @@ Simplifies Docker container management for local development and testing.
 
 1. Make sure all scripts are executable:
 
-    ```
-    chmod +x *.sh
-    ```
+   ```
+   chmod +x *.sh
+   ```
 
 2. Run any script with the `help` command to see available options:
 
-    ```
-    ./unified_test.sh help
-    ./smart_contract_manager.sh help
-    ./ml_model_manager.sh help
-    ./docker_orchestrator.sh help
-    ```
+   ```
+   ./unified_test.sh help
+   ./smart_contract_manager.sh help
+   ./ml_model_manager.sh help
+   ./docker_orchestrator.sh help
+   ```
 
 3. Place these scripts in your LendSmart project root directory for optimal functionality.
 

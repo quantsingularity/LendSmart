@@ -396,27 +396,27 @@ terraform destroy
 ## Security Best Practices
 
 1. **Never commit secrets to Git**
-    - Use `.gitignore` for `terraform.tfvars`, `hosts.yml`, `all.yml`
-    - Use external secrets management (AWS Secrets Manager, Vault)
+   - Use `.gitignore` for `terraform.tfvars`, `hosts.yml`, `all.yml`
+   - Use external secrets management (AWS Secrets Manager, Vault)
 
 2. **Use strong passwords**
-    - Generate random passwords: `openssl rand -base64 32`
-    - Rotate credentials regularly
+   - Generate random passwords: `openssl rand -base64 32`
+   - Rotate credentials regularly
 
 3. **Enable encryption**
-    - Terraform state encryption (S3 + KMS)
-    - Kubernetes secrets encryption at rest
-    - Database encryption (RDS encryption enabled)
+   - Terraform state encryption (S3 + KMS)
+   - Kubernetes secrets encryption at rest
+   - Database encryption (RDS encryption enabled)
 
 4. **Restrict network access**
-    - Security groups allow only necessary ports
-    - Use VPN or bastion host for SSH access
-    - Enable network policies in Kubernetes
+   - Security groups allow only necessary ports
+   - Use VPN or bastion host for SSH access
+   - Enable network policies in Kubernetes
 
 5. **Enable monitoring**
-    - CloudWatch for AWS resources
-    - Prometheus + Grafana for Kubernetes
-    - ELK stack for log aggregation
+   - CloudWatch for AWS resources
+   - Prometheus + Grafana for Kubernetes
+   - ELK stack for log aggregation
 
 ## Change Log
 
