@@ -1,9 +1,8 @@
-import React from "react";
 import { render, screen } from "@testing-library/react";
 import { BrowserRouter } from "react-router-dom";
-import ProfilePage from "../../pages/ProfilePage";
 import { ApiProvider } from "../../contexts/ApiContext";
 import { BlockchainProvider } from "../../contexts/BlockchainContext";
+import ProfilePage from "../../pages/ProfilePage";
 
 const MockedProfilePage = () => (
   <BrowserRouter>

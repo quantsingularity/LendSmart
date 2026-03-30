@@ -1,29 +1,29 @@
-import React, { useState } from "react";
 import {
-  Typography,
-  Box,
-  Paper,
-  TextField,
-  Button,
-  Grid,
   Alert,
+  Box,
+  Button,
   CircularProgress,
-  MenuItem,
   FormControl,
-  InputLabel,
-  Select,
-  InputAdornment,
-  Stepper,
-  Step,
-  StepLabel,
-  Radio,
-  RadioGroup,
   FormControlLabel,
   FormLabel,
+  Grid,
+  InputAdornment,
+  InputLabel,
+  MenuItem,
+  Paper,
+  Radio,
+  RadioGroup,
+  Select,
+  Step,
+  StepLabel,
+  Stepper,
+  TextField,
+  Typography,
 } from "@mui/material";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useApi } from "../contexts/ApiContext";
 import { useBlockchain } from "../contexts/BlockchainContext";
-import { useNavigate } from "react-router-dom";
 
 const LoanApplicationPage = () => {
   const navigate = useNavigate();
@@ -91,7 +91,7 @@ const LoanApplicationPage = () => {
           );
           return false;
         }
-        if (!formData.duration || parseInt(formData.duration) <= 0) {
+        if (!formData.duration || parseInt(formData.duration, 10) <= 0) {
           setError("Please select a valid loan duration");
           return false;
         }
@@ -180,7 +180,7 @@ const LoanApplicationPage = () => {
       const loanData = {
         amount: parseFloat(formData.amount),
         purpose: formData.purpose,
-        duration: parseInt(formData.duration),
+        duration: parseInt(formData.duration, 10),
         interestRate: formData.interestRate
           ? parseFloat(formData.interestRate)
           : undefined,
@@ -213,7 +213,7 @@ const LoanApplicationPage = () => {
           employmentStatus: formData.employmentStatus,
           employerName: formData.employerName,
           creditScore: formData.creditScore
-            ? parseInt(formData.creditScore)
+            ? parseInt(formData.creditScore, 10)
             : undefined,
         },
       };
@@ -226,7 +226,7 @@ const LoanApplicationPage = () => {
           token: formData.token,
           principal: parseFloat(formData.amount),
           interestRate: apiResult.data?.suggestedInterestRate || 500, // 5% default
-          duration: parseInt(formData.duration) * 30 * 24 * 60 * 60, // Convert months to seconds
+          duration: parseInt(formData.duration, 10) * 30 * 24 * 60 * 60, // Convert months to seconds
           purpose: formData.purpose,
           isCollateralized: formData.isCollateralized === "true",
           collateralToken:

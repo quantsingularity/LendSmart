@@ -1,43 +1,38 @@
-import React from "react";
+import CssBaseline from "@mui/material/CssBaseline";
+import { createTheme, ThemeProvider } from "@mui/material/styles";
 import {
+  Navigate,
+  Route,
   BrowserRouter as Router,
   Routes,
-  Route,
-  Navigate,
 } from "react-router-dom";
-import { ThemeProvider, createTheme } from "@mui/material/styles";
-import CssBaseline from "@mui/material/CssBaseline";
-
-// Context Providers
-import { AuthProvider } from "./contexts/AuthContext";
-import { BlockchainProvider } from "./contexts/BlockchainContext";
-import { ApiProvider } from "./contexts/ApiContext";
-
 // Layout Components
 import Layout from "./components/layout/Layout";
 import PrivateRoute from "./components/routing/PrivateRoute";
-
+import { ApiProvider } from "./contexts/ApiContext";
+// Context Providers
+import { AuthProvider } from "./contexts/AuthContext";
+import { BlockchainProvider } from "./contexts/BlockchainContext";
+import AdminDashboardPage from "./pages/AdminDashboardPage";
+import ApplyForLoan from "./pages/ApplyForLoan";
+import Dashboard from "./pages/Dashboard";
 // Pages
 import HomePage from "./pages/HomePage";
-import Dashboard from "./pages/Dashboard";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import Profile from "./pages/Profile";
-import LoanMarketplace from "./pages/LoanMarketplace";
-import LoanDetails from "./pages/LoanDetails";
-import ApplyForLoan from "./pages/ApplyForLoan";
-import MyLoans from "./pages/MyLoans";
-import RiskAssessment from "./pages/RiskAssessment";
-import NotFoundPage from "./pages/NotFoundPage";
-
+import KycVerificationPage from "./pages/KycVerificationPage";
 // New Pages
 import LoanApplicationPage from "./pages/LoanApplicationPage";
+import LoanDetails from "./pages/LoanDetails";
+import LoanMarketplace from "./pages/LoanMarketplace";
+import Login from "./pages/Login";
+import MyLoans from "./pages/MyLoans";
+import NotFoundPage from "./pages/NotFoundPage";
+import Profile from "./pages/Profile";
 import ProfilePage from "./pages/ProfilePage";
-import AdminDashboardPage from "./pages/AdminDashboardPage";
-import WalletConnectionPage from "./pages/WalletConnectionPage";
-import TransactionsHistoryPage from "./pages/TransactionsHistoryPage";
+import Register from "./pages/Register";
+import RiskAssessment from "./pages/RiskAssessment";
 import SettingsPage from "./pages/SettingsPage";
-import KycVerificationPage from "./pages/KycVerificationPage";
+import TransactionsHistoryPage from "./pages/TransactionsHistoryPage";
+import WalletConnectionPage from "./pages/WalletConnectionPage";
 
 // Create theme
 const theme = createTheme({

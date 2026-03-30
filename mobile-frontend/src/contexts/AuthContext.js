@@ -1,16 +1,9 @@
-import React, {
-  createContext,
-  useState,
-  useEffect,
-  useMemo,
-  useCallback,
-} from 'react';
-import PropTypes from 'prop-types';
-import * as Keychain from 'react-native-keychain';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import apiService from '../services/apiService';
-import {Alert} from 'react-native';
 import NetInfo from '@react-native-community/netinfo';
+import PropTypes from 'prop-types';
+import {createContext, useCallback, useEffect, useMemo, useState} from 'react';
+import * as Keychain from 'react-native-keychain';
+import apiService from '../services/apiService';
 
 export const AuthContext = createContext({
   user: null,
@@ -18,12 +11,12 @@ export const AuthContext = createContext({
   isAuthenticated: false,
   isLoading: true,
   error: null,
-  login: async credentials => {},
+  login: async _credentials => {},
   logout: async () => {},
-  register: async userData => {},
-  updateProfile: async userData => {},
-  resetPassword: async email => {},
-  verifyEmail: async code => {},
+  register: async _userData => {},
+  updateProfile: async _userData => {},
+  resetPassword: async _email => {},
+  verifyEmail: async _code => {},
   refreshToken: async () => {},
   clearError: () => {},
   checkAuthStatus: async () => {},
@@ -57,7 +50,7 @@ export const AuthProvider = ({children}) => {
     });
 
     return () => unsubscribe();
-  }, [isConnected]);
+  }, [isConnected, checkAuthStatus]);
 
   // Load auth data on initial app load
   useEffect(() => {
@@ -143,14 +136,18 @@ export const AuthProvider = ({children}) => {
     };
 
     loadAuthData();
-  }, []);
+  }, [
+    clearAuthData,
+    refreshTokenHandler, // Verify token with backend
+    verifyToken,
+  ]);
 
   // Verify token with backend
   const verifyToken = async authToken => {
     if (!authToken || !isConnected) return false;
 
     try {
-      const response = await apiService.get('/auth/verify');
+      const _response = await apiService.get('/auth/verify');
       return true;
     } catch (err) {
       console.error('Token verification failed:', err);
@@ -330,7 +327,7 @@ export const AuthProvider = ({children}) => {
         setIsLoading(false);
       }
     },
-    [isConnected],
+    [isConnected, clearAuthData, storeAuthData],
   );
 
   // Logout handler
@@ -352,7 +349,7 @@ export const AuthProvider = ({children}) => {
       await clearAuthData();
       setIsLoading(false);
     }
-  }, [token, isConnected]);
+  }, [token, isConnected, clearAuthData]);
 
   // Register handler
   const register = useCallback(
@@ -435,7 +432,7 @@ export const AuthProvider = ({children}) => {
         setIsLoading(false);
       }
     },
-    [token, user, refreshToken, tokenExpiry, isConnected],
+    [token, user, refreshToken, tokenExpiry, isConnected, storeAuthData],
   );
 
   // Reset password handler
@@ -452,7 +449,9 @@ export const AuthProvider = ({children}) => {
       setError(null);
 
       try {
-        const response = await apiService.post('/auth/reset-password', {email});
+        const response = await apiService.post('/auth/reset-password', {
+          email,
+        });
         return response.data;
       } catch (err) {
         console.error('Password reset request failed:', err);
@@ -515,7 +514,7 @@ export const AuthProvider = ({children}) => {
         setIsLoading(false);
       }
     },
-    [token, user, refreshToken, tokenExpiry, isConnected],
+    [token, user, refreshToken, tokenExpiry, isConnected, storeAuthData],
   );
 
   // Refresh token (exposed for manual refresh)
@@ -531,14 +530,14 @@ export const AuthProvider = ({children}) => {
     try {
       const newToken = await refreshTokenHandler(refreshToken);
       return newToken;
-    } catch (err) {
+    } catch (_err) {
       const message = 'Failed to refresh authentication. Please log in again.';
       setError(message);
       throw new Error(message);
     } finally {
       setIsLoading(false);
     }
-  }, [refreshToken]);
+  }, [refreshToken, refreshTokenHandler]);
 
   // Clear error state
   const clearError = useCallback(() => {
@@ -559,7 +558,7 @@ export const AuthProvider = ({children}) => {
     } finally {
       setIsLoading(false);
     }
-  }, [token, isConnected]);
+  }, [token, isConnected, verifyToken]);
 
   // Toggle biometric authentication
   const toggleBiometric = useCallback(async enabled => {

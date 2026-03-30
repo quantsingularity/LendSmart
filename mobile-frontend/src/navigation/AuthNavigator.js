@@ -1,13 +1,11 @@
-import React from 'react';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
-
+// Placeholder for Forgot Password, etc.
+import {Text, View} from 'react-native';
 // Import actual screen components
 import LoginScreen from '../features/Auth/screens/LoginScreen';
 import RegisterScreen from '../features/Auth/screens/RegisterScreen';
 
-// Placeholder for Forgot Password, etc.
-import {View, Text} from 'react-native';
-const PlaceholderScreen = ({route}) => (
+const _PlaceholderScreen = ({route}) => (
   <View style={{flex: 1, alignItems: 'center', justifyContent: 'center'}}>
     <Text>{route.name} Screen (Placeholder)</Text>
   </View>

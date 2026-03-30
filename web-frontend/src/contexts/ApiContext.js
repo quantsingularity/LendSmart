@@ -1,11 +1,11 @@
-import React, {
-  createContext,
-  useState,
-  useEffect,
-  useContext,
-  useCallback,
-} from "react";
 import axios from "axios";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 
 // Create API context
 const ApiContext = createContext();
@@ -47,11 +47,11 @@ export const ApiProvider = ({ children }) => {
   // Configure axios with token
   useEffect(() => {
     if (token) {
-      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+      axios.defaults.headers.common.Authorization = `Bearer ${token}`;
       setIsAuthenticated(true);
       loadUser();
     } else {
-      delete axios.defaults.headers.common["Authorization"];
+      delete axios.defaults.headers.common.Authorization;
       setIsAuthenticated(false);
       setUser(null);
     }
@@ -117,7 +117,7 @@ export const ApiProvider = ({ children }) => {
       localStorage.removeItem("token");
       setIsAuthenticated(false);
       setUser(null);
-      delete axios.defaults.headers.common["Authorization"];
+      delete axios.defaults.headers.common.Authorization;
     }
   };
 

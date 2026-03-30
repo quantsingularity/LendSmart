@@ -1,7 +1,6 @@
-import React from "react";
-import { renderHook, act, waitFor } from "@testing-library/react";
-import { ApiProvider, useApi } from "../../contexts/ApiContext";
+import { act, renderHook, waitFor } from "@testing-library/react";
 import axios from "axios";
+import { ApiProvider, useApi } from "../../contexts/ApiContext";
 
 jest.mock("axios");
 

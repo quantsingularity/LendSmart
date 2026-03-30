@@ -1,14 +1,13 @@
-import React from 'react';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import {useTheme} from 'react-native-paper';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 // Import screen components and navigators
 import DashboardScreen from '../features/Dashboard/DashboardScreen';
-// Import the new MarketplaceNavigator
-import MarketplaceNavigator from './MarketplaceNavigator';
 import LoanApplicationScreen from '../features/Loans/LoanApplicationScreen';
 import ProfileScreen from '../features/Profile/ProfileScreen';
+// Import the new MarketplaceNavigator
+import MarketplaceNavigator from './MarketplaceNavigator';
 
 const Tab = createBottomTabNavigator();
 

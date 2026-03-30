@@ -1,27 +1,27 @@
-import React, { useState, useEffect } from "react";
+import FilterListIcon from "@mui/icons-material/FilterList";
+import SearchIcon from "@mui/icons-material/Search";
+import SortIcon from "@mui/icons-material/Sort";
 import {
-  Typography,
+  Alert,
   Box,
-  Paper,
-  Grid,
-  Card,
-  CardContent,
-  CardActions,
   Button,
+  Card,
+  CardActions,
+  CardContent,
   Chip,
   CircularProgress,
-  Alert,
-  TextField,
-  InputAdornment,
-  IconButton,
   Divider,
+  Grid,
+  IconButton,
+  InputAdornment,
+  Paper,
+  TextField,
+  Typography,
 } from "@mui/material";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useApi } from "../contexts/ApiContext";
 import { useBlockchain } from "../contexts/BlockchainContext";
-import SearchIcon from "@mui/icons-material/Search";
-import FilterListIcon from "@mui/icons-material/FilterList";
-import SortIcon from "@mui/icons-material/Sort";
 
 const LoanMarketplace = () => {
   const navigate = useNavigate();
@@ -40,7 +40,7 @@ const LoanMarketplace = () => {
 
   useEffect(() => {
     fetchLoans();
-  }, []);
+  }, [fetchLoans]);
 
   const fetchLoans = async () => {
     try {

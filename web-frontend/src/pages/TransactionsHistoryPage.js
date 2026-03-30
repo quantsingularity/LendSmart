@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from "react";
 import {
-  Typography,
+  Alert,
   Box,
+  Chip,
+  CircularProgress,
   Paper,
   Table,
   TableBody,
@@ -9,10 +10,9 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Chip,
-  CircularProgress,
-  Alert,
+  Typography,
 } from "@mui/material";
+import { useEffect, useState } from "react";
 import { useApi } from "../contexts/ApiContext";
 
 const TransactionsHistoryPage = () => {

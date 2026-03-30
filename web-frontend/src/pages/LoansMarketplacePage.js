@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useContext } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
-import apiService from "../services/apiService";
-import { AuthContext } from "../contexts/AuthContext";
+import { useContext, useEffect, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import { AuthContext } from "../contexts/AuthContext";
+import apiService from "../services/apiService";
 
 const LoanCard = ({ loan, currentUser, onFundClick }) => {
   // Calculate funding progress percentage
@@ -194,7 +194,11 @@ const FundingModal = ({ loan, onClose, onSubmit }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!fundAmount || isNaN(fundAmount) || parseFloat(fundAmount) <= 0) {
+    if (
+      !fundAmount ||
+      Number.isNaN(fundAmount) ||
+      parseFloat(fundAmount) <= 0
+    ) {
       toast.error("Please enter a valid funding amount");
       return;
     }
@@ -490,7 +494,7 @@ const LoansMarketplacePage = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [loans, setLoans] = useState([]);
+  const [_loans, setLoans] = useState([]);
   const [filteredLoans, setFilteredLoans] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -532,7 +536,7 @@ const LoansMarketplacePage = () => {
     }
 
     fetchLoans();
-  }, [location.search]);
+  }, [location.search, fetchLoans]);
 
   const fetchLoans = async (page = 1, filterParams = appliedFilters) => {
     setLoading(true);

@@ -16,9 +16,9 @@ const BLOCKCHAIN_ENABLED = process.env.REACT_APP_BLOCKCHAIN_ENABLED !== "false";
 // Service state
 let provider;
 let signer;
-let loanContract;
-let loanContractReadOnly;
-let isInitialized = false;
+let _loanContract;
+let _loanContractReadOnly;
+let _isInitialized = false;
 let walletConnected = false;
 
 /**
@@ -112,7 +112,7 @@ export const initBlockchainService = async () => {
 
     // Initialize contract instances
     if (CONTRACT_ADDRESS && CONTRACT_ADDRESS !== "") {
-      loanContract = new ethers.Contract(
+      _loanContract = new ethers.Contract(
         CONTRACT_ADDRESS,
         LoanContractABI.abi,
         signer,
@@ -122,7 +122,7 @@ export const initBlockchainService = async () => {
       const readOnlyProvider = NETWORK_RPC_URL
         ? new ethers.JsonRpcProvider(NETWORK_RPC_URL)
         : provider;
-      loanContractReadOnly = new ethers.Contract(
+      _loanContractReadOnly = new ethers.Contract(
         CONTRACT_ADDRESS,
         LoanContractABI.abi,
         readOnlyProvider,
@@ -138,7 +138,7 @@ export const initBlockchainService = async () => {
     window.ethereum.on("chainChanged", handleChainChanged);
     window.ethereum.on("disconnect", handleDisconnect);
 
-    isInitialized = true;
+    _isInitialized = true;
     walletConnected = true;
 
     console.log("Blockchain service initialized successfully");
@@ -166,7 +166,7 @@ const handleAccountsChanged = async (accounts) => {
       const readOnlyProvider = NETWORK_RPC_URL
         ? new ethers.JsonRpcProvider(NETWORK_RPC_URL)
         : provider;
-      loanContractReadOnly = new ethers.Contract(
+      _loanContractReadOnly = new ethers.Contract(
         CONTRACT_ADDRESS,
         LoanContractABI.abi,
         readOnlyProvider,
@@ -182,7 +182,7 @@ const handleAccountsChanged = async (accounts) => {
       signer = await provider.getSigner();
 
       if (CONTRACT_ADDRESS && CONTRACT_ADDRESS !== "") {
-        loanContract = new ethers.Contract(
+        _loanContract = new ethers.Contract(
           CONTRACT_ADDRESS,
           LoanContractABI.abi,
           signer,
@@ -279,7 +279,7 @@ export const disconnectWallet = async () => {
       const readOnlyProvider = NETWORK_RPC_URL
         ? new ethers.JsonRpcProvider(NETWORK_RPC_URL)
         : provider;
-      loanContractReadOnly = new ethers.Contract(
+      _loanContractReadOnly = new ethers.Contract(
         CONTRACT_ADDRESS,
         LoanContractABI.abi,
         readOnlyProvider,
@@ -377,7 +377,7 @@ export const deployLoanContract = async (
  */
 export const fundLoan = async (
   contractAddress,
-  borrowerAddress,
+  _borrowerAddress,
   lenderAddress,
   amount,
 ) => {
@@ -434,7 +434,7 @@ export const fundLoan = async (
 export const repayLoan = async (
   contractAddress,
   borrowerAddress,
-  lenderAddress,
+  _lenderAddress,
   amount,
   installmentNumber,
 ) => {

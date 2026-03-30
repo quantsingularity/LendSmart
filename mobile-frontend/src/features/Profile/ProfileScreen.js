@@ -1,19 +1,19 @@
-import React, {useContext, useState} from 'react';
-import {View, StyleSheet, ScrollView, Alert} from 'react-native';
+import {useContext, useState} from 'react';
+import {Alert, ScrollView, StyleSheet, View} from 'react-native';
 // Removed unused useTheme import from react-native-paper, as theme comes from ThemeContext
 import {
   Avatar,
-  Text,
   Button,
-  List,
   Divider,
-  TextInput,
+  List,
   Switch,
+  Text,
+  TextInput,
 } from 'react-native-paper';
-import PropTypes from 'prop-types'; // Import PropTypes
 import {AuthContext} from '../../../contexts/AuthContext';
 import {ThemeContext} from '../../../contexts/ThemeContext';
 import {spacing} from '../../../theme/theme';
+
 // Removed unused Keychain import
 
 // Removed unused navigation prop

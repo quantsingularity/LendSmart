@@ -1,18 +1,18 @@
-import React, { useState } from "react";
+import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import {
-  Typography,
+  Alert,
+  Avatar,
   Box,
+  Button,
+  CircularProgress,
+  Grid,
   Paper,
   TextField,
-  Button,
-  Grid,
-  Alert,
-  CircularProgress,
-  Avatar,
+  Typography,
 } from "@mui/material";
-import { useApi } from "../contexts/ApiContext";
-import PersonAddIcon from "@mui/icons-material/PersonAdd";
+import { useState } from "react";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
+import { useApi } from "../contexts/ApiContext";
 
 const Register = () => {
   const navigate = useNavigate();

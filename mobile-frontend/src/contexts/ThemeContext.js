@@ -1,14 +1,8 @@
-import React, {
-  createContext,
-  useState,
-  useMemo,
-  useCallback,
-  useEffect,
-} from 'react';
-import {useColorScheme} from 'react-native';
-import PropTypes from 'prop-types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {CombinedLightTheme, CombinedDarkTheme} from '../theme/theme';
+import PropTypes from 'prop-types';
+import {createContext, useCallback, useEffect, useMemo, useState} from 'react';
+import {useColorScheme} from 'react-native';
+import {CombinedDarkTheme, CombinedLightTheme} from '../theme/theme';
 
 // Theme preference storage key
 const THEME_PREFERENCE_KEY = 'themePreference';
@@ -73,7 +67,7 @@ export const ThemeProvider = ({children}) => {
   const toggleTheme = useCallback(() => {
     const newThemeMode = isDark ? THEME_MODES.LIGHT : THEME_MODES.DARK;
     setThemeMode(newThemeMode);
-  }, [isDark]);
+  }, [isDark, setThemeMode]);
 
   // Set theme mode and persist to storage
   const setThemeMode = useCallback(async mode => {

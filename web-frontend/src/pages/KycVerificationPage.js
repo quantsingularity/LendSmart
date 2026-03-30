@@ -1,20 +1,20 @@
-import React, { useState } from "react";
 import {
-  Typography,
-  Box,
-  Paper,
-  TextField,
-  Button,
-  Grid,
   Alert,
-  Stepper,
+  Box,
+  Button,
+  FormControl,
+  Grid,
+  InputLabel,
+  MenuItem,
+  Paper,
+  Select,
   Step,
   StepLabel,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
+  Stepper,
+  TextField,
+  Typography,
 } from "@mui/material";
+import { useState } from "react";
 
 const KycVerificationPage = () => {
   const [activeStep, setActiveStep] = useState(0);

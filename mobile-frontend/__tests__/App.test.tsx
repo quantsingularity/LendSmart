@@ -2,7 +2,6 @@
  * @format
  */
 
-import React from 'react';
 import renderer from 'react-test-renderer'; // Using 'renderer' as a common alias
 import App from '../App'; // This correctly targets App.tsx in the mobile-frontend root
 

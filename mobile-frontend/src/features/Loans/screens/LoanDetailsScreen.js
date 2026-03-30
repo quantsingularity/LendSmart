@@ -1,19 +1,18 @@
-import React, {useEffect, useState} from 'react';
-// Import TextInput from react-native
-import {
-  View,
-  StyleSheet,
-  ScrollView,
-  ActivityIndicator,
-  Alert,
-  TextInput,
-} from 'react-native';
-import {Text, Card, Button, useTheme, Divider, List} from 'react-native-paper';
 // Removed unused MaterialCommunityIcons import
 import PropTypes from 'prop-types';
+import {useEffect, useState} from 'react';
+// Import TextInput from react-native
+import {
+  ActivityIndicator,
+  Alert,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  View,
+} from 'react-native';
+import {Button, Card, Divider, List, Text, useTheme} from 'react-native-paper';
 import {useWallet} from '../../../contexts/WalletContext'; // To check connection status
-import {getLoanDetails, fundLoan} from '../../../services/apiService';
-import blockchainService from '../../../services/blockchainService';
+import {getLoanDetails} from '../../../services/apiService';
 
 // Placeholder function for fallback
 const placeholderLoans = [
@@ -131,7 +130,7 @@ const LoanDetailsScreen = ({route, navigation}) => {
 
     // Basic validation
     const amountToFund = parseFloat(fundingAmount);
-    if (isNaN(amountToFund) || amountToFund <= 0) {
+    if (Number.isNaN(amountToFund) || amountToFund <= 0) {
       Alert.alert(
         'Invalid Amount',
         'Please enter a valid positive amount to fund.',

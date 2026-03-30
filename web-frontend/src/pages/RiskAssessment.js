@@ -1,25 +1,25 @@
-import React, { useState, useEffect } from "react";
 import {
-  Typography,
-  Box,
-  Paper,
-  Grid,
-  TextField,
-  Button,
-  CircularProgress,
   Alert,
+  Box,
+  Button,
+  Chip,
+  CircularProgress,
+  FormControl,
+  Grid,
+  InputLabel,
+  MenuItem,
+  Paper,
+  Select,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  Chip,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
+  TextField,
+  Typography,
 } from "@mui/material";
+import { useEffect, useState } from "react";
 import { useApi } from "../contexts/ApiContext";
 import { useBlockchain } from "../contexts/BlockchainContext";
 
@@ -39,7 +39,7 @@ const RiskAssessment = () => {
 
   useEffect(() => {
     fetchPendingLoans();
-  }, []);
+  }, [fetchPendingLoans]);
 
   const fetchPendingLoans = async () => {
     try {
@@ -94,7 +94,7 @@ const RiskAssessment = () => {
   const handleConnectWallet = async () => {
     try {
       await connectWallet();
-    } catch (err) {
+    } catch (_err) {
       setError("Failed to connect wallet");
     }
   };
@@ -109,7 +109,7 @@ const RiskAssessment = () => {
     if (!isConnected) {
       try {
         await connectWallet();
-      } catch (err) {
+      } catch (_err) {
         setError("Please connect your wallet to set risk score");
         return;
       }
@@ -120,7 +120,7 @@ const RiskAssessment = () => {
       return;
     }
 
-    if (!riskScore || isNaN(parseInt(riskScore))) {
+    if (!riskScore || Number.isNaN(parseInt(riskScore, 10))) {
       setError("Please enter a valid risk score");
       return;
     }
@@ -133,7 +133,7 @@ const RiskAssessment = () => {
       // Submit to blockchain
       const blockchainResult = await setLoanRiskScore(
         selectedLoan.blockchainId,
-        parseInt(riskScore),
+        parseInt(riskScore, 10),
         shouldReject,
       );
 
@@ -143,7 +143,7 @@ const RiskAssessment = () => {
 
       // Submit to backend
       await setRiskScore(selectedLoan.id, {
-        riskScore: parseInt(riskScore),
+        riskScore: parseInt(riskScore, 10),
         shouldReject,
         transactionHash: blockchainResult.transactionHash,
       });

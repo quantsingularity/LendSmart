@@ -1,13 +1,13 @@
-import React, { Suspense, lazy, useContext } from "react";
+import { lazy, Suspense, useContext } from "react";
 import {
+  Navigate,
+  Route,
   BrowserRouter as Router,
   Routes,
-  Route,
-  Navigate,
   useLocation,
 } from "react-router-dom";
-import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import Navbar from "../components/Navbar";
 import { AuthContext } from "../contexts/AuthContext";
 
 // Page Components (Lazy Loaded for better performance)

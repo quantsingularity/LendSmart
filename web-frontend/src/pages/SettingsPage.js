@@ -1,17 +1,17 @@
-import React, { useState } from "react";
 import {
-  Typography,
-  Box,
-  Paper,
-  TextField,
-  Button,
-  Grid,
   Alert,
+  Box,
+  Button,
   CircularProgress,
   Divider,
-  Switch,
   FormControlLabel,
+  Grid,
+  Paper,
+  Switch,
+  TextField,
+  Typography,
 } from "@mui/material";
+import { useState } from "react";
 import { useApi } from "../contexts/ApiContext";
 
 const SettingsPage = () => {

@@ -1,11 +1,11 @@
-import React, {
-  createContext,
-  useState,
-  useEffect,
-  useContext,
-  useCallback,
-} from "react";
 import { ethers } from "ethers";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import LendSmartLoanABI from "../utils/LendSmartLoanABI.json";
 
 // Create blockchain context
@@ -101,7 +101,7 @@ export const BlockchainProvider = ({ children }) => {
 
     initProvider();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [LEND_SMART_LOAN_ADDRESS, handleAccountsChanged, handleChainChanged]);
 
   // Connect wallet
   const connectWallet = useCallback(async () => {

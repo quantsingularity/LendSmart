@@ -5,11 +5,10 @@
  * registration through login to accessing protected routes.
  */
 
-import React from "react";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { BrowserRouter, MemoryRouter } from "react-router-dom";
-import App from "../../App";
+import { render, screen, waitFor } from "@testing-library/react";
 import axios from "axios";
+import { MemoryRouter } from "react-router-dom";
+import App from "../../App";
 
 jest.mock("axios");
 jest.mock("../../utils/LendSmartLoanABI.json", () => ({

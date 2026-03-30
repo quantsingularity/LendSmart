@@ -1,8 +1,7 @@
-import React from "react";
 import { render, screen } from "@testing-library/react";
 import { BrowserRouter } from "react-router-dom";
-import WalletConnectionPage from "../../pages/WalletConnectionPage";
 import { BlockchainProvider } from "../../contexts/BlockchainContext";
+import WalletConnectionPage from "../../pages/WalletConnectionPage";
 
 const MockedWalletConnectionPage = () => (
   <BrowserRouter>

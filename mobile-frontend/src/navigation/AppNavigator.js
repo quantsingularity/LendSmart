@@ -1,12 +1,11 @@
-import React, {useContext} from 'react';
 import {NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import {useContext} from 'react';
 import {ActivityIndicator, View} from 'react-native';
-
+import {useTheme} from 'react-native-paper';
 import {AuthContext} from '../contexts/AuthContext';
 import AuthNavigator from './AuthNavigator';
 import MainTabNavigator from './MainTabNavigator';
-import {useTheme} from 'react-native-paper';
 
 const Stack = createNativeStackNavigator();
 

@@ -1,8 +1,7 @@
-import React from 'react';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import {useTheme} from 'react-native-paper';
 import MarketplaceScreen from '../features/Loans/MarketplaceScreen';
 import LoanDetailsScreen from '../features/Loans/screens/LoanDetailsScreen'; // Corrected path
-import {useTheme} from 'react-native-paper';
 
 const Stack = createNativeStackNavigator();
 

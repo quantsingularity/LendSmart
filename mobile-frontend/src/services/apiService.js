@@ -1,6 +1,6 @@
+import AsyncStorage from '@react-native-async-storage/async-storage'; // For storing auth token
 import axios from 'axios';
 import {Platform} from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage'; // For storing auth token
 
 // Determine base URL based on platform for development
 // For Android emulator, localhost is 10.0.2.2
@@ -29,7 +29,7 @@ mobileApiService.interceptors.request.use(
     try {
       const token = await AsyncStorage.getItem('authToken');
       if (token) {
-        config.headers['Authorization'] = `Bearer ${token}`;
+        config.headers.Authorization = `Bearer ${token}`;
       }
     } catch (e) {
       console.error('Error reading authToken from AsyncStorage:', e);
@@ -101,16 +101,15 @@ export const recordRepayment = (loanId, repaymentData) =>
 // Set auth token (used by AuthContext)
 mobileApiService.setAuthToken = token => {
   if (token) {
-    mobileApiService.defaults.headers.common['Authorization'] =
-      `Bearer ${token}`;
+    mobileApiService.defaults.headers.common.Authorization = `Bearer ${token}`;
   } else {
-    delete mobileApiService.defaults.headers.common['Authorization'];
+    delete mobileApiService.defaults.headers.common.Authorization;
   }
 };
 
 // Clear auth token
 mobileApiService.clearAuthToken = () => {
-  delete mobileApiService.defaults.headers.common['Authorization'];
+  delete mobileApiService.defaults.headers.common.Authorization;
 };
 
 // Generic HTTP methods for direct use

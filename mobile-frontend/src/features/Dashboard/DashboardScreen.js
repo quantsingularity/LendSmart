@@ -1,15 +1,15 @@
-import React, {useContext, useState, useEffect, useCallback} from 'react';
-import {View, StyleSheet, ScrollView, RefreshControl} from 'react-native';
+import PropTypes from 'prop-types';
+import React, {useCallback, useContext, useEffect, useState} from 'react';
+import {RefreshControl, ScrollView, StyleSheet, View} from 'react-native';
 import {
-  Text,
-  Card,
-  Button,
-  useTheme,
   ActivityIndicator,
+  Button,
+  Card,
   Divider,
+  Text,
+  useTheme,
 } from 'react-native-paper';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import PropTypes from 'prop-types';
 // Removed direct import of spacing, use theme.spacing instead
 import {AuthContext} from '../../../contexts/AuthContext';
 import {getMyLoans} from '../../../services/apiService';
@@ -19,7 +19,7 @@ const DashboardScreen = ({navigation}) => {
   const theme = useTheme();
   const styles = createStyles(theme);
   const [refreshing, setRefreshing] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [_loading, setLoading] = useState(true);
   const [loanSummary, setLoanSummary] = useState({
     activeLoans: 0,
     totalBorrowed: 0,
@@ -78,7 +78,7 @@ const DashboardScreen = ({navigation}) => {
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [user, placeholderActivity]);
 
   useEffect(() => {
     fetchDashboardData();
@@ -145,7 +145,10 @@ const DashboardScreen = ({navigation}) => {
       case 'Failed':
         return {color: theme.colors.error, icon: 'alert-circle-outline'};
       default:
-        return {color: theme.colors.textSecondary, icon: 'information-outline'};
+        return {
+          color: theme.colors.textSecondary,
+          icon: 'information-outline',
+        };
     }
   };
 

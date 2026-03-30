@@ -1,5 +1,5 @@
-import React from 'react';
-import {render, fireEvent, waitFor} from '@testing-library/react-native';
+import {fireEvent, render, waitFor} from '@testing-library/react-native';
+import type React from 'react';
 import {Provider as PaperProvider} from 'react-native-paper';
 import {AuthProvider} from '../../src/contexts/AuthContext';
 import {ThemeProvider} from '../../src/contexts/ThemeContext';

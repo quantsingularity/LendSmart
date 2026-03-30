@@ -1,18 +1,18 @@
-import React, { useState } from "react";
+import PersonIcon from "@mui/icons-material/Person";
 import {
-  Typography,
-  Box,
-  Paper,
-  Grid,
-  TextField,
-  Button,
-  CircularProgress,
   Alert,
   Avatar,
+  Box,
+  Button,
+  CircularProgress,
   Divider,
+  Grid,
+  Paper,
+  TextField,
+  Typography,
 } from "@mui/material";
+import { useState } from "react";
 import { useApi } from "../contexts/ApiContext";
-import PersonIcon from "@mui/icons-material/Person";
 
 const Profile = () => {
   const {

@@ -1,26 +1,26 @@
-import React, {useState, useEffect} from 'react';
+import PropTypes from 'prop-types';
+import React, {useEffect, useState} from 'react';
 import {
-  View,
-  StyleSheet,
-  FlatList,
   ActivityIndicator,
+  FlatList,
   RefreshControl,
+  StyleSheet,
+  View,
 } from 'react-native';
 import {
-  Text,
-  Card,
   Button,
-  Searchbar,
-  useTheme,
+  Card,
   Chip,
+  Searchbar,
+  Text,
+  useTheme,
 } from 'react-native-paper';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import PropTypes from 'prop-types';
 // Removed direct import of spacing, use theme.spacing instead
 import {getMarketplaceLoans} from '../../../services/apiService';
 
 // Placeholder data for marketplace loans
-const placeholderLoans = [
+const _placeholderLoans = [
   {
     id: '1',
     amount: 1500,
@@ -96,12 +96,12 @@ const MarketplaceScreen = ({navigation}) => {
   useEffect(() => {
     fetchLoans();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchQuery]); // Re-fetch when search query changes
+  }, [fetchLoans]); // Re-fetch when search query changes
 
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
     fetchLoans(true);
-  }, []);
+  }, [fetchLoans]);
 
   const onChangeSearch = query => setSearchQuery(query);
 

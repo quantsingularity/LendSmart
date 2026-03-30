@@ -1,6 +1,6 @@
-import React from 'react';
-import {View, StyleSheet, TouchableOpacity} from 'react-native';
-import {Text, Chip, useTheme} from 'react-native-paper';
+import type React from 'react';
+import {StyleSheet, TouchableOpacity, View} from 'react-native';
+import {Chip, Text, useTheme} from 'react-native-paper';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Card from './Card';
 

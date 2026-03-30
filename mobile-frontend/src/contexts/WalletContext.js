@@ -1,14 +1,14 @@
+import {useWalletConnectModal} from '@walletconnect/modal-react-native';
+import {ethers} from 'ethers'; // For provider wrapping
+import PropTypes from 'prop-types';
 import React, {
   createContext,
-  useState,
-  useMemo,
   useCallback,
   useContext,
+  useMemo,
+  useState,
 } from 'react';
-import PropTypes from 'prop-types';
-import {useWalletConnectModal} from '@walletconnect/modal-react-native';
 import {Alert} from 'react-native';
-import {ethers} from 'ethers'; // For provider wrapping
 
 export const WalletContext = createContext({
   isConnected: false,

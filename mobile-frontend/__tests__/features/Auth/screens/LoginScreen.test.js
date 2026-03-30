@@ -1,5 +1,4 @@
-import React from 'react';
-import {render, fireEvent, waitFor} from '@testing-library/react-native';
+import {fireEvent, render, waitFor} from '@testing-library/react-native';
 import {PaperProvider} from 'react-native-paper'; // Assuming react-native-paper is used for UI components
 import {AuthContext} from '../../../../../contexts/AuthContext';
 import LoginScreen from '../LoginScreen';

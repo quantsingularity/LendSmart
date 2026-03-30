@@ -1,9 +1,8 @@
-import React from 'react';
-import {render, fireEvent, waitFor, act} from '@testing-library/react-native';
-import {PaperProvider, DefaultTheme} from 'react-native-paper';
+import {act, fireEvent, render, waitFor} from '@testing-library/react-native';
+import {Alert} from 'react-native';
+import {DefaultTheme, PaperProvider} from 'react-native-paper';
 import {AuthContext} from '../../../../../contexts/AuthContext';
 import LoanApplicationScreen from '../LoanApplicationScreen';
-import {Alert} from 'react-native';
 
 // Mock navigation
 const mockNavigate = jest.fn();

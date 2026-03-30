@@ -1,6 +1,5 @@
-import React from 'react';
-import {render, fireEvent, waitFor, act} from '@testing-library/react-native';
-import {PaperProvider, DefaultTheme} from 'react-native-paper';
+import {act, fireEvent, render, waitFor} from '@testing-library/react-native';
+import {DefaultTheme, PaperProvider} from 'react-native-paper';
 import MarketplaceScreen from '../MarketplaceScreen';
 
 // Mock navigation
@@ -16,7 +15,7 @@ const AllTheProviders = ({children}) => (
 );
 
 // Placeholder loans from the component for consistent testing
-const placeholderLoans = [
+const _placeholderLoans = [
   {
     id: '1',
     amount: 1500,
@@ -124,7 +123,7 @@ describe('MarketplaceScreen', () => {
     act(() => jest.runAllTimers()); // Load loans
 
     // Test pressing the card itself (first loan: Debt Consolidation)
-    const loanCard = await findByText('Debt Consolidation');
+    const _loanCard = await findByText('Debt Consolidation');
     // Card press is on the Card component, which is an ancestor. We'll target a button for more directness.
 
     const detailsButtons = await findAllByText('Details');

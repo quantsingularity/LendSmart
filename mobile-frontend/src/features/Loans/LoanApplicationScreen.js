@@ -1,14 +1,13 @@
-import React, {useState, useContext} from 'react';
-import {View, StyleSheet, ScrollView, Alert} from 'react-native';
-// Removed unused imports: ActivityIndicator, ProgressBar, MD3Colors
-import {Text, TextInput, Button, useTheme} from 'react-native-paper';
 import {Formik} from 'formik';
-import * as Yup from 'yup';
 import PropTypes from 'prop-types'; // Import PropTypes
+import {useContext, useState} from 'react';
+import {Alert, ScrollView, StyleSheet, View} from 'react-native';
+// Removed unused imports: ActivityIndicator, ProgressBar, MD3Colors
+import {Button, Text, TextInput, useTheme} from 'react-native-paper';
+import * as Yup from 'yup';
 import {AuthContext} from '../../../contexts/AuthContext';
-import {spacing} from '../../../theme/theme';
 import apiService from '../../../services/apiService'; // Assuming API service is set up
-import blockchainService from '../../../services/blockchainService'; // Assuming blockchain service is set up
+import {spacing} from '../../../theme/theme';
 
 const LoanApplicationSchema = Yup.object().shape({
   amount: Yup.number()
@@ -65,7 +64,7 @@ const LoanApplicationScreen = ({navigation}) => {
       });
       console.log('API Response:', apiResponse.data);
 
-      if (!apiResponse.data || !apiResponse.data.id) {
+      if (!apiResponse.data?.id) {
         throw new Error(
           apiResponse.data?.message || 'Failed to submit application via API.',
         );
@@ -79,7 +78,7 @@ const LoanApplicationScreen = ({navigation}) => {
         apiResponse.data.id,
       );
 
-      const loanId = apiResponse.data.id;
+      const _loanId = apiResponse.data.id;
 
       // Show success message and reset form
       Alert.alert(

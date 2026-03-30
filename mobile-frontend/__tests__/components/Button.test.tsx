@@ -1,5 +1,5 @@
-import React from 'react';
-import {render, fireEvent} from '@testing-library/react-native';
+import {fireEvent, render} from '@testing-library/react-native';
+import type React from 'react';
 import {Provider as PaperProvider} from 'react-native-paper';
 import Button from '../../src/components/Button';
 

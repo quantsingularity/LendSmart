@@ -1,6 +1,6 @@
-import React from 'react';
-import {View, StyleSheet} from 'react-native';
-import {Text, Button, useTheme} from 'react-native-paper';
+import type React from 'react';
+import {StyleSheet, View} from 'react-native';
+import {Button, Text, useTheme} from 'react-native-paper';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 interface ErrorMessageProps {

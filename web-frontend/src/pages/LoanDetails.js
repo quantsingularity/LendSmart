@@ -1,26 +1,26 @@
-import React, { useState, useEffect } from "react";
 import {
-  Typography,
+  Alert,
   Box,
-  Paper,
-  Grid,
+  Button,
   Card,
   CardContent,
-  Button,
   Chip,
   CircularProgress,
-  Alert,
   Divider,
+  Grid,
+  InputAdornment,
   List,
   ListItem,
   ListItemText,
+  Paper,
   TextField,
-  InputAdornment,
+  Typography,
 } from "@mui/material";
-import { useParams, useNavigate } from "react-router-dom";
+import { ethers } from "ethers";
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { useApi } from "../contexts/ApiContext";
 import { useBlockchain } from "../contexts/BlockchainContext";
-import { ethers } from "ethers";
 
 const LoanDetails = () => {
   const { id } = useParams();
@@ -49,7 +49,7 @@ const LoanDetails = () => {
 
   useEffect(() => {
     fetchLoanDetails();
-  }, [id]);
+  }, [fetchLoanDetails]);
 
   const fetchLoanDetails = async () => {
     try {
@@ -76,7 +76,7 @@ const LoanDetails = () => {
     if (!isConnected) {
       try {
         await connectWallet();
-      } catch (err) {
+      } catch (_err) {
         setError("Please connect your wallet to fund this loan");
         return;
       }
@@ -116,7 +116,7 @@ const LoanDetails = () => {
     if (!isConnected) {
       try {
         await connectWallet();
-      } catch (err) {
+      } catch (_err) {
         setError("Please connect your wallet to disburse this loan");
         return;
       }
@@ -156,7 +156,7 @@ const LoanDetails = () => {
     if (!isConnected) {
       try {
         await connectWallet();
-      } catch (err) {
+      } catch (_err) {
         setError("Please connect your wallet to repay this loan");
         return;
       }
@@ -206,7 +206,7 @@ const LoanDetails = () => {
     if (!isConnected) {
       try {
         await connectWallet();
-      } catch (err) {
+      } catch (_err) {
         setError("Please connect your wallet to deposit collateral");
         return;
       }
@@ -246,7 +246,7 @@ const LoanDetails = () => {
     if (!isConnected) {
       try {
         await connectWallet();
-      } catch (err) {
+      } catch (_err) {
         setError("Please connect your wallet to cancel this loan");
         return;
       }
@@ -289,7 +289,7 @@ const LoanDetails = () => {
 
   const formatDate = (timestamp) => {
     if (!timestamp || timestamp === "0") return "N/A";
-    return new Date(parseInt(timestamp) * 1000).toLocaleString();
+    return new Date(parseInt(timestamp, 10) * 1000).toLocaleString();
   };
 
   const formatAmount = (amount, decimals = 18) => {
@@ -665,8 +665,7 @@ const LoanDetails = () => {
             </Paper>
           )}
 
-          {blockchainLoan &&
-            blockchainLoan.repaymentSchedule &&
+          {blockchainLoan?.repaymentSchedule &&
             blockchainLoan.repaymentSchedule.length > 0 && (
               <Paper elevation={3} sx={{ p: 3, mt: 3 }}>
                 <Typography variant="h6" gutterBottom>

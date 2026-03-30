@@ -1,17 +1,17 @@
-import React, { useState } from "react";
 import {
-  Typography,
-  Box,
-  Paper,
-  TextField,
-  Button,
-  Grid,
   Alert,
+  Box,
+  Button,
+  Checkbox,
   CircularProgress,
   FormControlLabel,
-  Checkbox,
+  Grid,
   InputAdornment,
+  Paper,
+  TextField,
+  Typography,
 } from "@mui/material";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useApi } from "../contexts/ApiContext";
 import { useBlockchain } from "../contexts/BlockchainContext";
@@ -59,7 +59,7 @@ const ApplyForLoan = () => {
     if (!isConnected) {
       try {
         await connectWallet();
-      } catch (err) {
+      } catch (_err) {
         setError("Please connect your wallet to apply for a loan");
         return;
       }

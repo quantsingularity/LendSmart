@@ -1,5 +1,5 @@
-import React from 'react';
-import {StyleSheet, ViewStyle, TextStyle} from 'react-native';
+import type React from 'react';
+import {StyleSheet, type TextStyle, type ViewStyle} from 'react-native';
 import {Button as PaperButton, useTheme} from 'react-native-paper';
 
 interface ButtonProps {

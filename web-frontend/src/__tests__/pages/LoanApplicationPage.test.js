@@ -1,9 +1,8 @@
-import React from "react";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { BrowserRouter } from "react-router-dom";
-import LoanApplicationPage from "../../pages/LoanApplicationPage";
 import { ApiProvider } from "../../contexts/ApiContext";
 import { BlockchainProvider } from "../../contexts/BlockchainContext";
+import LoanApplicationPage from "../../pages/LoanApplicationPage";
 
 const MockedLoanApplicationPage = () => (
   <BrowserRouter>

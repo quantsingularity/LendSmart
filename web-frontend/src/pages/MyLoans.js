@@ -1,25 +1,22 @@
-import React, { useState, useEffect } from "react";
 import {
-  Typography,
+  Alert,
   Box,
-  Paper,
-  Grid,
+  Button,
   Card,
   CardContent,
-  Button,
   CircularProgress,
-  Alert,
   Divider,
-  List,
-  ListItem,
-  ListItemText,
-  Tabs,
+  Grid,
+  Paper,
   Tab,
+  Tabs,
+  Typography,
 } from "@mui/material";
+import { ethers } from "ethers";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useApi } from "../contexts/ApiContext";
 import { useBlockchain } from "../contexts/BlockchainContext";
-import { useNavigate } from "react-router-dom";
-import { ethers } from "ethers";
 
 const MyLoans = () => {
   const navigate = useNavigate();
@@ -35,7 +32,7 @@ const MyLoans = () => {
 
   useEffect(() => {
     fetchLoans();
-  }, [isConnected, account]);
+  }, [fetchLoans]);
 
   const fetchLoans = async () => {
     try {
@@ -70,12 +67,12 @@ const MyLoans = () => {
   const handleConnectWallet = async () => {
     try {
       await connectWallet();
-    } catch (err) {
+    } catch (_err) {
       setError("Failed to connect wallet");
     }
   };
 
-  const handleTabChange = (event, newValue) => {
+  const handleTabChange = (_event, newValue) => {
     setTabValue(newValue);
   };
 
@@ -174,7 +171,7 @@ const MyLoans = () => {
                 <Typography variant="body1" fontWeight="medium">
                   {isBlockchain
                     ? new Date(
-                        parseInt(loanData.requestedTime) * 1000,
+                        parseInt(loanData.requestedTime, 10) * 1000,
                       ).toLocaleDateString()
                     : new Date(loan.createdAt).toLocaleDateString()}
                 </Typography>

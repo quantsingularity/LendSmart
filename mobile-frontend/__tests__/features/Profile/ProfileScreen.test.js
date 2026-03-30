@@ -1,10 +1,9 @@
-import React from 'react';
-import {render, fireEvent, waitFor, act} from '@testing-library/react-native';
-import {PaperProvider, DefaultTheme} from 'react-native-paper';
+import {act, fireEvent, render, waitFor} from '@testing-library/react-native';
+import {Alert} from 'react-native';
+import {DefaultTheme, PaperProvider} from 'react-native-paper';
 import {AuthContext} from '../../../../../contexts/AuthContext';
 import {ThemeContext} from '../../../../../contexts/ThemeContext';
 import ProfileScreen from '../ProfileScreen';
-import {Alert} from 'react-native';
 
 // Mock navigation (ProfileScreen doesn't take navigation as a prop directly)
 // const mockNavigate = jest.fn();
@@ -125,7 +124,9 @@ describe('ProfileScreen', () => {
   });
 
   it('calls toggleTheme when dark mode switch is pressed', () => {
-    const {getByRole} = render(<ProfileScreen />, {wrapper: AllTheProviders});
+    const {getByRole} = render(<ProfileScreen />, {
+      wrapper: AllTheProviders,
+    });
     // react-native-paper Switch has role 'switch'
     const darkModeSwitch = getByRole('switch');
     fireEvent.press(darkModeSwitch); // Pressing the switch itself
@@ -133,7 +134,9 @@ describe('ProfileScreen', () => {
   });
 
   it('calls logout from AuthContext and handles success/failure', async () => {
-    const {getByText} = render(<ProfileScreen />, {wrapper: AllTheProviders});
+    const {getByText} = render(<ProfileScreen />, {
+      wrapper: AllTheProviders,
+    });
 
     // Simulate successful logout
     mockLogout.mockResolvedValueOnce(undefined);
@@ -154,7 +157,9 @@ describe('ProfileScreen', () => {
   });
 
   it('shows "Not Implemented" for Change Password and Notifications', () => {
-    const {getByText} = render(<ProfileScreen />, {wrapper: AllTheProviders});
+    const {getByText} = render(<ProfileScreen />, {
+      wrapper: AllTheProviders,
+    });
 
     fireEvent.press(getByText('Change Password'));
     expect(Alert.alert).toHaveBeenCalledWith(
@@ -171,7 +176,9 @@ describe('ProfileScreen', () => {
   });
 
   it('displays correct avatar initial', () => {
-    const {getByText} = render(<ProfileScreen />, {wrapper: AllTheProviders});
+    const {getByText} = render(<ProfileScreen />, {
+      wrapper: AllTheProviders,
+    });
     // Avatar.Text uses the first char of the label prop, which is derived from user.name
     expect(getByText('T')).toBeTruthy(); // For 'Test User'
   });

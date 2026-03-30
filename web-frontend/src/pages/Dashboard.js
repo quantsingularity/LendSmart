@@ -1,27 +1,27 @@
-import React, { useState, useEffect } from "react";
-import {
-  Typography,
-  Box,
-  Paper,
-  Grid,
-  Card,
-  CardContent,
-  Button,
-  CircularProgress,
-  Alert,
-  Divider,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
-} from "@mui/material";
-import { useApi } from "../contexts/ApiContext";
-import { useBlockchain } from "../contexts/BlockchainContext";
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import AssignmentIcon from "@mui/icons-material/Assignment";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import WarningIcon from "@mui/icons-material/Warning";
+import {
+  Alert,
+  Box,
+  Button,
+  Card,
+  CardContent,
+  CircularProgress,
+  Divider,
+  Grid,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  Paper,
+  Typography,
+} from "@mui/material";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useApi } from "../contexts/ApiContext";
+import { useBlockchain } from "../contexts/BlockchainContext";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -42,7 +42,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchDashboardData();
-  }, [isConnected, account]);
+  }, [fetchDashboardData]);
 
   const fetchDashboardData = async () => {
     try {
@@ -74,7 +74,7 @@ const Dashboard = () => {
   const handleConnectWallet = async () => {
     try {
       await connectWallet();
-    } catch (err) {
+    } catch (_err) {
       setError("Failed to connect wallet");
     }
   };

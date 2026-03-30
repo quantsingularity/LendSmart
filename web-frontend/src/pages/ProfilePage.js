@@ -1,22 +1,22 @@
-import React, { useState, useEffect } from "react";
+import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
+import PersonIcon from "@mui/icons-material/Person";
 import {
-  Typography,
-  Box,
-  Paper,
-  TextField,
-  Button,
-  Grid,
   Alert,
-  CircularProgress,
   Avatar,
-  Divider,
+  Box,
+  Button,
   Card,
   CardContent,
+  CircularProgress,
+  Divider,
+  Grid,
+  Paper,
+  TextField,
+  Typography,
 } from "@mui/material";
+import { useEffect, useState } from "react";
 import { useApi } from "../contexts/ApiContext";
 import { useBlockchain } from "../contexts/BlockchainContext";
-import PersonIcon from "@mui/icons-material/Person";
-import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 
 const ProfilePage = () => {
   const {

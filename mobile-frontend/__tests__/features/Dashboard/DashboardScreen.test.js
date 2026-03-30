@@ -1,6 +1,5 @@
-import React from 'react';
-import {render, fireEvent, waitFor} from '@testing-library/react-native';
-import {PaperProvider, DefaultTheme} from 'react-native-paper';
+import {fireEvent, render} from '@testing-library/react-native';
+import {DefaultTheme, PaperProvider} from 'react-native-paper';
 import {AuthContext} from '../../../../../contexts/AuthContext';
 import DashboardScreen from '../DashboardScreen';
 

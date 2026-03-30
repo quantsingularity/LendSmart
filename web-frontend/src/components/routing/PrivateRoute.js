@@ -1,8 +1,7 @@
-import React from "react";
+import Box from "@mui/material/Box";
+import CircularProgress from "@mui/material/CircularProgress";
 import { Navigate } from "react-router-dom";
 import { useApi } from "../../contexts/ApiContext";
-import CircularProgress from "@mui/material/CircularProgress";
-import Box from "@mui/material/Box";
 
 const PrivateRoute = ({ children }) => {
   const { isAuthenticated, loading } = useApi();

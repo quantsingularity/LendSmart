@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useContext } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useContext, useEffect, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { toast } from "react-toastify";
+import { AuthContext } from "../contexts/AuthContext";
 import apiService from "../services/apiService";
 import blockchainService from "../services/blockchainService";
-import { AuthContext } from "../contexts/AuthContext";
-import { toast } from "react-toastify";
 
 const LoanDetailsPage = () => {
   const { id: loanId } = useParams();
@@ -76,7 +76,11 @@ const LoanDetailsPage = () => {
       return;
     }
 
-    if (!fundAmount || isNaN(fundAmount) || parseFloat(fundAmount) <= 0) {
+    if (
+      !fundAmount ||
+      Number.isNaN(fundAmount) ||
+      parseFloat(fundAmount) <= 0
+    ) {
       toast.error("Please enter a valid funding amount");
       return;
     }
@@ -169,7 +173,7 @@ const LoanDetailsPage = () => {
 
     if (
       !repaymentAmount ||
-      isNaN(repaymentAmount) ||
+      Number.isNaN(repaymentAmount) ||
       parseFloat(repaymentAmount) <= 0
     ) {
       toast.error("Please enter a valid repayment amount");
@@ -264,7 +268,7 @@ const LoanDetailsPage = () => {
   };
 
   const calculateTimeRemaining = () => {
-    if (!loan || !loan.fundingDate || !loan.term || !loan.termUnit) return null;
+    if (!loan?.fundingDate || !loan.term || !loan.termUnit) return null;
 
     const fundingDate = new Date(loan.fundingDate);
     let maturityDate;
@@ -382,7 +386,7 @@ const LoanDetailsPage = () => {
                 value={selectedInstallment?.installmentNumber || ""}
                 onChange={(e) => {
                   const selected = repaymentSchedule.find(
-                    (i) => i.installmentNumber === parseInt(e.target.value),
+                    (i) => i.installmentNumber === parseInt(e.target.value, 10),
                   );
                   setSelectedInstallment(selected);
 

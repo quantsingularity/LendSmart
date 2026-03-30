@@ -1,27 +1,27 @@
-import React, { useState, useEffect } from "react";
+import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
+import PeopleIcon from "@mui/icons-material/People";
+import TrendingUpIcon from "@mui/icons-material/TrendingUp";
+import WarningIcon from "@mui/icons-material/Warning";
 import {
-  Typography,
+  Alert,
   Box,
-  Paper,
-  Grid,
+  Button,
   Card,
   CardContent,
+  Chip,
+  CircularProgress,
+  Grid,
+  Paper,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  Button,
-  Chip,
-  CircularProgress,
-  Alert,
+  Typography,
 } from "@mui/material";
+import { useEffect, useState } from "react";
 import { useApi } from "../contexts/ApiContext";
-import PeopleIcon from "@mui/icons-material/People";
-import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
-import TrendingUpIcon from "@mui/icons-material/TrendingUp";
-import WarningIcon from "@mui/icons-material/Warning";
 
 const AdminDashboardPage = () => {
   const { getLoans, loading, error } = useApi();

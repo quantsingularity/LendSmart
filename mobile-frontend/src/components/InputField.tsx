@@ -1,6 +1,6 @@
-import React from 'react';
-import {StyleSheet, ViewStyle, View} from 'react-native';
-import {TextInput, Text, useTheme} from 'react-native-paper';
+import type React from 'react';
+import {StyleSheet, View, type ViewStyle} from 'react-native';
+import {Text, TextInput, useTheme} from 'react-native-paper';
 
 interface InputFieldProps {
   label: string;

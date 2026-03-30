@@ -1,12 +1,11 @@
+// Import necessary WalletConnect components
+import {WalletConnectModal} from '@walletconnect/modal-react-native';
 import React from 'react';
 import {Provider as PaperProvider} from 'react-native-paper';
 import {AuthProvider} from './contexts/AuthContext';
-import {ThemeProvider, ThemeContext} from './contexts/ThemeContext';
+import {ThemeContext, ThemeProvider} from './contexts/ThemeContext';
 import {WalletProvider} from './contexts/WalletContext'; // Import WalletProvider
 import AppNavigator from './navigation/AppNavigator';
-
-// Import necessary WalletConnect components
-import {WalletConnectModal} from '@walletconnect/modal-react-native';
 import '@walletconnect/react-native-compat'; // Polyfill for compatibility
 import 'react-native-get-random-values'; // Required for crypto operations
 

@@ -1,7 +1,7 @@
 import {renderHook} from '@testing-library/react';
-import {useAuth} from '../../src/hooks/useAuth';
-import {AuthContext} from '../../src/contexts/AuthContext';
 import React from 'react';
+import {AuthContext} from '../../src/contexts/AuthContext';
+import {useAuth} from '../../src/hooks/useAuth';
 
 const mockAuthContext = {
   user: {id: '1', email: 'test@example.com', name: 'Test User'},

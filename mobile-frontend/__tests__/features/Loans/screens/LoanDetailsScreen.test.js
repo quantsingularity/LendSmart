@@ -1,9 +1,8 @@
-import React from 'react';
-import {render, fireEvent, waitFor, act} from '@testing-library/react-native';
-import {PaperProvider, DefaultTheme} from 'react-native-paper';
+import {act, fireEvent, render, waitFor} from '@testing-library/react-native';
+import {Alert} from 'react-native';
+import {DefaultTheme, PaperProvider} from 'react-native-paper';
 import {WalletContext} from '../../../../../../contexts/WalletContext';
 import LoanDetailsScreen from '../LoanDetailsScreen';
-import {Alert, TextInput} from 'react-native';
 
 // Mock navigation and route
 const mockNavigate = jest.fn();
@@ -13,7 +12,7 @@ const mockRoute = loanId => ({params: {loanId}});
 
 // Mock WalletContext
 let mockIsConnected = false;
-let mockWalletAddress = '0xTestWalletAddress123';
+const mockWalletAddress = '0xTestWalletAddress123';
 const mockConnectWallet = jest.fn();
 
 const mockWalletContextValue = () => ({
@@ -30,7 +29,7 @@ jest.spyOn(Alert, 'alert');
 jest.useFakeTimers();
 
 // Placeholder loans from the component for consistent testing
-const placeholderLoans = [
+const _placeholderLoans = [
   {
     id: '1',
     amount: 1500,
@@ -186,7 +185,7 @@ describe('LoanDetailsScreen', () => {
     const connectAction = Alert.alert.mock.calls[0][2].find(
       action => action.text === 'Connect',
     );
-    if (connectAction && connectAction.onPress) {
+    if (connectAction?.onPress) {
       act(() => connectAction.onPress());
     }
     expect(mockConnectWallet).toHaveBeenCalledTimes(1);

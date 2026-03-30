@@ -1,6 +1,5 @@
 import {ethers} from 'ethers';
 import {Platform} from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage'; // For storing user preferences or non-sensitive data
 // It_s generally not recommended to store private keys directly in mobile app storage for mainnet.
 // For development or testnets, or if using a wallet SDK that manages keys, this might differ.
 

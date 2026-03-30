@@ -1,17 +1,18 @@
-import React, {useState, useContext} from 'react';
+import {Formik} from 'formik';
+import PropTypes from 'prop-types';
+import {useContext, useState} from 'react';
 import {
-  View,
-  StyleSheet,
-  ScrollView,
+  Alert,
   KeyboardAvoidingView,
   Platform,
-  Alert,
+  ScrollView,
+  StyleSheet,
+  View,
 } from 'react-native';
-import {TextInput, Button, Text, useTheme} from 'react-native-paper';
-import {Formik} from 'formik';
+import {Button, Text, TextInput, useTheme} from 'react-native-paper';
 import * as Yup from 'yup';
-import PropTypes from 'prop-types';
 import {AuthContext} from '../../../contexts/AuthContext';
+
 // Removed direct import of spacing, use theme.spacing instead
 
 const RegisterSchema = Yup.object().shape({

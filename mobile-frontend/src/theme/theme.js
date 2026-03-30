@@ -1,4 +1,4 @@
-import {DefaultTheme, DarkTheme} from 'react-native-paper';
+import {DarkTheme, DefaultTheme} from 'react-native-paper';
 
 // --- Modernized Theme Configuration ---
 // Based on docs/ui-design-concept.md and modern UI trends.
@@ -104,7 +104,7 @@ export const borderRadius = {
 // --- React Native Paper Theme Integration ---
 
 // Helper function to map fonts for Paper
-const mapPaperFonts = fontConfig => ({
+const _mapPaperFonts = fontConfig => ({
   regular: {fontFamily: fontConfig.primary, fontWeight: '400'},
   medium: {fontFamily: fontConfig.primaryMedium, fontWeight: '500'},
   light: {fontFamily: fontConfig.primary, fontWeight: '300'}, // Assuming Inter-Light exists or map appropriately

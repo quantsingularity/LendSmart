@@ -1,23 +1,22 @@
-import React, { useState, useEffect } from "react";
+import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import {
-  Typography,
+  Alert,
   Box,
-  Paper,
   Button,
   Card,
   CardContent,
-  Alert,
   Chip,
+  CircularProgress,
   Divider,
   List,
   ListItem,
   ListItemText,
-  CircularProgress,
+  Paper,
+  Typography,
 } from "@mui/material";
+import { useEffect, useState } from "react";
 import { useBlockchain } from "../contexts/BlockchainContext";
-import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import ErrorIcon from "@mui/icons-material/Error";
 
 const WalletConnectionPage = () => {
   const {

@@ -1,4 +1,4 @@
-import {useState, useCallback} from 'react';
+import {useCallback, useState} from 'react';
 
 interface ValidationRules<T> {
   [key: string]: (value: any, values: T) => string | undefined;
