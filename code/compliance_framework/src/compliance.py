@@ -403,7 +403,7 @@ class AntiMoneyLaunderingCheck(ComplianceCheck):
             indicators.append(
                 "Customer or transaction linked to high-risk jurisdiction"
             )
-        if data.get("transaction_consistent_with_profile", False) == False:
+        if not data.get("transaction_consistent_with_profile", False):
             indicators.append("Transaction inconsistent with customer profile")
         return indicators
 
@@ -588,9 +588,9 @@ class UDAPCheck(ComplianceCheck):
                 issues.append(
                     "Marketing materials contain potentially misleading statements"
                 )
-            if marketing_materials.get("discloses_all_fees", False) == False:
+            if not marketing_materials.get("discloses_all_fees", False):
                 issues.append("Not all fees clearly disclosed in marketing materials")
-            if marketing_materials.get("clear_terms_and_conditions", False) == False:
+            if not marketing_materials.get("clear_terms_and_conditions", False):
                 issues.append("Terms and conditions not clearly presented")
         loan_terms = data.get("loan_terms", {})
         if loan_terms:
@@ -606,7 +606,7 @@ class UDAPCheck(ComplianceCheck):
             issues.append("Practices may take unreasonable advantage of consumers")
         if data.get("prevents_understanding", False):
             issues.append("Practices may prevent consumer understanding of terms")
-        if data.get("fair_treatment", False) == False:
+        if not data.get("fair_treatment", False):
             issues.append("Evidence of unfair treatment of consumers")
         if issues:
             return (False, "UDAAP compliance issues: " + "; ".join(issues))

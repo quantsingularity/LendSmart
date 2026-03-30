@@ -538,7 +538,7 @@ def example_usage() -> None:
     logger.info(f"Score: {results['score']}")
     logger.info(f"Decision: {results['decision']}")
     logger.info(f"Is Compliant: {results['is_compliant']}")
-    logger.info(f"Documents Generated:")
+    logger.info("Documents Generated:")
     for doc_type, doc_path in results["documents"].items():
         logger.info(f"  - {doc_type}: {doc_path}")
 
