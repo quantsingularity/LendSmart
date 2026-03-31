@@ -1,7 +1,8 @@
+from typing import Optional, Union
+
 import joblib
 import numpy as np
 import pandas as pd
-from typing import Optional, Union
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report, confusion_matrix, roc_auc_score
 from sklearn.model_selection import GridSearchCV, train_test_split

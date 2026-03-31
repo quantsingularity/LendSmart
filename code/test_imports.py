@@ -1,7 +1,7 @@
 """Test basic imports and type checking of all fixed modules"""
 
-import sys
 import os
+import sys
 
 # Add paths
 sys.path.insert(0, os.path.join(os.getcwd(), "credit_risk_models/src"))

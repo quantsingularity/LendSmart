@@ -2,8 +2,9 @@ import os
 import sys
 import tempfile
 import unittest
-import numpy as np
 from typing import Any
+
+import numpy as np
 from sklearn.metrics import roc_auc_score
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

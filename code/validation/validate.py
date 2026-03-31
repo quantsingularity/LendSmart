@@ -12,6 +12,7 @@ import sys
 import uuid
 from datetime import datetime
 from typing import Any
+
 import pandas as pd
 
 sys.path.append(
@@ -35,8 +36,8 @@ sys.path.append(
 )
 try:
     from compliance import ComplianceDocumentGenerator, ComplianceFramework
-    from data_sources import AlternativeDataManager
     from credit_scoring_model import CreditScoringModel
+    from data_sources import AlternativeDataManager
     from integration import LendingSystem
     from scoring import AlternativeDataScoreAggregator
 

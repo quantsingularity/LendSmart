@@ -12,10 +12,12 @@ try:
     from .utils import setup_logging
 except ImportError:
     from utils import setup_logging
+
 import os
 from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import Any, Dict, List, Optional
+
 import numpy as np
 import pandas as pd
 

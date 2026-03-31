@@ -3,8 +3,8 @@ Quick Installation & Verification Script for LendSmart Backend
 Run this after extracting code_fixed.zip to verify everything works
 """
 
-import sys
 import os
+import sys
 
 
 def test_installation():

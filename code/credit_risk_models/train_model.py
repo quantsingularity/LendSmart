@@ -1,5 +1,5 @@
 from src.credit_scoring_model import CreditScoringModel
-from src.utils import setup_logging, load_data, feature_engineering
+from src.utils import feature_engineering, load_data, setup_logging
 
 # Setup logging for the main script
 logger = setup_logging("train_model_main", "train_model.log")
