@@ -23,7 +23,7 @@ const {
 
 // Apply authentication and authorization middleware to all routes
 router.use(protect);
-router.use(authorize("admin", "super_admin"));
+router.use(authorize("admin"));
 
 // User management routes
 router.get("/users", getAllUsers);

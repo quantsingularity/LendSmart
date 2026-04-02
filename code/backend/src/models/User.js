@@ -2,6 +2,8 @@ const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
 const { getEncryptionService } = require("../config/security/encryption");
+const { logger } = require('../utils/logger');
+
 
 /**
  * User Model
@@ -369,21 +371,21 @@ userSchema.pre("save", async function (next) {
     const encryptionService = getEncryptionService();
 
     if (this.isModified("firstName")) {
-      this.firstName = encryptionService.encrypt(this.firstName);
+      this.firstName = await encryptionService.encrypt(this.firstName);
     }
     if (this.isModified("lastName")) {
-      this.lastName = encryptionService.encrypt(this.lastName);
+      this.lastName = await encryptionService.encrypt(this.lastName);
     }
     if (this.isModified("phoneNumber")) {
-      this.phoneNumber = encryptionService.encrypt(this.phoneNumber);
+      this.phoneNumber = await encryptionService.encrypt(this.phoneNumber);
     }
     if (this.isModified("socialSecurityNumber") && this.socialSecurityNumber) {
-      this.socialSecurityNumber = encryptionService.encrypt(
+      this.socialSecurityNumber = await encryptionService.encrypt(
         this.socialSecurityNumber,
       );
     }
     if (this.isModified("income") && this.income) {
-      this.income = encryptionService.encrypt(this.income.toString());
+      this.income = await encryptionService.encrypt(this.income.toString());
     }
   }
 
@@ -401,24 +403,24 @@ userSchema.post(["find", "findOne", "findOneAndUpdate"], async function (docs) {
     if (doc && typeof doc.toObject === "function") {
       try {
         if (doc.firstName) {
-          doc.firstName = encryptionService.decrypt(doc.firstName);
+          doc.firstName = await encryptionService.decrypt(doc.firstName);
         }
         if (doc.lastName) {
-          doc.lastName = encryptionService.decrypt(doc.lastName);
+          doc.lastName = await encryptionService.decrypt(doc.lastName);
         }
         if (doc.phoneNumber) {
-          doc.phoneNumber = encryptionService.decrypt(doc.phoneNumber);
+          doc.phoneNumber = await encryptionService.decrypt(doc.phoneNumber);
         }
         if (doc.socialSecurityNumber) {
-          doc.socialSecurityNumber = encryptionService.decrypt(
+          doc.socialSecurityNumber = await encryptionService.decrypt(
             doc.socialSecurityNumber,
           );
         }
         if (doc.income && typeof doc.income === "string") {
-          doc.income = parseFloat(encryptionService.decrypt(doc.income));
+          doc.income = parseFloat(await encryptionService.decrypt(doc.income));
         }
       } catch (error) {
-        console.error("Decryption error:", error.message);
+        logger.error("Decryption error:", { error: error.message });
       }
     }
   }

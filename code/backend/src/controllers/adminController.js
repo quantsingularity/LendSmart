@@ -25,7 +25,7 @@ exports.getAllUsers = asyncHandler(async (req, res) => {
   const query = {};
 
   if (status) {
-    query.status = status;
+    query.accountStatus = status;
   }
 
   if (role) {
@@ -200,7 +200,7 @@ exports.getAllLoans = asyncHandler(async (req, res) => {
   const query = {};
 
   if (status) {
-    query.status = status;
+    query.accountStatus = status;
   }
 
   if (minAmount) {

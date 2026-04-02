@@ -1,4 +1,5 @@
 const express = require("express");
+const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const helmet = require("helmet");
 const compression = require("compression");
@@ -28,8 +29,6 @@ const {
 // Import middleware
 const authMiddleware = require("./middleware/auth");
 const { rateLimiter } = require("./middleware/security/rateLimiter");
-const { inputValidator } = require("./validators/inputValidator");
-
 // Import routes
 const authRoutes = require("./routes/authRoutes");
 const userRoutes = require("./routes/userRoutes");
@@ -166,6 +165,9 @@ class LendSmartServer {
         limit: "10mb",
       }),
     );
+
+    // Cookie parsing
+    this.app.use(cookieParser());
 
     // Security sanitization
     this.app.use(
@@ -362,7 +364,8 @@ class LendSmartServer {
 const lendSmartServer = new LendSmartServer();
 
 // Export for testing
-module.exports = lendSmartServer.app;
+const app = lendSmartServer.app;
+module.exports = app;
 
 // Start server if not in test environment
 if (process.env.NODE_ENV !== "test") {
@@ -396,3 +399,4 @@ if (process.env.NODE_ENV !== "test") {
 
 // Export server instance for external use
 module.exports.server = lendSmartServer;
+module.exports.app = app;

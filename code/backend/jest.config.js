@@ -2,6 +2,16 @@ module.exports = {
   testEnvironment: "node",
   coveragePathIgnorePatterns: ["/node_modules/"],
   testMatch: ["**/tests/**/*.test.js", "**/?(*.)+(spec|test).js"],
-  // setupFilesAfterEnv: ["./tests/setup.js"], // if you have a setup file for tests
-  // verbose: true, // Optionally, for more detailed output
+  setupFilesAfterFramework: ["./tests/setup.js"],
+  testTimeout: 30000,
+  verbose: true,
+  forceExit: true,
+  detectOpenHandles: true,
+  coverageDirectory: "coverage",
+  collectCoverageFrom: [
+    "src/**/*.js",
+    "!src/server.js",
+    "!src/config/**",
+    "!src/scripts/**",
+  ],
 };

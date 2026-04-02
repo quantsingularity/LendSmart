@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
+import '@openzeppelin/contracts/utils/ReentrancyGuard.sol';
 import '@openzeppelin/contracts/access/Ownable.sol';
 
 /**
@@ -57,7 +57,7 @@ contract LoanManager is ReentrancyGuard, Ownable {
   event LoanDefaulted(uint256 indexed loanId, address indexed borrower, address indexed lender);
   event LoanCancelled(uint256 indexed loanId, address indexed borrower);
 
-  constructor() Ownable() {}
+  constructor() Ownable(msg.sender) {}
 
   /**
    * @dev Creates a new loan request.

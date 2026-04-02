@@ -55,10 +55,7 @@ class TestSetup {
 
       const mongoUri = this.mongoServer.getUri();
 
-      await mongoose.connect(mongoUri, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-      });
+      await mongoose.connect(mongoUri);
 
       this.testDatabase = mongoose.connection;
 
@@ -85,7 +82,7 @@ class TestSetup {
    * Create test users with different roles and statuses
    */
   async createTestUsers() {
-    const User = require("../src/models/UserModel");
+    const User = require("../src/models/User");
 
     const testUserData = [
       {
@@ -226,7 +223,7 @@ class TestSetup {
     borrowerUsername = "testborrower",
     lenderUsername = null,
   ) {
-    const Loan = require("../src/models/LoanModel");
+    const Loan = require("../src/models/Loan");
     const borrower = this.getTestUser(borrowerUsername);
     const lender = lenderUsername ? this.getTestUser(lenderUsername) : null;
 

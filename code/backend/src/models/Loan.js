@@ -1,5 +1,7 @@
 const mongoose = require("mongoose");
 const { getEncryptionService } = require("../config/security/encryption");
+const { logger } = require('../utils/logger');
+
 
 /**
  * Loan Model
@@ -490,11 +492,11 @@ loanSchema.pre("save", async function (next) {
   // Encrypt sensitive notes
   if (this.isModified("internalNotes")) {
     const encryptionService = getEncryptionService();
-    this.internalNotes.forEach((note) => {
+    for (const note of this.internalNotes) {
       if (note.isModified && note.isModified("note")) {
-        note.note = encryptionService.encrypt(note.note);
+        note.note = await encryptionService.encrypt(note.note);
       }
-    });
+    }
   }
 
   next();
@@ -509,15 +511,15 @@ loanSchema.post(["find", "findOne", "findOneAndUpdate"], async function (docs) {
 
   for (const doc of documents) {
     if (doc && doc.internalNotes) {
-      doc.internalNotes.forEach((note) => {
+      for (const note of doc.internalNotes) {
         try {
           if (note.note) {
-            note.note = encryptionService.decrypt(note.note);
+            note.note = await encryptionService.decrypt(note.note);
           }
         } catch (error) {
-          console.error("Note decryption error:", error.message);
+          logger.error("Note decryption error:", { error: error.message });
         }
-      });
+      }
     }
   }
 });
@@ -743,7 +745,7 @@ loanSchema.statics.getPortfolioStats = function (userId, role = "borrower") {
   const matchField = role === "borrower" ? "borrower" : "lender";
 
   return this.aggregate([
-    { $match: { [matchField]: mongoose.Types.ObjectId(userId) } },
+    { $match: { [matchField]: new mongoose.Types.ObjectId(userId) } },
     {
       $group: {
         _id: "$status",
@@ -754,35 +756,5 @@ loanSchema.statics.getPortfolioStats = function (userId, role = "borrower") {
     },
   ]);
 };
-
-// Calculate maturityDate before saving if term, termUnit and fundedDate are set
-loanSchema.pre("save", function (next) {
-  if (
-    this.isModified("fundedDate") ||
-    this.isModified("term") ||
-    this.isModified("termUnit")
-  ) {
-    if (this.fundedDate && this.term && this.termUnit) {
-      const funded = new Date(this.fundedDate);
-      let maturity = new Date(funded);
-      switch (this.termUnit) {
-        case "days":
-          maturity.setDate(funded.getDate() + this.term);
-          break;
-        case "weeks":
-          maturity.setDate(funded.getDate() + this.term * 7);
-          break;
-        case "months":
-          maturity.setMonth(funded.getMonth() + this.term);
-          break;
-        case "years":
-          maturity.setFullYear(funded.getFullYear() + this.term);
-          break;
-      }
-      this.maturityDate = maturity;
-    }
-  }
-  next();
-});
 
 module.exports = mongoose.model("Loan", loanSchema);

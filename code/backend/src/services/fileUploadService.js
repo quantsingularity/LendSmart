@@ -74,7 +74,7 @@ class FileUploadService {
   createKYCUploadConfig() {
     const storage = multer.diskStorage({
       destination: (req, file, cb) => {
-        const uploadPath = path.join(this.config.uploadDir, "kyc", req.user.id);
+        const uploadPath = path.join(this.config.uploadDir, "kyc", String(req.user?._id || req.user?.id || "unknown"));
         fs.mkdir(uploadPath, { recursive: true })
           .then(() => cb(null, uploadPath))
           .catch((err) => cb(err));

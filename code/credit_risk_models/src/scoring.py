@@ -184,7 +184,9 @@ class DigitalFootprintScorer(AlternativeDataScorer):
             weighted_score += value * weight
             total_weight += weight
         if total_weight > 0:
-            normalized_score = weighted_score / total_weight
+            normalized_score = (
+                weighted_score / total_weight if total_weight > 0 else 0.0
+            )
         else:
             normalized_score = 0.5
         final_score = normalized_score * 100
@@ -309,7 +311,9 @@ class TransactionDataScorer(AlternativeDataScorer):
                 weighted_score += value * weight
                 total_weight += weight
             if total_weight > 0:
-                normalized_score = weighted_score / total_weight
+                normalized_score = (
+                    weighted_score / total_weight if total_weight > 0 else 0.0
+                )
             else:
                 normalized_score = 0.5
             final_score = normalized_score * 100
@@ -471,7 +475,9 @@ class UtilityPaymentScorer(AlternativeDataScorer):
             weighted_score += value * weight
             total_weight += weight
         if total_weight > 0:
-            normalized_score = weighted_score / total_weight
+            normalized_score = (
+                weighted_score / total_weight if total_weight > 0 else 0.0
+            )
         else:
             normalized_score = 0.5
         final_score = normalized_score * 100
@@ -596,7 +602,9 @@ class EducationEmploymentScorer(AlternativeDataScorer):
                 weighted_score += value * weight
                 total_weight += weight
             if total_weight > 0:
-                normalized_score = weighted_score / total_weight
+                normalized_score = (
+                    weighted_score / total_weight if total_weight > 0 else 0.0
+                )
             else:
                 normalized_score = 0.5
             final_score = normalized_score * 100

@@ -82,9 +82,9 @@ class LoanRiskModel:
             X_processed["is_collateralized"] = X_processed["is_collateralized"].astype(
                 int
             )
-        X_processed["collateral_value_to_loan_ratio"] = (
-            X_processed["collateral_value"] / X_processed["loan_amount"]
-        )
+        X_processed["collateral_value_to_loan_ratio"] = X_processed[
+            "collateral_value"
+        ] / X_processed["loan_amount"].replace(0, np.nan)
         X_processed["collateral_value_to_loan_ratio"] = X_processed[
             "collateral_value_to_loan_ratio"
         ].fillna(0)
@@ -158,9 +158,9 @@ class LoanRiskModel:
                 and "collateral_value" in loan_data.columns
                 and ("loan_amount" in loan_data.columns)
             ):
-                prediction_data[feature] = (
-                    loan_data["collateral_value"] / loan_data["loan_amount"]
-                )
+                prediction_data[feature] = loan_data["collateral_value"] / loan_data[
+                    "loan_amount"
+                ].replace(0, np.nan)
                 prediction_data[feature] = prediction_data[feature].fillna(0)
             else:
                 prediction_data[feature] = 0
@@ -233,7 +233,9 @@ class LoanRiskModel:
         X.loc[mask, "collateral_value"] = X.loc[
             mask, "loan_amount"
         ] * np.random.uniform(1, 2, mask.sum())
-        X["collateral_value_to_loan_ratio"] = X["collateral_value"] / X["loan_amount"]
+        X["collateral_value_to_loan_ratio"] = X["collateral_value"] / X[
+            "loan_amount"
+        ].replace(0, np.nan)
         X["collateral_value_to_loan_ratio"].fillna(0, inplace=True)
         default_prob = (
             0.05

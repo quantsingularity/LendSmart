@@ -310,10 +310,15 @@ class TransactionDataSource(AlternativeDataSource):
                 "other": np.random.uniform(0.05, 0.1),
             }
             total = sum(expense_categories.values())
-            expense_categories = {k: v / total for k, v in expense_categories.items()}
+            expense_categories = {
+                k: v / total if total > 0 else 0.0
+                for k, v in expense_categories.items()
+            }
             avg_monthly_expense = (
-                sum(monthly_income) / len(monthly_income) * np.random.uniform(0.7, 1.1)
-            )
+                sum(monthly_income) / len(monthly_income)
+                if len(monthly_income) > 0
+                else 0
+            ) * np.random.uniform(0.7, 1.1)
             late_payment_freq = np.random.uniform(0, 0.2)
             overdraft_freq = np.random.uniform(0, 0.1)
             savings_rate = expense_categories["savings"]
@@ -325,8 +330,11 @@ class TransactionDataSource(AlternativeDataSource):
                 "income_volatility": income_volatility,
                 "income_stability": income_stability,
                 "avg_monthly_expense": avg_monthly_expense,
-                "expense_to_income_ratio": avg_monthly_expense
-                / np.mean(monthly_income),
+                "expense_to_income_ratio": (
+                    avg_monthly_expense / np.mean(monthly_income)
+                    if len(monthly_income) > 0 and np.mean(monthly_income) != 0
+                    else 0
+                ),
                 "housing_expense_ratio": expense_categories["housing"],
                 "debt_service_ratio": debt_service_ratio,
                 "savings_rate": savings_rate,

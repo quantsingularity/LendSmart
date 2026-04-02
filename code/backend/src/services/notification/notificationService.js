@@ -794,6 +794,37 @@ class NotificationService {
     // Implementation would store delivery log in database
     logger.info("Notification delivery logged", logEntry);
   }
+
+  async sendLoanApplicationConfirmation(user, loan) {
+    const subject = "Loan Application Received - LendSmart";
+    const body = `Dear ${user.firstName || user.username}, your loan application for $${loan.amount} has been received and is under review. Application ID: ${loan._id}`;
+    return await this.sendEmail({ to: user.email, subject, body });
+  }
+
+  async notifyAdminNewLoanApplication(loan) {
+    const adminEmail = process.env.ADMIN_EMAIL || "admin@lendsmart.com";
+    const subject = "New Loan Application Submitted";
+    const body = `A new loan application (ID: ${loan._id}) for $${loan.amount} requires admin review.`;
+    return await this.sendEmail({ to: adminEmail, subject, body });
+  }
+
+  async sendLoanApprovalNotification(user, loan) {
+    const subject = "Loan Application Approved - LendSmart";
+    const body = `Congratulations! Your loan application for $${loan.amount} has been approved.`;
+    return await this.sendEmail({ to: user.email, subject, body });
+  }
+
+  async sendLoanRejectionNotification(user, loan, reason) {
+    const subject = "Loan Application Update - LendSmart";
+    const body = `Your loan application for $${loan.amount} was not approved. Reason: ${reason}`;
+    return await this.sendEmail({ to: user.email, subject, body });
+  }
+
+  async sendRepaymentConfirmation(user, loan, repaymentAmount) {
+    const subject = "Payment Received - LendSmart";
+    const body = `Your payment of $${repaymentAmount} for loan ID ${loan._id} has been processed.`;
+    return await this.sendEmail({ to: user.email, subject, body });
+  }
 }
 
 module.exports = new NotificationService();

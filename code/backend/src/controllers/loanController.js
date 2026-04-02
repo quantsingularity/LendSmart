@@ -2,7 +2,6 @@ const Loan = require("../models/Loan");
 const User = require("../models/User");
 const { getAuditLogger } = require("../compliance/auditLogger");
 const { getEncryptionService } = require("../config/security/encryption");
-const { validateSchema } = require("../validators/inputValidator");
 const { logger } = require("../utils/logger");
 const creditScoringService = require("../services/creditScoringService");
 const blockchainService = require("../services/blockchainService");
@@ -786,9 +785,13 @@ class LoanController {
    * @returns {Object} Sanitized loan data
    */
   async sanitizeLoanData(loan) {
-    const sanitized = loan.toObject();
+    const sanitized = (loan && typeof loan.toObject === "function")
+      ? loan.toObject()
+      : { ...loan };
 
     // Remove sensitive information
+    delete sanitized.internalNotes;
+    delete sanitized.auditLog;
     delete sanitized.paymentDetails;
     delete sanitized.creditAssessment;
 

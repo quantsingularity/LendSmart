@@ -4,95 +4,100 @@ const path = require("path");
 
 async function main() {
   const [deployer] = await hre.ethers.getSigners();
-  console.log("Deploying contracts with the account:", deployer.address);
-  console.log(
-    "Account balance:",
-    (await hre.ethers.provider.getBalance(deployer.address)).toString(),
-  );
 
-  // Define constructor arguments for LoanContract
-  // These should be configurable, perhaps from a .env file or a config script for different networks
-  const initialOwner = deployer.address; // Or a specific multisig/governance address for production
-  const initialFeeRate = 100; // Example: 1.00% (100 / 10000)
-  const initialFeeRecipient = deployer.address; // Or a dedicated treasury address
+  console.log("Deploying contracts with account:", deployer.address);
+  const balance = await hre.ethers.provider.getBalance(deployer.address);
+  console.log("Account balance:", hre.ethers.formatEther(balance), "ETH");
 
-  console.log(`\nDeploying LoanContract with constructor arguments:`);
-  console.log(`  Initial Owner: ${initialOwner}`);
-  console.log(`  Initial Fee Rate: ${initialFeeRate} (0.01 = 1%)`);
-  console.log(`  Initial Fee Recipient: ${initialFeeRecipient}`);
+  // ── Deploy LoanContract ───────────────────────────────────────────────────
+  const initialOwner = deployer.address;
+  const initialFeeRate = 100; // 1.00% (basis points)
+  const initialFeeRecipient = deployer.address;
 
+  console.log("\nDeploying LoanContract...");
   const LoanContract = await hre.ethers.getContractFactory("LoanContract");
   const loanContract = await LoanContract.deploy(
     initialOwner,
     initialFeeRate,
     initialFeeRecipient,
   );
-
   await loanContract.waitForDeployment();
+  const loanContractAddress = await loanContract.getAddress();
+  console.log("LoanContract deployed to:", loanContractAddress);
 
-  const contractAddress = await loanContract.getAddress();
-  console.log("\nLoanContract deployed to:", contractAddress);
+  // ── Deploy LendSmartLoan ──────────────────────────────────────────────────
+  const initialRiskAssessor = process.env.RISK_ASSESSOR_ADDRESS || deployer.address;
 
-  // Save contract address and ABI for frontend/backend integration
-  saveFrontendFiles(loanContract, "LoanContract");
+  console.log("\nDeploying LendSmartLoan...");
+  const LendSmartLoan = await hre.ethers.getContractFactory("LendSmartLoan");
+  const lendSmartLoan = await LendSmartLoan.deploy(
+    initialOwner,
+    initialFeeRate,
+    initialFeeRecipient,
+    initialRiskAssessor,
+  );
+  await lendSmartLoan.waitForDeployment();
+  const lendSmartLoanAddress = await lendSmartLoan.getAddress();
+  console.log("LendSmartLoan deployed to:", lendSmartLoanAddress);
+
+  // ── Save Artifacts ────────────────────────────────────────────────────────
+  saveArtifacts({
+    LoanContract: { contract: loanContract, address: loanContractAddress },
+    LendSmartLoan: { contract: lendSmartLoan, address: lendSmartLoanAddress },
+  });
+
+  // ── Print Summary ─────────────────────────────────────────────────────────
+  console.log("\n=== Deployment Summary ===");
+  console.log(`LoanContract:   ${loanContractAddress}`);
+  console.log(`LendSmartLoan:  ${lendSmartLoanAddress}`);
+  console.log("\nSave these addresses in your .env file:");
+  console.log(`LOAN_CONTRACT_ADDRESS=${loanContractAddress}`);
+  console.log(`LENDSMART_LOAN_CONTRACT_ADDRESS=${lendSmartLoanAddress}`);
 }
 
-function saveFrontendFiles(contract, contractName) {
-  const contractsDir = path.join(
-    __dirname,
-    "..",
-    "..",
-    "web-frontend",
-    "src",
-    "contracts",
-  );
-  const mobileContractsDir = path.join(
-    __dirname,
-    "..",
-    "..",
-    "mobile-frontend",
-    "src",
-    "contracts",
-  );
-
-  if (!fs.existsSync(contractsDir)) {
-    fs.mkdirSync(contractsDir, { recursive: true });
-  }
-  if (!fs.existsSync(mobileContractsDir)) {
-    fs.mkdirSync(mobileContractsDir, { recursive: true });
+function saveArtifacts(contracts) {
+  const outputDir = path.join(__dirname, "..", "deployments");
+  if (!fs.existsSync(outputDir)) {
+    fs.mkdirSync(outputDir, { recursive: true });
   }
 
-  const contractAddress = contract.target; // For ethers v6
+  const deploymentInfo = {
+    network: hre.network.name,
+    timestamp: new Date().toISOString(),
+    contracts: {},
+  };
 
-  // Save address to a JSON file
-  fs.writeFileSync(
-    path.join(contractsDir, `${contractName}-address.json`),
-    JSON.stringify({ address: contractAddress }, undefined, 2),
-  );
-  fs.writeFileSync(
-    path.join(mobileContractsDir, `${contractName}-address.json`),
-    JSON.stringify({ address: contractAddress }, undefined, 2),
-  );
+  for (const [name, { address }] of Object.entries(contracts)) {
+    try {
+      const artifact = hre.artifacts.readArtifactSync(name);
+      const contractFile = {
+        address,
+        abi: artifact.abi,
+        bytecode: artifact.bytecode,
+      };
 
-  // Save ABI
-  const ContractArtifact = hre.artifacts.readArtifactSync(contractName);
-  fs.writeFileSync(
-    path.join(contractsDir, `${contractName}.json`),
-    JSON.stringify(ContractArtifact, null, 2),
-  );
-  fs.writeFileSync(
-    path.join(mobileContractsDir, `${contractName}.json`),
-    JSON.stringify(ContractArtifact, null, 2),
-  );
+      fs.writeFileSync(
+        path.join(outputDir, `${name}.json`),
+        JSON.stringify(contractFile, null, 2),
+      );
 
-  console.log(
-    `\nArtifacts for ${contractName} (address and ABI) saved to web and mobile frontend contract directories.`,
+      deploymentInfo.contracts[name] = address;
+      console.log(`Artifact saved: deployments/${name}.json`);
+    } catch (err) {
+      console.warn(`Could not save artifact for ${name}:`, err.message);
+    }
+  }
+
+  fs.writeFileSync(
+    path.join(outputDir, "deployment.json"),
+    JSON.stringify(deploymentInfo, null, 2),
   );
+  console.log("Deployment info saved: deployments/deployment.json");
 }
 
 main()
   .then(() => process.exit(0))
   .catch((error) => {
-    console.error(error);
+    console.error("Deployment failed:", error);
     process.exit(1);
   });

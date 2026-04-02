@@ -90,7 +90,9 @@
     "web3": "^4.1.1",
     "winston": "^3.10.0",
     "winston-daily-rotate-file": "^4.7.1",
-    "xss": "^1.0.14"
+    "xss": "^1.0.14",
+    "http-proxy-middleware": "^3.0.0",
+    "rate-limit-redis": "^4.2.0"
   },
   "devDependencies": {
     "@types/jest": "^29.5.4",
@@ -108,7 +110,8 @@
     "nodemon": "^3.0.1",
     "prettier": "^3.0.2",
     "snyk": "^1.1210.0",
-    "supertest": "^6.3.4"
+    "supertest": "^6.3.4",
+    "redis-mock": "^0.56.3"
   },
   "jest": {
     "testEnvironment": "node",

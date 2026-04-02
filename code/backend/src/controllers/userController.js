@@ -7,7 +7,7 @@ const User = require("../models/User");
  */
 exports.getUsers = async (req, res, next) => {
   try {
-    const users = await User.find();
+    const users = await User.find().select("-password -mfaSecret -mfaBackupCodes -refreshTokens");
 
     res.status(200).json({
       success: true,
@@ -26,7 +26,9 @@ exports.getUsers = async (req, res, next) => {
  */
 exports.getUser = async (req, res, next) => {
   try {
-    const user = await User.findById(req.params.id);
+    const user = await User.findById(req.params.id).select(
+      "-password -mfaSecret -mfaBackupCodes -refreshTokens"
+    );
 
     if (!user) {
       return res.status(404).json({
@@ -51,26 +53,34 @@ exports.getUser = async (req, res, next) => {
  */
 exports.createUser = async (req, res, next) => {
   try {
-    const { name, email, password, walletAddress, role } = req.body;
+    const {
+      username,
+      firstName,
+      lastName,
+      email,
+      password,
+      phoneNumber,
+      walletAddress,
+      role,
+      employmentStatus,
+      dateOfBirth,
+    } = req.body;
 
-    // Validate required fields
-    if (!name || !email || !password) {
+    if (!username || !firstName || !lastName || !email || !password || !phoneNumber || !employmentStatus || !dateOfBirth) {
       return res.status(400).json({
         success: false,
-        message: "Please provide name, email, and password",
+        message: "Please provide username, firstName, lastName, email, password, phoneNumber, employmentStatus, and dateOfBirth",
       });
     }
 
-    // Check if user already exists
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({ $or: [{ email }, { username }] });
     if (existingUser) {
       return res.status(400).json({
         success: false,
-        message: "Email already in use",
+        message: "Email or username already in use",
       });
     }
 
-    // Check if wallet address is already in use
     if (walletAddress) {
       const walletUser = await User.findOne({ walletAddress });
       if (walletUser) {
@@ -81,18 +91,24 @@ exports.createUser = async (req, res, next) => {
       }
     }
 
-    // Create user
     const user = await User.create({
-      name,
+      username,
+      firstName,
+      lastName,
       email,
       password,
+      phoneNumber,
       walletAddress,
-      role,
+      role: role || "user",
+      employmentStatus,
+      dateOfBirth,
     });
+
+    const safeUser = user.toSafeObject();
 
     res.status(201).json({
       success: true,
-      data: user,
+      data: safeUser,
     });
   } catch (error) {
     next(error);
@@ -106,15 +122,20 @@ exports.createUser = async (req, res, next) => {
  */
 exports.updateUser = async (req, res, next) => {
   try {
-    const fieldsToUpdate = {
-      name: req.body.name,
-      email: req.body.email,
-      role: req.body.role,
-    };
+    const allowedFields = [
+      "firstName", "lastName", "email", "role",
+      "phoneNumber", "employmentStatus", "accountStatus",
+      "kycStatus", "creditScore",
+    ];
 
-    // Only update wallet address if provided
+    const fieldsToUpdate = {};
+    allowedFields.forEach((field) => {
+      if (req.body[field] !== undefined) {
+        fieldsToUpdate[field] = req.body[field];
+      }
+    });
+
     if (req.body.walletAddress) {
-      // Check if wallet address is already in use by another user
       const walletUser = await User.findOne({
         walletAddress: req.body.walletAddress,
         _id: { $ne: req.params.id },
@@ -126,19 +147,13 @@ exports.updateUser = async (req, res, next) => {
           message: "Wallet address already in use",
         });
       }
-
       fieldsToUpdate.walletAddress = req.body.walletAddress;
-    }
-
-    // Only update password if provided
-    if (req.body.password) {
-      fieldsToUpdate.password = req.body.password;
     }
 
     const user = await User.findByIdAndUpdate(req.params.id, fieldsToUpdate, {
       new: true,
       runValidators: true,
-    });
+    }).select("-password -mfaSecret -mfaBackupCodes -refreshTokens");
 
     if (!user) {
       return res.status(404).json({
@@ -191,17 +206,16 @@ exports.deleteUser = async (req, res, next) => {
 exports.getUsersByRole = async (req, res, next) => {
   try {
     const { role } = req.params;
+    const validRoles = ["user", "admin", "risk-assessor", "support"];
 
-    // Validate role
-    const validRoles = ["user", "borrower", "lender", "risk-assessor", "admin"];
     if (!validRoles.includes(role)) {
       return res.status(400).json({
         success: false,
-        message: "Invalid role",
+        message: `Invalid role. Valid roles: ${validRoles.join(", ")}`,
       });
     }
 
-    const users = await User.find({ role });
+    const users = await User.find({ role }).select("-password -mfaSecret -mfaBackupCodes -refreshTokens");
 
     res.status(200).json({
       success: true,
@@ -216,13 +230,14 @@ exports.getUsersByRole = async (req, res, next) => {
 /**
  * @desc    Get user by wallet address
  * @route   GET /api/users/wallet/:address
- * @access  Private
+ * @access  Private/Admin
  */
 exports.getUserByWalletAddress = async (req, res, next) => {
   try {
     const { address } = req.params;
-
-    const user = await User.findOne({ walletAddress: address });
+    const user = await User.findOne({ walletAddress: address }).select(
+      "-password -mfaSecret -mfaBackupCodes -refreshTokens"
+    );
 
     if (!user) {
       return res.status(404).json({

@@ -1,15 +1,11 @@
 const express = require("express");
 const router = express.Router();
-const { protect, authorize } = require("../middleware/auth");
+const { protect } = require("../middleware/auth");
 const loanController = require("../controllers/loanController");
 
-// Public routes
-router.get("/", loanController.getMarketplaceLoans.bind(loanController));
-router.get("/:id", loanController.getLoanDetails.bind(loanController));
-
-// Protected routes (require authentication)
+// Protected routes that must come BEFORE /:id to prevent route conflicts
 router.get(
-  "/user/my-loans",
+  "/my-loans",
   protect,
   loanController.getUserLoans.bind(loanController),
 );
@@ -18,7 +14,17 @@ router.post(
   protect,
   loanController.applyForLoan.bind(loanController),
 );
-router.post("/:id/fund", protect, loanController.fundLoan.bind(loanController));
+
+// Public routes
+router.get("/", loanController.getMarketplaceLoans.bind(loanController));
+router.get("/:id", loanController.getLoanDetails.bind(loanController));
+
+// Protected routes with :id parameter
+router.post(
+  "/:id/fund",
+  protect,
+  loanController.fundLoan.bind(loanController),
+);
 router.post(
   "/:id/repay",
   protect,

@@ -11,15 +11,15 @@ const {
   getUserByWalletAddress,
 } = require("../controllers/userController");
 
-// Admin only routes
 router.use(protect);
 router.use(authorize("admin"));
 
-router.route("/").get(getUsers).post(createUser);
-
-router.route("/:id").get(getUser).put(updateUser).delete(deleteUser);
-
+// Specific routes BEFORE :id to prevent conflicts
 router.get("/role/:role", getUsersByRole);
 router.get("/wallet/:address", getUserByWalletAddress);
+
+// General CRUD routes
+router.route("/").get(getUsers).post(createUser);
+router.route("/:id").get(getUser).put(updateUser).delete(deleteUser);
 
 module.exports = router;
