@@ -8,9 +8,12 @@ import joblib
 import pandas as pd
 
 try:
-    from src.utils import setup_logging
+    from ml_services.credit_risk.src.utils import setup_logging
 except ImportError:
-    from utils import setup_logging
+    try:
+        from src.utils import setup_logging
+    except ImportError:
+        from utils import setup_logging
 
 logger = setup_logging("prediction_service", "prediction_service.log")
 

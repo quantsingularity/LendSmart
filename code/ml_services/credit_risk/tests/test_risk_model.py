@@ -2,32 +2,39 @@ import os
 import sys
 import tempfile
 import unittest
-from typing import Any
 
 import numpy as np
 from sklearn.metrics import roc_auc_score
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from src.risk_model import LoanRiskModel
+# Allow running tests both as part of the package and standalone
+_pkg_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+if _pkg_root not in sys.path:
+    sys.path.insert(0, _pkg_root)
+
+try:
+    from ml_services.credit_risk.src.risk_assessment import LoanRiskModel
+except ImportError:
+    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    from src.risk_assessment import LoanRiskModel
 
 
 class TestLoanRiskModel(unittest.TestCase):
     """Test cases for the LoanRiskModel class"""
 
-    def setUp(self) -> Any:
+    def setUp(self) -> None:
         """Set up test fixtures"""
         self.model = LoanRiskModel()
         X, y = self.model.generate_synthetic_training_data(n_samples=200)
         self.X_test = X
         self.y_test = y
 
-    def test_model_initialization(self) -> Any:
+    def test_model_initialization(self) -> None:
         """Test that the model initializes correctly"""
         self.assertIsNone(self.model.model)
         self.assertIsInstance(self.model.features, list)
         self.assertTrue(len(self.model.features) > 0)
 
-    def test_data_preprocessing(self) -> Any:
+    def test_data_preprocessing(self) -> None:
         """Test data preprocessing functionality"""
         data = self.X_test.copy()
         data.loc[0:10, "loan_amount"] = np.nan
@@ -37,7 +44,7 @@ class TestLoanRiskModel(unittest.TestCase):
         self.assertEqual(processed_data["is_collateralized"].dtype, np.int64)
         self.assertIn("collateral_value_to_loan_ratio", processed_data.columns)
 
-    def test_model_training(self) -> Any:
+    def test_model_training(self) -> None:
         """Test model training functionality"""
         self.model.train(self.X_test, self.y_test)
         self.assertIsNotNone(self.model.model)
@@ -50,7 +57,7 @@ class TestLoanRiskModel(unittest.TestCase):
         auc = roc_auc_score(self.y_test, y_pred_proba)
         self.assertGreater(auc, 0.7)
 
-    def test_risk_score_prediction(self) -> Any:
+    def test_risk_score_prediction(self) -> None:
         """Test risk score prediction functionality"""
         self.model.train(self.X_test, self.y_test)
         loan_application = {
@@ -77,7 +84,7 @@ class TestLoanRiskModel(unittest.TestCase):
         risky_score = self.model.predict_risk_score(risky_loan)
         self.assertLess(risky_score, risk_score)
 
-    def test_model_save_load(self) -> Any:
+    def test_model_save_load(self) -> None:
         """Test model saving and loading functionality"""
         self.model.train(self.X_test, self.y_test)
         with tempfile.NamedTemporaryFile(suffix=".joblib") as tmp:
@@ -101,7 +108,7 @@ class TestLoanRiskModel(unittest.TestCase):
             score2 = new_model.predict_risk_score(loan_application)
             self.assertEqual(score1, score2)
 
-    def test_synthetic_data_generation(self) -> Any:
+    def test_synthetic_data_generation(self) -> None:
         """Test synthetic data generation functionality"""
         X, y = self.model.generate_synthetic_training_data(n_samples=500)
         self.assertEqual(len(X), 500)
@@ -111,7 +118,7 @@ class TestLoanRiskModel(unittest.TestCase):
         self.assertTrue(set(y.unique()).issubset({0, 1}))
         self.assertTrue(0.05 <= y.mean() <= 0.5)
 
-    def test_error_handling(self) -> Any:
+    def test_error_handling(self) -> None:
         """Test error handling in the model"""
         untrained_model = LoanRiskModel()
         with self.assertRaises(ValueError):

@@ -12,7 +12,10 @@ from sklearn.preprocessing import StandardScaler
 try:
     from .utils import setup_logging
 except ImportError:
-    from utils import setup_logging
+    try:
+        from ml_services.credit_risk.src.utils import setup_logging
+    except ImportError:
+        from utils import setup_logging
 
 logger = setup_logging("loan_risk_model", "risk_assessment.log")
 
@@ -236,7 +239,7 @@ class LoanRiskModel:
         X["collateral_value_to_loan_ratio"] = X["collateral_value"] / X[
             "loan_amount"
         ].replace(0, np.nan)
-        X["collateral_value_to_loan_ratio"].fillna(0, inplace=True)
+        X["collateral_value_to_loan_ratio"] = X["collateral_value_to_loan_ratio"].fillna(0)
         default_prob = (
             0.05
             + 0.1 * (X["loan_amount"] > 30000).astype(int)

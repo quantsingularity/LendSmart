@@ -12,7 +12,10 @@ import logging
 try:
     from .utils import setup_logging
 except ImportError:
-    from utils import setup_logging
+    try:
+        from ml_services.credit_risk.src.utils import setup_logging
+    except ImportError:
+        from utils import setup_logging
 
 import os
 from datetime import datetime
@@ -189,7 +192,7 @@ class CreditScoringModel:
         categorical_transformer = Pipeline(
             steps=[
                 ("imputer", SimpleImputer(strategy="most_frequent")),
-                ("onehot", OneHotEncoder(handle_unknown="ignore", sparse_output=False)),
+                ("onehot", OneHotEncoder(handle_unknown="ignore", sparse_output=False)),  # sparse_output requires sklearn>=1.2
             ]
         )
 

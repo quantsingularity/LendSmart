@@ -11,7 +11,10 @@ import logging
 try:
     from .utils import setup_logging
 except ImportError:
-    from utils import setup_logging
+    try:
+        from ml_services.credit_risk.src.utils import setup_logging
+    except ImportError:
+        from utils import setup_logging
 
 import os
 from abc import ABC, abstractmethod

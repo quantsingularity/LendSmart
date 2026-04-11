@@ -41,7 +41,7 @@ def setup_logging(name: str, log_file: str) -> logging.Logger:
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, "..", "data")
-RESOURCES_DIR = os.path.join(BASE_DIR, "..", "..", "resources", "datasets")
+RESOURCES_DIR = os.path.join(BASE_DIR, "..", "data")
 
 
 def create_synthetic_data(
@@ -272,7 +272,3 @@ def feature_engineering(
         logger.error(f"Error during feature engineering: {e}")
         return pd.DataFrame()
 
-
-# Remove the temporary logging_utils.py file
-if os.path.exists(os.path.join(BASE_DIR, "logging_utils.py")):
-    os.remove(os.path.join(BASE_DIR, "logging_utils.py"))

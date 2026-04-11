@@ -27,7 +27,6 @@ const {
 } = require("./middleware/monitoring/metricsCollector");
 
 // Import middleware
-const authMiddleware = require("./middleware/auth");
 const { rateLimiter } = require("./middleware/security/rateLimiter");
 // Import routes
 const authRoutes = require("./routes/authRoutes");

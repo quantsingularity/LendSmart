@@ -2,11 +2,11 @@ version: "3.8"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # LendSmart - Full Stack Docker Compose
-# Services: Backend API, Credit Risk ML, MongoDB, Redis, Nginx
+# Services: Backend API (Node.js), Credit Risk ML (Python), MongoDB, Redis
 # ─────────────────────────────────────────────────────────────────────────────
 
 services:
-  # ─── Backend API (Node.js) ────────────────────────────────────────────────
+  # ─── Backend API (Node.js) ─────────────────────────────────────────────────
   backend:
     build:
       context: .
@@ -32,6 +32,9 @@ services:
       LOG_LEVEL: debug
       ALLOWED_ORIGINS: "http://localhost:3001,http://localhost:8080"
       ADMIN_EMAIL: "admin@lendsmart.com"
+      AI_RISK_MODEL_ENDPOINT: "http://credit-risk:8000/predict/risk"
+      AI_CREDIT_MODEL_ENDPOINT: "http://credit-risk:8000/predict"
+      AI_FRAUD_MODEL_ENDPOINT: "http://credit-risk:8000/predict/fraud"
       CREDIT_SCORING_SERVICE_URL: "http://credit-risk:8000"
     volumes:
       - ./backend:/app
@@ -58,65 +61,23 @@ services:
       retries: 5
       start_period: 40s
 
-  # ─── Backend API Production ───────────────────────────────────────────────
-  backend-prod:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: production
-    container_name: lendsmart-backend-prod
-    restart: unless-stopped
-    ports:
-      - "3000:3000"
-    environment:
-      NODE_ENV: production
-      PORT: "3000"
-      MONGODB_URI: "mongodb://admin:${MONGO_ROOT_PASSWORD:-admin123}@mongo:27017/lendsmart_prod?authSource=admin"
-      REDIS_HOST: redis
-      REDIS_PORT: "6379"
-      REDIS_PASSWORD: "${REDIS_PASSWORD:-redis123}"
-      JWT_SECRET: "${JWT_SECRET}"
-      REFRESH_TOKEN_SECRET: "${REFRESH_TOKEN_SECRET}"
-      ENCRYPTION_MASTER_KEY: "${ENCRYPTION_MASTER_KEY}"
-    depends_on:
-      mongo:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    networks:
-      - lendsmart-network
-    profiles:
-      - production
-    healthcheck:
-      test:
-        [
-          "CMD",
-          "node",
-          "-e",
-          "require('http').get('http://localhost:3000/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))",
-        ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
-
-  # ─── Credit Risk ML Service (Python) ─────────────────────────────────────
+  # ─── Credit Risk ML Service (Python) ──────────────────────────────────────
   credit-risk:
     build:
-      context: ./credit_risk_models
-      dockerfile: Dockerfile
-      target: development
+      context: .
+      dockerfile: ml_services/credit_risk/Dockerfile
+      target: production
     container_name: lendsmart-credit-risk
     restart: unless-stopped
     ports:
       - "8000:8000"
     environment:
+      PYTHONPATH: /app
       PYTHONUNBUFFERED: "1"
       LOG_LEVEL: info
-      MODEL_PATH: /app/models
     volumes:
-      - ./credit_risk_models:/app
-      - ml_models:/app/models
+      - ml_models:/app/saved_models
+      - ml_logs:/app/logs
     networks:
       - lendsmart-network
     healthcheck:
@@ -129,12 +90,12 @@ services:
         ]
       interval: 30s
       timeout: 10s
-      retries: 3
+      retries: 5
       start_period: 60s
 
   # ─── MongoDB ──────────────────────────────────────────────────────────────
   mongo:
-    image: mongo:6.0
+    image: mongo:7.0
     container_name: lendsmart-mongo
     restart: unless-stopped
     ports:
@@ -149,20 +110,7 @@ services:
     networks:
       - lendsmart-network
     healthcheck:
-      test:
-        [
-          "CMD",
-          "mongosh",
-          "--quiet",
-          "--eval",
-          "db.adminCommand('ping').ok",
-          "--username",
-          "admin",
-          "--password",
-          "admin123",
-          "--authenticationDatabase",
-          "admin",
-        ]
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -170,12 +118,12 @@ services:
 
   # ─── Redis ────────────────────────────────────────────────────────────────
   redis:
-    image: redis:7-alpine
+    image: redis:7.2-alpine
     container_name: lendsmart-redis
     restart: unless-stopped
     ports:
       - "6379:6379"
-    command: redis-server --appendonly yes --requirepass redis123
+    command: redis-server --requirepass redis123 --maxmemory 256mb --maxmemory-policy allkeys-lru
     volumes:
       - redis_data:/data
     networks:
@@ -187,141 +135,17 @@ services:
       retries: 5
       start_period: 10s
 
-  # ─── Nginx Reverse Proxy ──────────────────────────────────────────────────
-  nginx:
-    image: nginx:alpine
-    container_name: lendsmart-nginx
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - nginx_logs:/var/log/nginx
-    depends_on:
-      backend:
-        condition: service_healthy
-    networks:
-      - lendsmart-network
-    profiles:
-      - production
-      - nginx
-    healthcheck:
-      test:
-        [
-          "CMD",
-          "wget",
-          "--quiet",
-          "--tries=1",
-          "--spider",
-          "http://localhost/health",
-        ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  # ─── Prometheus ───────────────────────────────────────────────────────────
-  prometheus:
-    image: prom/prometheus:latest
-    container_name: lendsmart-prometheus
-    restart: unless-stopped
-    ports:
-      - "9090:9090"
-    volumes:
-      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-      - prometheus_data:/prometheus
-    command:
-      - "--config.file=/etc/prometheus/prometheus.yml"
-      - "--storage.tsdb.path=/prometheus"
-      - "--storage.tsdb.retention.time=200h"
-      - "--web.enable-lifecycle"
-    networks:
-      - lendsmart-network
-    profiles:
-      - monitoring
-    healthcheck:
-      test:
-        [
-          "CMD",
-          "wget",
-          "--quiet",
-          "--tries=1",
-          "--spider",
-          "http://localhost:9090/-/healthy",
-        ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  # ─── Grafana ──────────────────────────────────────────────────────────────
-  grafana:
-    image: grafana/grafana:latest
-    container_name: lendsmart-grafana
-    restart: unless-stopped
-    ports:
-      - "3001:3000"
-    environment:
-      GF_SECURITY_ADMIN_USER: admin
-      GF_SECURITY_ADMIN_PASSWORD: admin123
-      GF_USERS_ALLOW_SIGN_UP: "false"
-    volumes:
-      - grafana_data:/var/lib/grafana
-    depends_on:
-      - prometheus
-    networks:
-      - lendsmart-network
-    profiles:
-      - monitoring
-
-  # ─── Test Databases ───────────────────────────────────────────────────────
-  mongo-test:
-    image: mongo:6.0
-    container_name: lendsmart-mongo-test
-    restart: "no"
-    ports:
-      - "27018:27017"
-    environment:
-      MONGO_INITDB_DATABASE: lendsmart_test
-    networks:
-      - lendsmart-network
-    profiles:
-      - testing
-
-  redis-test:
-    image: redis:7-alpine
-    container_name: lendsmart-redis-test
-    restart: "no"
-    ports:
-      - "6380:6379"
-    command: redis-server --appendonly no
-    networks:
-      - lendsmart-network
-    profiles:
-      - testing
-
-volumes:
-  mongo_data:
-    driver: local
-  mongo_config:
-    driver: local
-  redis_data:
-    driver: local
-  ml_models:
-    driver: local
-  backend_logs:
-    driver: local
-  backend_uploads:
-    driver: local
-  nginx_logs:
-    driver: local
-  prometheus_data:
-    driver: local
-  grafana_data:
-    driver: local
-
+# ─── Networks ───────────────────────────────────────────────────────────────
 networks:
   lendsmart-network:
     driver: bridge
-    ipam:
-      config:
-        - subnet: 172.20.0.0/16
+
+# ─── Volumes ────────────────────────────────────────────────────────────────
+volumes:
+  mongo_data:
+  mongo_config:
+  redis_data:
+  backend_logs:
+  backend_uploads:
+  ml_models:
+  ml_logs:

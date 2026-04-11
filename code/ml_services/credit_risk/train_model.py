@@ -1,5 +1,9 @@
-from src.credit_scoring_model import CreditScoringModel
-from src.utils import feature_engineering, load_data, setup_logging
+try:
+    from ml_services.credit_risk.src.credit_scoring_model import CreditScoringModel
+    from ml_services.credit_risk.src.utils import feature_engineering, load_data, setup_logging
+except ImportError:
+    from src.credit_scoring_model import CreditScoringModel
+    from src.utils import feature_engineering, load_data, setup_logging
 
 # Setup logging for the main script
 logger = setup_logging("train_model_main", "train_model.log")

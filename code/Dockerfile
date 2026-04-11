@@ -1,6 +1,6 @@
 # LendSmart Root Dockerfile
 # Builds the backend Node.js service (main API)
-# For Python ML services, see credit_risk_models/Dockerfile
+# For Python ML services, see ml_services/credit_risk/Dockerfile
 
 FROM node:18-alpine AS base
 
@@ -37,7 +37,7 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
     CMD node -e "require('http').get('http://localhost:3000/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"
 CMD ["dumb-init", "npm", "run", "dev"]
 
-# ─── Production Dependencies ──────────────────────────────────────────────────
+# ─── Production Dependencies ───────────────────────────────────────────────────
 FROM base AS deps
 RUN npm ci --only=production && npm cache clean --force
 

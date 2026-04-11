@@ -8,7 +8,10 @@ to augment traditional credit scoring with non-traditional data points.
 try:
     from .utils import setup_logging
 except ImportError:
-    from utils import setup_logging
+    try:
+        from ml_services.credit_risk.src.utils import setup_logging
+    except ImportError:
+        from utils import setup_logging
 
 import logging
 import os
@@ -340,7 +343,7 @@ class TransactionDataScorer(AlternativeDataScorer):
         joblib.dump(model_data, filepath)
         logger.info(f"Transaction data model saved to {filepath}")
 
-    def load_model(self, filepath: str = None) -> None:
+    def load_model(self, filepath: Optional[str] = None) -> None:
         """
         Load the scoring model from a file
 
@@ -628,7 +631,7 @@ class EducationEmploymentScorer(AlternativeDataScorer):
         joblib.dump(self.model, filepath)
         logger.info(f"Education/employment model saved to {filepath}")
 
-    def load_model(self, filepath: str = None) -> None:
+    def load_model(self, filepath: Optional[str] = None) -> None:
         """
         Load the scoring model from a file
 

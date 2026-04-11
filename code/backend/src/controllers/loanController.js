@@ -4,8 +4,8 @@ const { getAuditLogger } = require("../compliance/auditLogger");
 const { getEncryptionService } = require("../config/security/encryption");
 const { logger } = require("../utils/logger");
 const creditScoringService = require("../services/creditScoringService");
-const blockchainService = require("../services/blockchainService");
-const notificationService = require("../services/notificationService");
+const blockchainService = require("../services/blockchain/blockchainService");
+const notificationService = require("../services/notification/notificationService");
 
 /**
  * Loan Controller
