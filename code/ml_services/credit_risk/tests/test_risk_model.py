@@ -7,7 +7,9 @@ import numpy as np
 from sklearn.metrics import roc_auc_score
 
 # Allow running tests both as part of the package and standalone
-_pkg_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+_pkg_root = os.path.dirname(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 if _pkg_root not in sys.path:
     sys.path.insert(0, _pkg_root)
 

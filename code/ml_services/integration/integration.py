@@ -26,35 +26,37 @@ import pandas as pd
 # package or with the repo root on PYTHONPATH)
 # ---------------------------------------------------------------------------
 try:
+    from ml_services.compliance.compliance import (
+        ComplianceDocumentGenerator,
+        ComplianceFramework,
+    )
     from ml_services.credit_risk.src.credit_scoring_model import (
         ModelIntegrator,
         generate_synthetic_data,
     )
     from ml_services.credit_risk.src.data_sources import AlternativeDataManager
-    from ml_services.credit_risk.src.scoring import AlternativeDataScoreAggregator
     from ml_services.credit_risk.src.risk_assessment import LoanRiskModel
-    from ml_services.compliance.compliance import (
-        ComplianceDocumentGenerator,
-        ComplianceFramework,
-    )
+    from ml_services.credit_risk.src.scoring import AlternativeDataScoreAggregator
 except ImportError:
     # Fallback for running the file directly from its own directory
     import sys
 
-    _repo_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    _repo_root = os.path.dirname(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    )
     if _repo_root not in sys.path:
         sys.path.insert(0, _repo_root)
 
+    from ml_services.compliance.compliance import (
+        ComplianceDocumentGenerator,
+        ComplianceFramework,
+    )
     from ml_services.credit_risk.src.credit_scoring_model import (
         ModelIntegrator,
         generate_synthetic_data,
     )
     from ml_services.credit_risk.src.data_sources import AlternativeDataManager
     from ml_services.credit_risk.src.scoring import AlternativeDataScoreAggregator
-    from ml_services.compliance.compliance import (
-        ComplianceDocumentGenerator,
-        ComplianceFramework,
-    )
 
     try:
         from ml_services.credit_risk.src.risk_assessment import LoanRiskModel
@@ -97,7 +99,9 @@ class LendingSystem:
         )
         self.traditional_model = LoanRiskModel()
         self.output_dir = os.path.join(
-            os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+            os.path.dirname(
+                os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            ),
             "output",
         )
         os.makedirs(self.output_dir, exist_ok=True)
@@ -176,7 +180,9 @@ class LendingSystem:
 
         logger.info("Training integrated model")
         self.model_integrator.train(
-            X_traditional, X_alternative if X_alternative is not None else pd.DataFrame(), y
+            X_traditional,
+            X_alternative if X_alternative is not None else pd.DataFrame(),
+            y,
         )
         self.model_integrator.save_models()
         logger.info("Model training completed")
@@ -187,9 +193,7 @@ class LendingSystem:
         self.model_integrator.load_models()
         logger.info("Models loaded")
 
-    def generate_synthetic_training_data(
-        self, n_samples: int = 1000
-    ) -> Dict[str, Any]:
+    def generate_synthetic_training_data(self, n_samples: int = 1000) -> Dict[str, Any]:
         """Generate synthetic data for training and testing."""
         X, y = generate_synthetic_data(n_samples=n_samples, include_alternative=True)
 
@@ -199,7 +203,9 @@ class LendingSystem:
             "utility_payment_",
             "education_employment_",
         )
-        trad_cols = [c for c in X.columns if not any(c.startswith(p) for p in alt_prefixes)]
+        trad_cols = [
+            c for c in X.columns if not any(c.startswith(p) for p in alt_prefixes)
+        ]
         alt_cols = [c for c in X.columns if any(c.startswith(p) for p in alt_prefixes)]
 
         return {
@@ -252,7 +258,9 @@ class LendingSystem:
         self, traditional_data: pd.DataFrame, alt_data: pd.DataFrame
     ) -> Tuple[float, Dict[str, Any]]:
         try:
-            score, assessment = self.model_integrator.predict(traditional_data, alt_data)
+            score, assessment = self.model_integrator.predict(
+                traditional_data, alt_data
+            )
             logger.info(f"Enhanced credit score: {score}")
             return float(score), assessment
         except Exception as exc:
@@ -306,7 +314,9 @@ class LendingSystem:
                     "Recent delinquencies",
                 ],
             }
-            notice_path = self.document_generator.generate_adverse_action_notice(notice_data)
+            notice_path = self.document_generator.generate_adverse_action_notice(
+                notice_data
+            )
             documents["adverse_action_notice"] = notice_path
 
         cm = self.model_integrator.credit_model
@@ -341,7 +351,9 @@ class LendingSystem:
             "approval_process": f"Approved by Risk Committee on {datetime.now().strftime('%Y-%m-%d')}",
             "monitoring_plan": "Monthly performance monitoring and quarterly comprehensive review",
         }
-        model_doc_path = self.document_generator.generate_model_documentation(model_data)
+        model_doc_path = self.document_generator.generate_model_documentation(
+            model_data
+        )
         documents["model_documentation"] = model_doc_path
 
         if not is_compliant:
@@ -350,23 +362,21 @@ class LendingSystem:
             n_compliant = sum(1 for r in check_results.values() if r[0])
             report_data = {
                 "report_id": str(uuid.uuid4()),
-                "period_start": (
-                    datetime.now() - pd.Timedelta(days=30)
-                ).isoformat(),
+                "period_start": (datetime.now() - pd.Timedelta(days=30)).isoformat(),
                 "period_end": datetime.now().isoformat(),
                 "total_checks": n_total,
                 "compliant_checks": n_compliant,
                 "non_compliant_checks": n_total - n_compliant,
                 "compliance_rate": (n_compliant / n_total) if n_total else 0,
                 "non_compliant_by_check": {
-                    check: 1
-                    for check, result in check_results.items()
-                    if not result[0]
+                    check: 1 for check, result in check_results.items() if not result[0]
                 },
                 "recommendations": "Address compliance issues before proceeding with loan decision",
                 "conclusion": "Application requires compliance review before final decision",
             }
-            report_path = self.document_generator.generate_compliance_report(report_data)
+            report_path = self.document_generator.generate_compliance_report(
+                report_data
+            )
             documents["compliance_report"] = report_path
 
         return documents

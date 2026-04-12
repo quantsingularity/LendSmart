@@ -271,4 +271,3 @@ def feature_engineering(
     except Exception as e:
         logger.error(f"Error during feature engineering: {e}")
         return pd.DataFrame()
-

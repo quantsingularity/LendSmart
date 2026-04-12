@@ -192,7 +192,10 @@ class CreditScoringModel:
         categorical_transformer = Pipeline(
             steps=[
                 ("imputer", SimpleImputer(strategy="most_frequent")),
-                ("onehot", OneHotEncoder(handle_unknown="ignore", sparse_output=False)),  # sparse_output requires sklearn>=1.2
+                (
+                    "onehot",
+                    OneHotEncoder(handle_unknown="ignore", sparse_output=False),
+                ),  # sparse_output requires sklearn>=1.2
             ]
         )
 
