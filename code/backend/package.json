@@ -89,14 +89,12 @@
     "twilio": "^4.14.0",
     "uuid": "^9.0.0",
     "validator": "^13.11.0",
-    "web-push": "^3.6.7",
     "web3": "^4.1.1",
     "winston": "^3.10.0",
     "winston-daily-rotate-file": "^4.7.1",
     "xss": "^1.0.14"
   },
   "devDependencies": {
-    "@shelf/jest-mongodb": "^6.0.2",
     "@types/jest": "^29.5.4",
     "artillery": "^2.0.0",
     "eslint": "^8.47.0",

@@ -9,13 +9,13 @@ on:
 
 jobs:
   # ============================================================
-  # Job 1 — Code formatting (Python · Prettier · Solidity)
+  # Job 1 -- Code formatting (Python / Prettier / Solidity)
   # ============================================================
   formatting_check:
     runs-on: ubuntu-latest
 
     env:
-      CODE_DIR: code/ml_services
+      CODE_DIR: code
       WEB_FRONTEND_DIR: web-frontend
       MOBILE_FRONTEND_DIR: mobile-frontend
       INFRASTRUCTURE_DIR: infrastructure
@@ -56,7 +56,7 @@ jobs:
         run: |
           set -euo pipefail
           if [ ! -d "${{ env.CODE_DIR }}" ]; then
-            echo "Code directory '${{ env.CODE_DIR }}' not found — skipping Python formatting."
+            echo "Code directory '${{ env.CODE_DIR }}' not found -- skipping Python formatting."
             exit 0
           fi
 
@@ -147,7 +147,7 @@ jobs:
               exit 1
             }
           else
-            echo "No infrastructure directory '${{ env.INFRASTRUCTURE_DIR }}' found or INFRASTRUCTURE_DIR unset — skipping infra YAML checks."
+            echo "No infrastructure directory '${{ env.INFRASTRUCTURE_DIR }}' found or INFRASTRUCTURE_DIR unset -- skipping infra YAML checks."
           fi
 
       # 5) Solidity files (entire repo)
@@ -161,7 +161,7 @@ jobs:
               exit 1
             }
           else
-            echo "No .sol files found — skipping Solidity check."
+            echo "No .sol files found -- skipping Solidity check."
           fi
 
       # -------------------------------
@@ -171,13 +171,22 @@ jobs:
         run: echo "All formatting checks completed successfully."
 
   # ============================================================
-  # Job 2 — LendSmart backend unit & integration tests
+  # Job 2 -- LendSmart backend unit & integration tests
   #
-  # Runs in parallel with formatting_check.
-  # No external services required:
-  #   • MongoDB  → mongodb-memory-server (spun up by globalSetup.js)
-  #   • Redis    → in-memory fallback (SKIP_REDIS=true)
-  #   • web-push → Jest manual mock (__mocks__/web-push.js)
+  # Runs in parallel with formatting_check (no "needs:" dependency).
+  # No external services are required:
+  #   - MongoDB  : mongodb-memory-server, spun up by tests/globalSetup.js
+  #   - Redis    : in-memory fallback activated by SKIP_REDIS=true
+  #   - web-push : resolved by Jest moduleNameMapper to __mocks__/web-push.js;
+  #                intentionally NOT listed in package.json so the lockfile
+  #                stays in sync and "npm ci" succeeds. Add it to package.json
+  #                and re-run "npm install" only when VAPID push notifications
+  #                are ready for production.
+  #
+  # Why not @shelf/jest-mongodb?
+  #   Declared in devDependencies but never imported anywhere in the project.
+  #   It also requires Node >=22 while the project targets >=18. Removed from
+  #   package.json; the project uses its own tests/fakeMongoServer.js instead.
   # ============================================================
   backend_tests:
     name: Backend Tests (LendSmart)
@@ -185,15 +194,18 @@ jobs:
 
     defaults:
       run:
+        # All steps run inside the backend directory unless overridden.
         working-directory: code/backend
 
     env:
-      # Tells the app to skip real Redis and DB connections at boot time.
-      # The actual test DB URI is set dynamically inside tests/globalSetup.js.
+      # Prevents the app from attempting real Redis / DB connections at boot.
+      # The actual test MongoDB URI is injected by tests/globalSetup.js via
+      # mongodb-memory-server; all other secrets (JWT_SECRET, ENCRYPTION_KEY,
+      # etc.) are also set there -- no GitHub Secrets are needed for tests.
       NODE_ENV: test
       SKIP_REDIS: "true"
       SKIP_DB_CONNECTION: "true"
-      # Suppress noisy winston output during CI runs.
+      # Suppress verbose winston output on the CI runner log.
       LOG_LEVEL: error
 
     steps:
@@ -211,28 +223,33 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          # Must be >=18 per package.json engines field.
+          # >=18 satisfies package.json engines field; 20 is the current LTS.
+          # Node 22 is NOT required -- @shelf/jest-mongodb (the only package
+          # that demanded >=22) has been removed as it was unused.
           node-version: "20"
           cache: "npm"
           cache-dependency-path: code/backend/package-lock.json
 
       - name: Install dependencies
+        # npm ci requires package.json and package-lock.json to be in sync.
+        # web-push is intentionally absent from both (see job comment above),
+        # so "npm ci" is safe and gives reproducible, lockfile-verified installs.
         run: npm ci
 
       # -------------------------------
       # Test
       # -------------------------------
       - name: Run Jest test suite with coverage
-        run: npm test -- --coverage --coverageReporters=text --coverageReporters=lcov
-        # Allow the step to run for up to 5 minutes; the suite currently takes
-        # ~100 s locally; 5 min gives comfortable headroom on cold CI runners.
+        # The suite takes ~100 s locally on a warm machine.
+        # 5 minutes gives comfortable headroom on a cold CI runner.
         timeout-minutes: 5
+        run: npm test -- --coverage --coverageReporters=text --coverageReporters=lcov
 
       # -------------------------------
-      # Upload coverage report as artifact
-      # (available for download from the Actions run summary page)
+      # Artifacts
       # -------------------------------
       - name: Upload coverage report
+        # Upload even on test failure so coverage is inspectable on red runs.
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -241,9 +258,7 @@ jobs:
           retention-days: 14
 
       # -------------------------------
-      # Post a coverage summary to the
-      # job log (lcov-summary gives a
-      # quick pass/fail line count)
+      # Coverage summary in the job log
       # -------------------------------
       - name: Print coverage summary
         if: always()
@@ -263,5 +278,5 @@ jobs:
               console.log('Lines covered : ' + lh + ' / ' + lf + ' (' + pct + '%)');
             "
           else
-            echo "No lcov.info found — skipping summary."
+            echo "No lcov.info found -- skipping summary."
           fi
