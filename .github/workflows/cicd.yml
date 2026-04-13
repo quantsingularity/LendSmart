@@ -8,11 +8,14 @@ on:
   workflow_dispatch:
 
 jobs:
+  # ============================================================
+  # Job 1 — Code formatting (Python · Prettier · Solidity)
+  # ============================================================
   formatting_check:
     runs-on: ubuntu-latest
 
     env:
-      CODE_DIR: code
+      CODE_DIR: code/ml_services
       WEB_FRONTEND_DIR: web-frontend
       MOBILE_FRONTEND_DIR: mobile-frontend
       INFRASTRUCTURE_DIR: infrastructure
@@ -166,3 +169,99 @@ jobs:
       # -------------------------------
       - name: Finalize Check
         run: echo "All formatting checks completed successfully."
+
+  # ============================================================
+  # Job 2 — LendSmart backend unit & integration tests
+  #
+  # Runs in parallel with formatting_check.
+  # No external services required:
+  #   • MongoDB  → mongodb-memory-server (spun up by globalSetup.js)
+  #   • Redis    → in-memory fallback (SKIP_REDIS=true)
+  #   • web-push → Jest manual mock (__mocks__/web-push.js)
+  # ============================================================
+  backend_tests:
+    name: Backend Tests (LendSmart)
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: code/backend
+
+    env:
+      # Tells the app to skip real Redis and DB connections at boot time.
+      # The actual test DB URI is set dynamically inside tests/globalSetup.js.
+      NODE_ENV: test
+      SKIP_REDIS: "true"
+      SKIP_DB_CONNECTION: "true"
+      # Suppress noisy winston output during CI runs.
+      LOG_LEVEL: error
+
+    steps:
+      # -------------------------------
+      # Checkout
+      # -------------------------------
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # -------------------------------
+      # Node.js setup + dependency cache
+      # -------------------------------
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          # Must be >=18 per package.json engines field.
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: code/backend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      # -------------------------------
+      # Test
+      # -------------------------------
+      - name: Run Jest test suite with coverage
+        run: npm test -- --coverage --coverageReporters=text --coverageReporters=lcov
+        # Allow the step to run for up to 5 minutes; the suite currently takes
+        # ~100 s locally; 5 min gives comfortable headroom on cold CI runners.
+        timeout-minutes: 5
+
+      # -------------------------------
+      # Upload coverage report as artifact
+      # (available for download from the Actions run summary page)
+      # -------------------------------
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage-report
+          path: code/backend/coverage/
+          retention-days: 14
+
+      # -------------------------------
+      # Post a coverage summary to the
+      # job log (lcov-summary gives a
+      # quick pass/fail line count)
+      # -------------------------------
+      - name: Print coverage summary
+        if: always()
+        run: |
+          if [ -f coverage/lcov.info ]; then
+            echo "=== Coverage summary ==="
+            node -e "
+              const fs = require('fs');
+              const lcov = fs.readFileSync('coverage/lcov.info', 'utf8');
+              const lines = lcov.split('\n');
+              let lf = 0, lh = 0;
+              lines.forEach(l => {
+                if (l.startsWith('LF:')) lf += parseInt(l.slice(3));
+                if (l.startsWith('LH:')) lh += parseInt(l.slice(3));
+              });
+              const pct = lf ? ((lh / lf) * 100).toFixed(1) : '0.0';
+              console.log('Lines covered : ' + lh + ' / ' + lf + ' (' + pct + '%)');
+            "
+          else
+            echo "No lcov.info found — skipping summary."
+          fi
