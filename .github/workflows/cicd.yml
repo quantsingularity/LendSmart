@@ -9,7 +9,7 @@ on:
 
 jobs:
   # ============================================================
-  # Job 1 -- Global formatting and quality (Prettier / Solidity)
+  # Job 1 -- Code Quality Checks (Global Formatting)
   # ============================================================
   code_quality:
     name: Code Quality Checks
@@ -35,7 +35,7 @@ jobs:
           set -euo pipefail
           NODE_GLOBAL=$(npm root -g)
           echo "=== Running Prettier check for all supported files ==="
-          # Scans entire repo for JS, TS, JSON, HTML, CSS, Markdown, Solidity, and YAML
+          # Scans entire repo; automatically finds files in backend, web, etc.
           prettier --plugin="$NODE_GLOBAL/prettier-plugin-solidity/dist/index.js" \
             --check "**/*.{js,jsx,ts,tsx,json,html,css,md,sol,yml,yaml}"
 
@@ -48,6 +48,7 @@ jobs:
   backend_tests:
     name: Backend Tests (LendSmart)
     runs-on: ubuntu-latest
+    needs: code_quality
 
     defaults:
       run:
