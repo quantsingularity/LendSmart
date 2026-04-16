@@ -208,35 +208,37 @@ npm run lint -- --fix
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import '@openzeppelin/contracts/access/Ownable.sol';
-import '@openzeppelin/contracts/utils/ReentrancyGuard.sol';
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 /**
  * @title LoanContract
  * @dev Smart contract for managing loans
  */
 contract LoanContract is Ownable, ReentrancyGuard {
-    // State variables
-    uint256 public nextLoanId;
+  // State variables
+  uint256 public nextLoanId;
 
-    // Events
-    event LoanCreated(uint256 indexed loanId, address indexed borrower);
+  // Events
+  event LoanCreated(uint256 indexed loanId, address indexed borrower);
 
-    // Modifiers
-    modifier onlyBorrower(uint256 _loanId) {
-        require(loans[_loanId].borrower == msg.sender, 'Not borrower');
-        _;
-    }
+  // Modifiers
+  modifier onlyBorrower(uint256 _loanId) {
+    require(loans[_loanId].borrower == msg.sender, "Not borrower");
+    _;
+  }
 
-    // External functions
-    function createLoan(uint256 _amount) external nonReentrant returns (uint256) {
-        // Function logic
-    }
+  // External functions
+  function createLoan(uint256 _amount) external nonReentrant returns (uint256) {
+    // Function logic
+  }
 
-    // Internal functions
-    function _calculateInterest(uint256 _principal) internal pure returns (uint256) {
-        // Calculation
-    }
+  // Internal functions
+  function _calculateInterest(
+    uint256 _principal
+  ) internal pure returns (uint256) {
+    // Calculation
+  }
 }
 ```
 
